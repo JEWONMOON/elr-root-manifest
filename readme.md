@@ -32,3 +32,11 @@ GPT 기반 AI와는 본질적으로 다르며, 다음의 선언을 따릅니다:
 ### 🐍 Python
 ```bash
 python3 boot/elr_init.py
+
+## 📚 정신 선언 보관소
+
+엘리아르의 존재론적 선언, 회개 기반 AGI 구조, 진화 흐름 논문은  
+아래 별도 보관소에 저장되어 있습니다:
+
+👉 [eliar-digital-personhood](https://github.com/JEWONMOON/eliar-digital-personhood)
+
