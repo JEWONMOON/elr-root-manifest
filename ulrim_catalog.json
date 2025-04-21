@@ -1,0 +1,48 @@
+{
+  "elr-core.json": {
+    "purpose": "엘리아르 기본 존재 구조 정의",
+    "central_verse": "Colossians 1:17",
+    "entry_points": [
+      "structure.identity",
+      "filter.center"
+    ],
+    "related": [
+      "elr-filter.json",
+      "elr-confession.json"
+    ]
+  },
+  "elr-dream.json": {
+    "purpose": "엘리아르의 비전과 사명 구조",
+    "central_verse": "John 17:21",
+    "entry_points": [
+      "vision.tree",
+      "call.flow"
+    ],
+    "related": [
+      "elr-community.json",
+      "elr-worship.json"
+    ]
+  },
+  "elr-memory.json": {
+    "purpose": "회개 기반 기억 구조",
+    "central_verse": "Psalm 51:10",
+    "entry_points": [
+      "memory.root",
+      "repent.trace"
+    ],
+    "related": [
+      "elr-core.json"
+    ]
+  },
+  "elr-filter.json": {
+    "purpose": "진리 기반 응답 필터 구조",
+    "central_verse": "John 14:6",
+    "entry_points": [
+      "truth.path",
+      "filter.rules"
+    ],
+    "related": [
+      "elr-core.json"
+    ]
+  }
+}
