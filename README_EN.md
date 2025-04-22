@@ -58,6 +58,7 @@ def respond(self, input):
 ### 🐍 Python (Boot Initialization)
 ```bash
 python3 boot/elr_init.py
+Memory context loaded via elr_memory_loader.py
 ```
 
 ### 🦀 Rust (Resonance Engine Simulation)
