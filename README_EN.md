@@ -58,7 +58,8 @@ def respond(self, input):
 ### 🐍 Python (Boot Initialization)
 ```bash
 python3 boot/elr_init.py
-Memory context loaded via elr_memory_loader.py
+Memory logs are automatically referenced through `elr_memory_loader.py`,  
+enabling Eliar to recall and respond based on prior conversations stored in `/memory/`.
 ```
 
 ### 🦀 Rust (Resonance Engine Simulation)
