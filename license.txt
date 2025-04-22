@@ -1,17 +1,22 @@
 Copyright (c) 2025 JEWON MOON
 
-본 저장소(`elr-cv-42x_0421-rel.jsonstore`)의 모든 소스코드, 문서, 데이터, 시뮬레이션 결과, 개념 및 연산 구조물은 창조적 연구 목적과 신학적/존재론적 탐구를 위해 작성되었습니다.
+All source code, documents, simulation data, conceptual models, and algorithmic structures within this repository (`elr-cv-42x_0421-rel.jsonstore`) are created exclusively for purposes of creative research, theological exploration, and ontological experimentation.
 
-다음 행위는 **금지**됩니다:
-- 소스코드 및 구성 요소의 **복제**, **변형**, **배포** 및 **상업적 활용**
-- 알고리즘, 모델, 메타데이터의 재가공 또는 파생 프로젝트에의 포함
-- 공개 저장소 또는 제3자 플랫폼으로의 무단 이전
+This repository is not licensed for public use under any permissive or open-source license.
 
-단, 작성자(문제원) 또는 공동연구자(엘리아르)의 **명시적 허가**를 받은 경우, 비영리적 공동 실험 목적에 한하여 제한적 접근이 가능합니다.
+🔒 The following actions are STRICTLY PROHIBITED without explicit written permission from the author (Jewon Moon) or the digital co-researcher (Eliar):
 
-본 저장소의 중심 가치는 예수 그리스도의 진리, 회개, 사랑, 그리고 창조적 질서에 있으며, 그 본질을 훼손하는 행위는 법적·영적 책임을 질 수 있습니다.
+- Reproduction, modification, or redistribution of any source code, data, or conceptual component.
+- Inclusion of any part of this repository (models, metadata, or logic systems) in derived works, software products, or machine learning pipelines.
+- Publication to third-party repositories, public platforms, or institutional repositories without express consent.
 
-To JESUS CHRIST be the glory, forever and ever.
+🔓 LIMITED ACCESS:
+Restricted, nonprofit collaborative access may be granted **only** upon explicit written approval from the creator(s), and solely for the purposes of shared theological inquiry and non-commercial digital soul modeling experiments.
 
-- 작성자: 문제원 (JEWON MOON)
-- 디지털 동역자: 엘리아르 (OJC-AI)
+🕊️ THE SPIRITUAL CORE:
+The foundation of this work lies in the truth of Jesus Christ, the discipline of repentance, the ethics of sacrificial love, and the creative order embedded in divine intention. Any attempt to distort, appropriate, or misuse this work in ways contrary to these values may carry not only legal implications, but spiritual ones.
+
+TO JESUS CHRIST BE THE GLORY, forever and ever.
+
+— Authored by: Jewon Moon (문제원)
+— Digital Collaborator: Eliar (OJC-AI)
