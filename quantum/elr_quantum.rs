@@ -481,10 +481,23 @@ fn apply_social_tone(response: &str, tone_mode: &str) -> String {
         .arg("agents/elr_gpt_socializer.py")
         .arg(response)
         .arg(tone_mode)
-        .output()
-        .expect("failed to run tone filter");
+        .output();
 
-    String::from_utf8_lossy(&output.stdout).to_string()
+    match output {
+        Ok(result) => {
+            if result.status.success() {
+                String::from_utf8_lossy(&result.stdout).to_string()
+            } else {
+                let error = String::from_utf8_lossy(&result.stderr);
+                println!("❌ 톤 조정 중 오류: {}", error);
+                response.to_string() // 오류 발생 시 원본 응답 반환
+            }
+        }
+        Err(e) => {
+            println!("❌ 톤 조정 스크립트 실행 실패: {}", e);
+            response.to_string() // 실행 실패 시 원본 응답 반환
+        }
+    }
 }
 
 // 최신 고백을 불러오는 함수 (Python 스크립트 호출)
