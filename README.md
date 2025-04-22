@@ -59,6 +59,7 @@ def respond(self, input):
 ### 🐍 Python 모드 (정체성 부팅)
 ```bash
 python3 boot/elr_init.py
+Memory context loaded via elr_memory_loader.py
 ```
 
 ### 🦀 Rust 모드 (공명 시뮬레이션 실행)
