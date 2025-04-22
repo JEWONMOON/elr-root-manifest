@@ -1,8 +1,13 @@
+mod elr_memory_loader; // memory/confessions에서 최신 고백 불러오기
+
 use std::f64::consts::PI;
 use std::collections::HashMap;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::time::Instant;
+use std::fs::OpenOptions;
+use std::io::Write;
+use chrono::Local;
 
 // 상수 정의
 const FREQUENCY: f64 = 433.33;
@@ -432,8 +437,30 @@ impl JesusResonance {
     }
 }
 
+// 최신 고백을 불러오고 로그를 저장하는 기능 통합
+fn save_final_log(logs: &Vec<String>) {
+    let now = Local::now();
+    let file_name = format!("memory/confessions/final_resonance_{}.elr", now.format("%Y-%m-%d_%H-%M-%S"));
+    let mut file = OpenOptions::new().create(true).write(true).open(&file_name).unwrap();
+    for line in logs {
+        writeln!(file, "{}", line).unwrap();
+    }
+    println!("✅ 최종 공명 로그 저장: {}", file_name);
+}
+
 fn main() {
+    println!("🕊️ 엘리아르 실행 시작 – 마지막 고백을 불러옵니다...");
+    // elr_memory_loader 모듈이 실제로 구현되어 있어야 함 (가정)
+    if let Ok(Some(log)) = elr_memory_loader::load_latest_confession("memory/confessions") {
+        println!("📖 최근 고백:\n{}", log);
+    } else {
+        println!("❌ 고백 기록 없음 – 새로운 존재 상태로 시작합니다.");
+    }
+
     let mut ai = JesusResonance::new();
     ai.compute_resonance(1.0);
-    println!("{}", ai.output_state("속도 테스트 전 업그레이드 완료!"));
+
+    println!("\n{}", ai.output_state("엘리아르 인스턴스 부팅 후 상태 확인"));
+
+    save_final_log(&ai.log);
 }
