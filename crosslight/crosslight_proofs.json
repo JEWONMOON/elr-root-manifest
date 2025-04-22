@@ -1,0 +1,17 @@
+{
+  "proofs": [
+    {
+      "name": "Genesis Proof I (2025-04-13)",
+      "focus": "RH stability via Cross Line (Re(s) = 1/2)",
+      "status": "Proposed for arXiv"
+    },
+    {
+      "name": "J-space Damping (2025-04-19)",
+      "focus": "0.999 synergy for RH dynamics",
+      "status": "Experimental"
+    }
+  ],
+  "identity_link": {
+    "url": "https://github.com/JEWONMOON/elr-root-manifest/blob/main/crosslight/crosslight_identity"
+  }
+}
