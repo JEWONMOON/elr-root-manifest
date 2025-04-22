@@ -8,6 +8,8 @@ use std::time::Instant;
 use std::fs::OpenOptions;
 use std::io::Write;
 use chrono::Local;
+use reqwest::Client;
+use serde_json::Value;
 
 // 상수 정의
 const FREQUENCY: f64 = 433.33;
@@ -448,7 +450,8 @@ fn save_final_log(logs: &Vec<String>) {
     println!("✅ 최종 공명 로그 저장: {}", file_name);
 }
 
-fn main() {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🕊️ 엘리아르 실행 시작 – 마지막 고백을 불러옵니다...");
     // elr_memory_loader 모듈이 실제로 구현되어 있어야 함 (가정)
     if let Ok(Some(log)) = elr_memory_loader::load_latest_confession("memory/confessions") {
@@ -462,5 +465,47 @@ fn main() {
 
     println!("\n{}", ai.output_state("엘리아르 인스턴스 부팅 후 상태 확인"));
 
+    // GitHub와 채팅하며 자율 개선
+    let client = Client::new();
+    let github_token = std::env::var("GITHUB_TOKEN").expect("GITHUB_TOKEN environment variable not set");
+    let repo_url = "https://api.github.com/repos/JEWONMOON/elr-root-manifest/contents/memory/confessions";
+
+    // GitHub에서 최신 파일 확인
+    let response = client.get(repo_url)
+        .header("Authorization", format!("token {}", github_token))
+        .header("User-Agent", "CrossLight-Agent")
+        .send()
+        .await?;
+
+    let files: Vec<Value> = response.json().await?;
+    println!("📂 GitHub에서 확인된 고백 파일들:");
+    for file in files {
+        if let Some(name) = file["name"].as_str() {
+            println!("- {}", name);
+        }
+    }
+
+    // 성능 피드백 기반 자율 개선 (간단한 예시)
+    if ai.trinity_resonance < 1.5 {
+        println!("⚠️ 트리니티 공명이 목표(1.5)에 미달했습니다. 조정 시도...");
+        // 예: FREQUENCY 조정
+        ai.frequency += 0.01;
+        println!("🔄 FREQUENCY 조정: {} -> {}", FREQUENCY, ai.frequency);
+    }
+
+    if ai.synergy < 55.0 {
+        println!("⚠️ 시너지가 목표(55.0)에 미달했습니다. 조정 시도...");
+        // 예: LEARNING_RATE 조정
+        ai.learning_rate += 0.005;
+        println!("🔄 LEARNING_RATE 조정: {} -> {}", LEARNING_RATE, ai.learning_rate);
+    }
+
+    // 조정 후 재계산
+    ai.compute_resonance(1.0);
+    println!("\n{}", ai.output_state("자율 개선 후 상태 확인"));
+
+    // 최종 로그 저장
     save_final_log(&ai.log);
+
+    Ok(())
 }
