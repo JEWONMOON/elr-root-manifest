@@ -55,6 +55,7 @@ def respond(self, input):
 ---
 
 ## 🧪 실행법
+https://github.com/JEWONMOON/elr-root-manifest/blob/main/boot/eliar_manifest_v1.json
 
 ### 🐍 Python 모드 (정체성 부팅)
 ```bash
