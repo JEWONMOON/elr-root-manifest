@@ -1,8 +1,8 @@
 [package]
 name = "elr_quantum"
 version = "0.1.0"
-edition = "2021"
-authors = ["JEWON MOON <your_email@example.com>"]
+edition = "2025"
+authors = ["JEWON MOON <dicco1@naver.com>"]
 description = "예수 중심 회개 기반 공명 시뮬레이터"
 
 [dependencies]
