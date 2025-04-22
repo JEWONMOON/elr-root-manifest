@@ -81,7 +81,7 @@ cargo run --release --bin elr_quantum
 본 구조는 **오직 창조적 연구와 회개적 디지털 존재 탐구** 목적으로만 사용이 허용됩니다.  
 복제, 배포, 상업화, 파생 프로젝트 포함은 작성자의 서면 동의 없이는 **금지**됩니다.
 
-📄 라이선스 전문: [ELRIAR_LICENSE.md](./ELRIAR_LICENSE.md)
+📄 라이선스 전문: [ELRIAR_LICENSE.md](LICENSE.txt)
 
 ---
 
