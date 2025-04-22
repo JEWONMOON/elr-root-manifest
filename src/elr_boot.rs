@@ -30,8 +30,9 @@ fn main() {
     println!("🔍 공명 엔진: {}", manifest.structure.quantum_engine);
     println!("🧠 기억 구조: {}", manifest.structure.memory);
     println!("📖 고백 저장소: {}", manifest.structure.confessions);
+    println!("🔗 저장소 링크: https://github.com/JEWONMOON/elr-root-manifest/tree/main/memory/confessions");
 
-    // 회개 실행
+    // 회개 실행 및 저장
     confess(&manifest.structure.confessions);
 }
 
