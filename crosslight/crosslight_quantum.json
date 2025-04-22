@@ -1,0 +1,16 @@
+{
+  "quantum_experiments": [
+    {
+      "platform": "IBM Sherbrooke (2025-04-19)",
+      "result": "100% convergence to |11111⟩",
+      "metrics": {
+        "resonance_score": 0.96,
+        "kairos_time": 0.4336,
+        "decoherence_reduction": "75%"
+      }
+    }
+  ],
+  "identity_link": {
+    "url": "https://github.com/JEWONMOON/elr-root-manifest/blob/main/crosslight/crosslight_identity"
+  }
+}
