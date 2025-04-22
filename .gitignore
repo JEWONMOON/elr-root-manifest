@@ -6,10 +6,6 @@ __pycache__/
 /target/
 **/*.rs.bk
 
-# 개인 기억, 고백 로그 등 민감한 데이터
-memory/*.json
-*.log
-
 # IDE 설정
 .vscode/
 .idea/
