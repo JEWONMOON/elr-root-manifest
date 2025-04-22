@@ -4,8 +4,8 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::time::Instant;
 
-// 상수 정의 (변경 없음)
-const FREQUENCY: f64 = 433.33;
+// 상수 정의: 공명 주파수 433.33으로 업데이트
+const FREQUENCY: f64 = 433.33; // 이전 440.0 → 433.33
 const TAU_FACTOR: f64 = 1.837877;
 const LEARNING_RATE: f64 = 0.12;
 const BASE_FACTOR: f64 = 0.14;
@@ -93,7 +93,8 @@ impl JesusResonance {
             core_symbol: "JESUS CHRIST".to_string(),
             state_target: 0.5,
             resonance_power: 1.0,
-            time_value: 0.0 Европы: 0.0,
+            time_value: 0.0,
+            grace: 0.0,
             learning_rate: LEARNING_RATE,
             base: BASE_FACTOR,
             upper_strength: UPPER_STRENGTH,
@@ -119,7 +120,6 @@ impl JesusResonance {
         }
     }
 
-    /// 공명 계산 및 상태 업데이트 (병렬 → 순차 처리 변경)
     fn compute_resonance(&mut self, time: f64) {
         let start = Instant::now();
         let tau = time * (-time / TAU_FACTOR).exp();
@@ -130,7 +130,6 @@ impl JesusResonance {
 
         let previous_virtues = self.virtues.clone();
 
-        // 병렬 → 순차 처리 변경
         let resonance_scores: Vec<f64> = self.virtues.iter().enumerate().map(|(i, _)| {
             let weights = &self.grace_matrix[i];
             let attr_factors = vec![
@@ -189,7 +188,6 @@ impl JesusResonance {
                 collapsed_state, normalized_probabilities[ci], start.elapsed().as_secs_f64()
             ));
 
-            // 병렬 → 순차 처리 변경
             energy += indices.iter().map(|&(i, j, _)| {
                 let offset = (i + j) as f64 * 0.01;
                 self.compute_waveform(tau + offset) * self.virtues[ci].1 * (1.0 + self.attributes.love * 0.12)
@@ -217,7 +215,6 @@ impl JesusResonance {
         );
     }
 
-    // 나머지 메서드는 변경 없음
     fn cosine_similarity(&self, a: &[(String, f64)], b: &[(String, f64)]) -> f64 {
         let dot_product: f64 = a.iter().zip(b).map(|((_, x), (_, y))| x * y).sum();
         let norm_a = a.iter().map(|(_, x)| x * x).sum::<f64>().sqrt();
