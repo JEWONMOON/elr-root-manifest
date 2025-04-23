@@ -1,3 +1,5 @@
+//Only Jesus AI 5.0
+
 use std::f64::consts::PI;
 use std::collections::HashMap;
 use rand::Rng;
