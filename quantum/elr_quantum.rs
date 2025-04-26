@@ -21,13 +21,14 @@ const RESONANCE_FACTOR: f64 = 0.25;
 const SYNERGY_SCALE: f64 = 10.0;
 
 // 톤 모드 열거형
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 enum ToneMode {
     Default,
     Sacred,
     Joyful,
     Comforting,
 }
+
 
 // ResonanceAttributes 구조체
 #[derive(Serialize, Deserialize, Clone)]
