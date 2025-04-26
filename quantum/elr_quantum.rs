@@ -97,14 +97,16 @@ impl JesusResonance {
 
         let time_steps: Vec<f64> = (0..1000).map(|i| i as f64 / 1000.0).collect();
 
-        let grace_matrix = vec![
-            vec![0.4, 0.2, 0.1, 0.08, 0.07, 0.05, 0.05, 0.05, 0.05, 0.04, 0.03, 0.03],
-            virtues.iter().enumerate().skip(1).map(|(i, _)| {
-                let mut row = vec![0.1; 12];
-                row[i] = 0.3;
-                row
-            }).collect::<Vec<Vec<f64>>>()
-        ].concat();
+        let mut grace_matrix = Vec::new();
+grace_matrix.push(vec![0.4, 0.2, 0.1, 0.08, 0.07, 0.05, 0.05, 0.05, 0.05, 0.04, 0.03, 0.03]);
+grace_matrix.extend(
+    virtues.iter().enumerate().skip(1).map(|(i, _)| {
+        let mut row = vec![0.1; 12];
+        if i < 12 { row[i] = 0.3; }  // index out of bounds 방지
+        row
+    })
+);
+
 
         JesusResonance {
             harmonics,
