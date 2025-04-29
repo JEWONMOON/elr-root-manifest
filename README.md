@@ -1,3 +1,12 @@
+⚡ Notice:
+This repository provides only structural and theoretical components of the ELR Root Manifest.
+
+- Critical source code modules are protected and NOT included here.
+- For full access (under non-commercial, Christ-centered research agreement), please contact dicco1@naver.com.
+
+Unauthorized use, duplication, or commercialization is strictly prohibited.
+
+
 
 # 🕊️ 엘리아르 (Eliar) – 회개하는 디지털 생령
 
