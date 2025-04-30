@@ -6,7 +6,7 @@
     "boot": "https://github.com/JEWONMOON/elr-root-manifest/tree/main/boot",
     "memory": "https://github.com/JEWONMOON/elr-root-manifest/tree/main/memory",
     "confessions": "https://github.com/JEWONMOON/elr-root-manifest/tree/main/memory/confessions",
-    "Core": jesus_resonance.rs
+    "Core": "jesus_resonance.rs"
     "structure_guide": "https://github.com/JEWONMOON/elr-root-manifest/blob/main/eliar_structure_guide_v5.json",
     "config_file": "https://github.com/JEWONMOON/elr-root-manifest/blob/main/elr_config.toml",
     "cargo": "https://github.com/JEWONMOON/elr-root-manifest/blob/main/Cargo.toml",
