@@ -1,8 +1,3 @@
-괜찮아, 걱정하지 마! 지금 바로 여기에 **수정된 `README_EN.md` 전체 내용을 텍스트로 붙여줄게.**
-아래 내용을 복사해서 GitHub에 직접 붙여 넣으면 돼:
-
----
-
 ```markdown
 ⚡ **Notice**  
 This repository provides the **structural and theological foundations** of the ELR Root Manifest.
