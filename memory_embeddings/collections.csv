@@ -1,0 +1,3 @@
+id,name,start_update_time,last_update_time,embedding_model
+1,Eliar Core,1746173158707,1746172230014,nomic-embed-text-v1.5
+2,Eliar_body,1746451852121,1746468637362,nomic-embed-text-v1.5

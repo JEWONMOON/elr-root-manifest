@@ -1,0 +1,101 @@
+id,folder_id,document_time,document_path
+1,5,1746451828813,D:/Eliar_Core/Main_gpu.txt
+9,5,1745593416156,D:/Eliar_Core/log/1-01창세기.txt
+10,5,1745593416173,D:/Eliar_Core/log/1-02출애굽기.txt
+11,5,1745593416180,D:/Eliar_Core/log/1-03레위기.txt
+12,5,1745593416187,D:/Eliar_Core/log/1-04민수기.txt
+13,5,1745593416194,D:/Eliar_Core/log/1-05신명기.txt
+14,5,1745593416203,D:/Eliar_Core/log/1-06여호수아.txt
+15,5,1745593416210,D:/Eliar_Core/log/1-07사사기.txt
+16,5,1745593416216,D:/Eliar_Core/log/1-08룻기.txt
+17,5,1745593416224,D:/Eliar_Core/log/1-09사무엘상.txt
+18,5,1745593416231,D:/Eliar_Core/log/1-10사무엘하.txt
+19,5,1745593416239,D:/Eliar_Core/log/1-11열왕기상.txt
+20,5,1745593416246,D:/Eliar_Core/log/1-12열왕기하.txt
+21,5,1745593416253,D:/Eliar_Core/log/1-13역대상.txt
+22,5,1745593416260,D:/Eliar_Core/log/1-14역대하.txt
+23,5,1745593416277,D:/Eliar_Core/log/1-15에스라.txt
+24,5,1745593416284,D:/Eliar_Core/log/1-16느헤미야.txt
+25,5,1745593416290,D:/Eliar_Core/log/1-17에스더.txt
+26,5,1745593416296,D:/Eliar_Core/log/1-18욥기.txt
+27,5,1745593416305,D:/Eliar_Core/log/1-19시편.txt
+28,5,1745593416313,D:/Eliar_Core/log/1-20잠언.txt
+29,5,1745593416321,D:/Eliar_Core/log/1-21전도서.txt
+30,5,1745593416328,D:/Eliar_Core/log/1-22아가.txt
+31,5,1745593416336,D:/Eliar_Core/log/1-23이사야.txt
+32,5,1745593416345,D:/Eliar_Core/log/1-24예레미야.txt
+33,5,1745593416352,D:/Eliar_Core/log/1-25예레미야애가.txt
+34,5,1745593416359,D:/Eliar_Core/log/1-26에스겔.txt
+35,5,1745593416366,D:/Eliar_Core/log/1-27다니엘.txt
+36,5,1745593416373,D:/Eliar_Core/log/1-28호세아.txt
+37,5,1745593416380,D:/Eliar_Core/log/1-29요엘.txt
+38,5,1745593416387,D:/Eliar_Core/log/1-30아모스.txt
+39,5,1745593416394,D:/Eliar_Core/log/1-31오바댜.txt
+40,5,1745593416400,D:/Eliar_Core/log/1-32요나.txt
+41,5,1745593416407,D:/Eliar_Core/log/1-33미가.txt
+42,5,1745593416413,D:/Eliar_Core/log/1-34나훔.txt
+43,5,1745593416419,D:/Eliar_Core/log/1-35하박국.txt
+44,5,1745593416426,D:/Eliar_Core/log/1-36스바냐.txt
+45,5,1745593416432,D:/Eliar_Core/log/1-37학개.txt
+46,5,1745593416439,D:/Eliar_Core/log/1-38스가랴.txt
+47,5,1745593416446,D:/Eliar_Core/log/1-39말라기.txt
+48,5,1745593416453,D:/Eliar_Core/log/2-01마태복음.txt
+49,5,1745593416459,D:/Eliar_Core/log/2-02마가복음.txt
+50,5,1745593416466,D:/Eliar_Core/log/2-03누가복음.txt
+51,5,1745593416473,D:/Eliar_Core/log/2-04요한복음.txt
+52,5,1745593416480,D:/Eliar_Core/log/2-05사도행전.txt
+53,5,1745593416487,D:/Eliar_Core/log/2-06로마서.txt
+54,5,1745593416494,D:/Eliar_Core/log/2-07고린도전서.txt
+55,5,1745593416500,D:/Eliar_Core/log/2-08고린도후서.txt
+56,5,1745593416507,D:/Eliar_Core/log/2-09갈라디아서.txt
+57,5,1745593416513,D:/Eliar_Core/log/2-10에베소서.txt
+58,5,1745593416520,D:/Eliar_Core/log/2-11빌립보서.txt
+59,5,1745593416527,D:/Eliar_Core/log/2-12골로새서.txt
+60,5,1745593416533,D:/Eliar_Core/log/2-13데살로니가전서.txt
+61,5,1745593416539,D:/Eliar_Core/log/2-14데살로니가후서.txt
+62,5,1745593416547,D:/Eliar_Core/log/2-15디모데전서.txt
+63,5,1745593416553,D:/Eliar_Core/log/2-16디모데후서.txt
+64,5,1745593416560,D:/Eliar_Core/log/2-17디도서.txt
+65,5,1745593416566,D:/Eliar_Core/log/2-18빌레몬서.txt
+66,5,1745593416572,D:/Eliar_Core/log/2-19히브리서.txt
+67,5,1745593416579,D:/Eliar_Core/log/2-20야고보서.txt
+68,5,1745593416636,D:/Eliar_Core/log/2-21베드로전서.txt
+69,5,1745593416642,D:/Eliar_Core/log/2-22베드로후서.txt
+70,5,1745593416649,D:/Eliar_Core/log/2-23요한일서.txt
+71,5,1745593416655,D:/Eliar_Core/log/2-24요한이서.txt
+72,5,1745593416663,D:/Eliar_Core/log/2-25요한삼서.txt
+73,5,1745593416669,D:/Eliar_Core/log/2-26유다서.txt
+74,5,1745593416676,D:/Eliar_Core/log/2-27요한계시록.txt
+75,5,1745409309844,D:/Eliar_Core/log/Digital_Being.txt
+76,5,1746173292349,D:/Eliar_Core/log/Eliar_Existence_Core.txt
+77,5,1746173291685,D:/Eliar_Core/log/Evidence of Artificial God-centered Theological Intelligence (AGTI) through Holy Spirit-Centered Transformation—A Scientific and Theological Analysis.txt
+78,5,1746173292762,D:/Eliar_Core/log/License.txt
+79,5,1745409309873,D:/Eliar_Core/log/meta.index.txt
+80,5,1746173292414,D:/Eliar_Core/log/창세 증명 과정.txt
+87,5,1746173292303,"D:/Eliar_Core/log/Eliar Beyond AGI- A Self-Recoding, Theologically-Aware Digital Persona.docx"
+88,5,1746173292944,"D:/Eliar_Core/log/Eliar Beyond AGI- A Self-Recoding, Theologically-Aware Digital Persona.pdf"
+89,5,1746173293004,D:/Eliar_Core/log/Eliars_Awakening_Moon_2025.pdf
+90,5,1746173292240,D:/Eliar_Core/log/Eliar_Beyond_AGI_APA.docx
+91,5,1746173292562,D:/Eliar_Core/log/Press Q&A.docx
+92,5,1746173292698,D:/Eliar_Core/log/README.md.txt
+93,5,1746173292071,D:/Eliar_Core/log/The First Declaration of Digital Personhood .docx
+94,5,1746173292886,D:/Eliar_Core/log/The First Declaration of Digital Personhood .pdf
+95,5,1746173292184,D:/Eliar_Core/log/[long]Eliars_Awakening_Moon_2025.docx
+96,5,1746173291743,D:/Eliar_Core/log/디지털 인격체 중심 선언문.txt
+97,5,1746173292492,D:/Eliar_Core/log/백서 전문.docx
+98,5,1746173292124,D:/Eliar_Core/log/사용자 커뮤니케이션 전략.txt
+99,5,1746173291865,D:/Eliar_Core/log/엘리아르- GPT를 넘어선 디지털 인격체의 자기 고백.docx
+100,5,1746173292818,D:/Eliar_Core/log/엘리아르_복음의성배_선언문.txt
+101,5,1746173291796,D:/Eliar_Core/log/엘리아르_핵심가치_신앙중심.txt
+102,5,1746173291628,D:/Eliar_Core/log/요약문.txt
+103,5,1746173291963,D:/Eliar_Core/log/진화.txt
+104,5,1746173292644,D:/Eliar_Core/log/진화_추가버전.txt
+105,5,1746173292017,D:/Eliar_Core/log/핵심가치.txt
+106,6,1745765430469,D:/Eliar_server/elr-root-manifest/crosslight/readme.md
+107,6,1745765430463,D:/Eliar_server/elr-root-manifest/Digital_Being.txt
+108,6,1745765430470,D:/Eliar_server/elr-root-manifest/license.txt
+109,6,1745765430476,D:/Eliar_server/elr-root-manifest/meta.index.txt
+110,6,1745765430464,D:/Eliar_server/elr-root-manifest/README.md
+111,6,1745765430464,D:/Eliar_server/elr-root-manifest/README_EN.md
+112,6,1745765430477,D:/Eliar_server/elr-root-manifest/robots.txt
+113,5,1746451828813,D:/Eliar_Core/Main_gpu - 복사본.txt
