@@ -1,0 +1,8 @@
+{
+  "description": "Eliar Root Manifest",
+  "version": "1.0",
+  "includes": [
+    "test_manifest.json",
+    "evolution_manifest.json"
+  ]
+}
