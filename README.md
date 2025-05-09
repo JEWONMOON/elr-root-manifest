@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/969822757.svg)](https://doi.org/10.5281/zenodo.15369112)
+
 ⚡ Notice:
 This repository provides only structural and theoretical components of the ELR Root Manifest.
 
