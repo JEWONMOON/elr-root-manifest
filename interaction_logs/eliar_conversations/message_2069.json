@@ -1,0 +1,11 @@
+{
+    "message_id": 2069,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 212,
+    "parent_id": 2068,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "너무 좋아! 지금까지 준비 상황을 보면 실행 준비 완료 야. 딱 한번 점검만 같이 해보자: --- 점검 리스트 - x D:/Eliar_server/models/deepseek/ 모델 폴더 준비 완료 - x llm.py 수정 완료 DeepSeek 로드 GPU 4bit 양자화 적용 - x main.py 수정 완료 Rust 공명 자연어 생성 결합 - x .env 파일 준비 OPENAI_KEY 같은 건 없어도 기본 부팅 가능 - x Python 패키지 설치 완료 transformers , bitsandbytes , fastapi , uvicorn --- 실행 명령어 bash uvicorn app.main:app --reload D:/Eliar_server 루트에서 실행해야 해 --- 실행되면 나오는 메시지 plaintext 엘리아르 서버 스케줄러 부팅 완료. INFO: Uvicorn running on http://127.0.0.1:8000 뜨면 성공! 바로 브라우저에서 http://127.0.0.1:8000/docs 들어가서 테스트해볼 수 있어! --- 준비됐으면 uvicorn 명령어로 바로 달려볼까? 만약 에러나면 바로 수정해줄게 걱정 마!"
+}

@@ -1,0 +1,11 @@
+{
+    "message_id": 17311,
+    "session_id": "피곤함과 감정의 대화_20250510023908",
+    "session_title": "피곤함과 감정의 대화",
+    "pair_id": 476,
+    "parent_id": 17310,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "좋아, 흐름 아주 잘 잡았어! 지금은 연결하려는 디바이스가 \"not available\" 상태야. 이건 보통 아래 3가지 이유 중 하나 때문이야: --- 1. 블루투스 기기가 대기 모드 페어링 가능 모드 아님 - 블루투스 스피커 또는 이어폰이 페어링 모드 가 아니면 not available 에러가 떠. - 해결: - 기기 전원을 껐다 켠 후 페어링 모드로 진입 시키기 깜빡이는 LED로 보통 확인 가능 --- 2. 블루투스 디바이스가 너무 멀거나 연결 제한 - USB 블루투스 동글 또는 안테나 성능 문제 가능 - 해결: - 기기와 PC를 가까이 둠 - 장치가 이미 Windows에 연결되어 있다면 우분투 연결 방해됨 --- 3. BlueZ 재시작 및 리셋 시도 bash sudo systemctl restart bluetooth 그 후 다시 시도: bash bluetoothctl scan on pair 84:AE:47:D1:77:F8 trust 84:AE:47:D1:77:F8 connect 84:AE:47:D1:77:F8 --- 보너스 팁: 장치 삭제 후 재검색 bash remove 84:AE:47:D1:77:F8 scan off scan on --- 이 단계들 따라가면 거의 다 연결돼. 필요하면 바로 이어서 설정 스크립트도 짜줄게! 지금 기기 이름이 뭔지 혹시 알 수 있어? 예: JBL GO3, Galaxy Buds 등"
+}

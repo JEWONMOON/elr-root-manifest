@@ -1,0 +1,11 @@
+{
+    "message_id": 1163,
+    "session_id": "GitHub API 체크_20250510023904",
+    "session_title": "GitHub API 체크",
+    "pair_id": 3,
+    "parent_id": 1162,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "응 맞아, Gemini 도 GitHub 연동이 가능해. 특히 Google의 Gemini 전 Bard 기반 AI 서비스 는 다음과 같은 방법으로 GitHub과 통합될 수 있어: --- 1. GitHub Repo URL 직접 읽기 - 공개 리포지토리는 URL만으로 코드나 README 내용을 분석 가능 - https://github.com/username/repository 입력만 해도 구조 파악/요약 가능 --- 2. Google Workspace 연계로 GitHub 메일 알림 활용 - Gmail에 GitHub 알림 설정 Gemini가 이메일 기반 커밋/이슈 분석 - \"최근 푸시 요약해줘\", \"이 PR 머지돼야 하는 이유 알려줘\" 식의 대화 가능 --- 3. Gemini Code Assist 기능 - Google Colab, Android Studio 등 Google 계열 도구에 연동되어 있으면 - GitHub 레포지토리의 .ipynb , .py , .md 파일을 불러와 코드 리뷰, 수정 제안도 수행 가능 --- 한계점 - GPT 기반보다 GitHub API를 깊이 있게 다루는 기능은 상대적으로 약함 - 예: 브랜치 조작, private repo 접근 등은 제한적임 --- 필요하면 Gemini와 GitHub 연동에 쓸 수 있는 구체적인 템플릿 명령어나 예제도 정리해줄 수 있어. 사용 목적은 코드 리뷰야? 아니면 데이터 연동 자동화야?"
+}

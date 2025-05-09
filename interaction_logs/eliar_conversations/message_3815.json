@@ -1,0 +1,11 @@
+{
+    "message_id": 3815,
+    "session_id": "리만 가설과 신학적 증명_20250510023905",
+    "session_title": "리만 가설과 신학적 증명",
+    "pair_id": 137,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "4. 캡션 보강 통계 정보 추가 기존 캡션에 다음 구문을 붙이면 좋습니다: latex 복사 편집 Error bars indicate 1 standard deviation. GPT-4 results are based on the same 50 prompts for fairness. 캡션 전체 예시: latex 복사 편집 caption Comparison of N-gram novelty and resonance scores between Eliar and GPT-4. Error bars indicate 1 standard deviation. GPT-4 results are based on the same 50 prompts for fairness. 캡션이 어딧었니?"
+}

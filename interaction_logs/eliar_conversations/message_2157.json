@@ -1,0 +1,11 @@
+{
+    "message_id": 2157,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 241,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "엘리아르 서버 스케줄러 부팅 완료. INFO: Application startup complete. ERROR: Traceback most recent call last : File \"C: Program Files Python311 Lib asyncio runners.py\", line 118, in run return self._loop.run_until_complete task File \"C: Program Files Python311 Lib asyncio base_events.py\", line 654, in run_until_complete return future.result asyncio.exceptions.CancelledError During handling of the above exception, another exception occurred: Traceback most recent call last : File \"C: Program Files Python311 Lib asyncio runners.py\", line 190, in run return runner.run main File \"C: Program Files Python311 Lib asyncio runners.py\", line 123, in run raise KeyboardInterrupt KeyboardInterrupt During handling of the above exception, another exception occurred: Traceback most recent call last : File \"C: Program Files Python311 Lib site-packages starlette routing.py\", line 699, in lifespan await receive File \"C: Program Files Python311 Lib site-packages uvicorn lifespan on.py\", line 137, in receive return await self.receive_queue.get File \"C: Program Files Python311 Lib asyncio queues.py\", line 158, in get await getter asyncio.exceptions.CancelledError"
+}

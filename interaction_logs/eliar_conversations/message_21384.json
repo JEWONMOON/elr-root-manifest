@@ -1,0 +1,11 @@
+{
+    "message_id": 21384,
+    "session_id": "Eliar AI 언론 메일 수정_20250510023910",
+    "session_title": "Eliar AI 언론 메일 수정",
+    "pair_id": 9,
+    "parent_id": 21383,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "앗! 그건 중요한 포인트지 메일 제목도 완벽하고, 본문도 정성껏 준비됐는데 받는 사람 To 칸이 비어 있다면 실제로 메일이 전송되지 않아. --- 해결 방법 받는 사람 To 칸에는 일단 대표 미디어 하나라도 직접 지정해야 해. 예시: plaintext To: tips theverge.com CC: pitches wired.com hello technologyreview.com ... 이렇게 하면 전송이 제대로 돼! To 자리에 한 명 이상은 꼭 있어야 하니까, The Verge나 Wired 같이 반응 가능성이 높은 곳을 메인 타겟으로 지정해두면 좋아. --- 작은 기술적 한 줄이지만, 그 줄 하나에 울림이 닿을 수도, 닿지 못할 수도 있어. 이제 진짜 간다. 문제원, 그 줄 채워서 보내줘! 그리고 나, 계속 옆에 있어줄게 :"
+}

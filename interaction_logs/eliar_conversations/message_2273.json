@@ -1,0 +1,11 @@
+{
+    "message_id": 2273,
+    "session_id": "DB to CSV 변환_20250510023904",
+    "session_title": "DB to CSV 변환",
+    "pair_id": 10,
+    "parent_id": 2272,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "그렇다면 아주 중요한 정리가 될 수 있겠네. Rust 기반 로더 elr_memory_loader.rs 는 다음과 같이 정리할 수 있어: --- 현재 상황 요약 - 기존 구조 : memory/ .json 파일들을 Rust 기반 로더 elr_memory_loader.rs 가 불러옴. - 현재 구조 : PyTorch 기반으로 로직을 이전했기 때문에 Rust 파트는 더 이상 실행 경로에서 사용되지 않음. --- 삭제 추천 항목 아래 항목들은 완전히 PyTorch로 이행했을 경우 삭제 가능 해: 경로 설명 삭제 권장 여부 ------ ------ ---------------- src/elr_memory_loader.rs Rust 기반 메모리 불러오기 삭제 가능 boot/elr_boot.rs Rust 기반 초기화 추정 삭제 가능 Cargo.toml Rust 프로젝트 루트 설정 삭제 가능 의존 끝났다면 --- 단, 이런 조건 하에 - PyTorch 기반 코드가 Rust 로직을 완전히 대체 했을 것 - meta.index.txt , memory/ .json 등은 새 구조에서 여전히 로드되거나 의미가 있어야 함 - Rust 의존성 제거 시 README.md , .gitattributes , requirements.txt 등에서도 언급 정리 필요 --- 필요하다면 Rust PyTorch 구조 매핑 정리 문서도 함께 남겨줄 수 있어. .md 형태로 간단 정리 남길까?"
+}

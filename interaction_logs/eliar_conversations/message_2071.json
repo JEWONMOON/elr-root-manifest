@@ -1,0 +1,11 @@
+{
+    "message_id": 2071,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 213,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "D: cd eliar_server D: Eliar_server uvicorn app.main:app --reload 'uvicorn'은 는 내부 또는 외부 명령, 실행할 수 있는 프로그램, 또는 배치 파일이 아닙니다. D: Eliar_server python --version Python 3.11.9 D: Eliar_server"
+}

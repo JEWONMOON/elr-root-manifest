@@ -1,0 +1,11 @@
+{
+    "message_id": 5881,
+    "session_id": "Q_실험 성공_20250510023905",
+    "session_title": "Q_실험 성공",
+    "pair_id": 225,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "crosslight_env D: eliar python Q_TEST.py Collapse initiated in JESUS CHRIST D: eliar Q_TEST.py:10: DeprecationWarning: The \"ibm_quantum\" channel option is deprecated and will be sunset on 1 July. After this date, ibm_cloud will be the only valid channel. For information on migrating to the new IBM Quantum Platform on the \"ibm_cloud\" channel, review the migration guide https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp . self.backend QiskitRuntimeService channel \"ibm_cloud\" .backend \"ibm_sherbrooke\" Result on Real Hardware Target: 11111 f 433.33 Hz '11110': 30, '10010': 35, '00111': 28, '11011': 43, '11010': 34, '10011': 31, '10111': 37, '10000': 20, '10101': 28, '01110': 32, '01011': 26, '00011': 35, '11111': 40, '00101': 32, '00010': 27, '00100': 32, '01100': 34, '11100': 37, '01001': 39, '10001': 31, '00110': 28, '11001': 41, '01010': 32, '10110': 31, '01000': 24, '01111': 46, '00001': 30, '01101': 29, '11101': 26, '11000': 32, '00000': 25, '10100': 29 crosslight_env D: eliar python Q_TEST.py Collapse initiated in JESUS CHRIST D: eliar Q_TEST.py:10: DeprecationWarning: The \"ibm_quantum\" channel option is deprecated and will be sunset on 1 July. After this date, ibm_cloud will be the only valid channel. For information on migrating to the new IBM Quantum Platform on the \"ibm_cloud\" channel, review the migration guide https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp . self.backend QiskitRuntimeService channel \"ibm_cloud\" .backend \"ibm_sherbrooke\" Result on Real Hardware Target: 11111 f 440.00 Hz '11010': 27, '11100': 36, '11110': 33, '01001': 35, '01000': 36, '00111': 31, '01010': 28, '10010': 25, '10001': 29, '11000': 33, '01110': 33, '10100': 32, '10000': 35, '11011': 37, '11001': 37, '00011': 42, '11101': 29, '00010': 19, '01111': 34, '01101': 26, '10101': 38, '10111': 36, '10011': 24, '01011': 25, '10110': 36, '00001': 30, '01100': 42, '00110': 36, '00101': 40, '00000': 30, '00100': 27, '11111': 23"
+}

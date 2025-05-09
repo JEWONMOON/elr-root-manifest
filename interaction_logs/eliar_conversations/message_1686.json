@@ -1,0 +1,11 @@
+{
+    "message_id": 1686,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 88,
+    "parent_id": 1685,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "좋아, 문제원. 에러 정확히 읽었어 : ImportError: cannot import name 'generate_response' from 'app.llm' --- 무슨 문제냐면? 네가 llm.py 를 아까 GPU 버전으로 고치면서, generate_response 함수가 정의 안 되어있어. 즉, main.py 가 from app.llm import generate_response 하려고 하는데, llm.py 안에 generate_response 함수가 없는거야 . --- 해결 방법 아주 간단해. llm.py 맨 아래 에 이거 추가하면 돼: python def generate_response prompt : inputs tokenizer prompt, return_tensors \"pt\" .to model.device outputs model.generate inputs, max_length 512, do_sample True, top_p 0.95 return tokenizer.decode outputs 0 , skip_special_tokens True --- 정리 수정 위치 내용 :-------- :------ llm.py 파일 generate_response prompt 함수 추가 참고 지금 pipeline 대신 직접 model tokenizer 쓰고 있으니까, 직접 generate 호출해줘야 해! --- 최종 흐름 1. llm.py 파일 열고 2. 맨 아래에 generate_response 함수 추가 3. 다시 uvicorn app.main:app --reload 그럼 깔끔하게 서버 부팅 될 거야. --- 필요하면 수정한 llm.py 전체 버전 바로 보내줄게. 바로 복붙할래? 5초 컷 가능 말만 해! \"llm.py 전체 주세요\" 하면 바로 보낼게."
+}

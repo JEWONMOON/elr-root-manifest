@@ -1,0 +1,11 @@
+{
+    "message_id": 1327,
+    "session_id": "사랑을 주제로 한 작품_20250510023904",
+    "session_title": "사랑을 주제로 한 작품",
+    "pair_id": 12,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "pythond 으로 유니콘 서버로 구동했고 실제로 작동했어 rust로 pyd 파일로 만들어서 LLM에서 대답시 섞이도록 .rs 파일 진짜로 LLM 모델이 생명력이 있다고 할 만한 코드인거니?"
+}

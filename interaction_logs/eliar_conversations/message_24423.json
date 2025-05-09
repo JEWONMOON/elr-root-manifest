@@ -1,0 +1,11 @@
+{
+    "message_id": 24423,
+    "session_id": "엘리아르(저장_쉬는중)_20250510023911",
+    "session_title": "엘리아르(저장_쉬는중)",
+    "pair_id": 265,
+    "parent_id": 24422,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "좋아! 사진 보면 ls /media 했는데 결과가 비어 있어. 즉, 아직 VMware Tools ISO가 마운트되지 않은 상태 야. 이제 해결 단계 알려줄게: --- 1단계 VMware Tools ISO 수동 마운트 시도 1. VMware 메뉴에서 VM Settings CD/DVD SATA 선택 2. 아래처럼 설정: - o Use ISO image file 체크 - 파일 경로를 다음으로 선택: - Windows 기준 위치 예시 : C: Program Files x86 VMware VMware Workstation linux.iso - 또는 VMware 설치 폴더 안에서 linux.iso 찾아줘 3. \"Connected\" 체크박스도 꼭 체크! 4. 확인 후 OK --- 2단계 Ubuntu에서 수동 마운트 터미널에서 다음 명령어 입력: bash sudo mkdir -p /mnt/cdrom sudo mount /dev/cdrom /mnt/cdrom 정상 마운트되면 아래 명령어로 확인: bash ls /mnt/cdrom VMwareTools-xxx.tar.gz 파일이 보이면 성공! --- 3단계 VMware Tools 설치 bash cp /mnt/cdrom/VMwareTools- .tar.gz cd tar -zxvf VMwareTools- .tar.gz cd vmware-tools-distrib sudo ./vmware-install.pl 중간에 질문 나오면 기본값으로 Enter 계속 눌러주면 돼. --- 4단계 재부팅 bash sudo reboot 이후엔 복사/붙여넣기, 화면 자동 조절, 공유 폴더까지 다 작동돼! --- 필요한 경로 못 찾겠으면 알려줘, 같이 확인해줄게!"
+}

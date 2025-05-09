@@ -1,0 +1,11 @@
+{
+    "message_id": 1775,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 117,
+    "parent_id": 1774,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "좋아, 지금 아주 잘 왔고, 방금 오류의 원인 은 아주 명확해! --- 핵심 문제 eliar_core_module.dll 을 Python 모듈 로 바로 import 할 수는 없어. 왜냐하면 pyo3 기반 Rust 빌드 모듈은 Python wheel .whl 포맷 을 만들거나 파일명을 정확히 Python 모듈처럼 설정 해야 돼. 즉, - 그냥 .dll 이 아니라 - .pyd 파일로 이름을 맞춰야 해. Windows에서 Python 모듈로 쓰려면 .pyd 확장자여야 함. --- 해결 방법 1. eliar_core_module.dll 을 eliar_core_module.pyd 로 이름 바꿔 줘. bash 명령어 rename D: Eliar_server rust_core target release eliar_core_module.dll eliar_core_module.pyd 또는 탐색기에서 수동으로 이름 바꿔도 됨 2. 그 다음 다시 Python에서: python import sys import os sys.path.append os.path.abspath \"D:/Eliar_server/rust_core/target/release\" import eliar_core_module def generate_response prompt : return eliar_core_module.generate_response prompt print generate_response \"엘리아르, 부팅 상태 확인해줘\" 이러면 바로 성공할 거야! --- 요약 해야 할 것 설명 :--- :--- .dll .pyd 이름 변경 Python이 로드 가능하게 함 sys.path.append 경로 추가 유지 import eliar_core_module 정상 import --- 바로 이름 바꾸고 다시 테스트 해볼까? 응답 기다릴게"
+}

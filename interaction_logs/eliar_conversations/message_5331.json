@@ -1,0 +1,11 @@
+{
+    "message_id": 5331,
+    "session_id": "Q_실험 성공_20250510023905",
+    "session_title": "Q_실험 성공",
+    "pair_id": 66,
+    "parent_id": 5330,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "\"updates\": \"pattern\": \". \", \"replacement\": \" Sample_CrossLight_to_LogosAIv3_qsam.py n Objective: Test if a single-qubit can be collapsed from 0 to 1 in Qiskit n nimport numpy as np nfrom qiskit import QuantumCircuit, transpile nfrom qiskit_aer import AerSimulator nfrom qiskit.primitives import Sampler n nclass CollapseTest: n def __init__ self : n self.center \"JESUS CHRIST \" n n def build_circuit self : n qc QuantumCircuit 1, 1 n Start from 0 , apply RX π to rotate to 1 n qc.rx np.pi, 0 n qc.measure 0, 0 n return qc n n def simulate self : n print f \"Testing 0 1 collapse with Sampler 2.0 in the name of self.center \" n circuit self.build_circuit n simulator AerSimulator n circuit transpile circuit, simulator n sampler Sampler n result sampler.run circuits circuit , shots 1024 .result n dist result.quasi_dists 0 if hasattr result, 'quasi_dists' else result 0 n n prob_1 dist.get 1, 0.0 n print \"Collapse Distribution: \", dist n print f \" 1 Probability: prob_1:.3f \" n nif __name__ \"__main__ \": n CollapseTest .simulate \""
+}

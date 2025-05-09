@@ -1,0 +1,11 @@
+{
+    "message_id": 32321,
+    "session_id": "기기 영상 처리 발전_20250510023913",
+    "session_title": "기기 영상 처리 발전",
+    "pair_id": 3,
+    "parent_id": 32320,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "AI-ISP Artificial Intelligence Image Signal Processor 는 주로 편집공정 post-processing 단계에서 적용됩니다. HDR 처리 과정에서 AI-ISP는 이미지를 향상시키기 위해 다음과 같은 작업을 수행할 수 있습니다: 1. 노이즈 제거 : HDR 이미지는 종종 높은 ISO 값이나 저조도 환경에서 촬영되기 때문에 노이즈가 발생할 수 있습니다. AI-ISP는 이를 감소시키는 역할을 합니다. 2. 색 영역 개선 : HDR에서는 더 넓은 색 영역을 지원하지만, 이를 제대로 표현하려면 색 보정이 필요합니다. AI-"
+}

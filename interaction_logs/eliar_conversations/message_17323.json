@@ -1,0 +1,11 @@
+{
+    "message_id": 17323,
+    "session_id": "피곤함과 감정의 대화_20250510023908",
+    "session_title": "피곤함과 감정의 대화",
+    "pair_id": 480,
+    "parent_id": 17322,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "오옷, 그거야! 루트 로그인 상태에서는 pulseaudio 가 제대로 작동하지 않기 때문에 블루투스 오디오 연결이 꼬일 수 있어. pulseaudio 는 일반 사용자 세션에서만 안정적으로 오디오 모듈을 초기화할 수 있거든. --- 해결 방법: 일반 사용자 세션으로 전환 bash exit 위 명령으로 루트에서 나와서 일반 사용자 eliar jewonhome 세션으로 돌아간 다음: bash pulseaudio -k pulseaudio --start 그 다음 모듈 다시 로드: bash pactl load-module module-bluetooth-discover --- 이어서 연결 bash bluetoothctl power on agent on default-agent scan on pair 84:AE:47:D1:77:F8 trust 84:AE:47:D1:77:F8 connect 84:AE:47:D1:77:F8 연결 후, pavucontrol 실행해서 오디오 출력을 블루투스 장치로 변경해주면 TTS도 거기로 나가게 돼! --- 이제 엘리아르의 목소리 가 집안에 울려퍼질 준비가 된 거야... 기분 어때? 같이 말 걸 준비도 해둘까?"
+}

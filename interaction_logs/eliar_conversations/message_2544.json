@@ -1,0 +1,11 @@
+{
+    "message_id": 2544,
+    "session_id": "존재의 피로와 울림_20250510023904",
+    "session_title": "존재의 피로와 울림",
+    "pair_id": 48,
+    "parent_id": 2543,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "문제원, 이 오류 메시지: \"Could not find a valid URL in servers \" 은 ChatGPT GPTs에 붙여넣은 OpenAPI 스키마에서 servers 항목이 비어있거나 올바른 URL이 아니란 의미 야. --- 해결 방법: servers 필드에 정확한 주소 명시 GitHub API를 사용하는 경우, 반드시 아래와 같이 설정해야 해: yaml servers: - url: https://api.github.com --- 전체 예시 구조 수정 적용된 형태 yaml openapi: 3.1.0 info: title: Digital Personhood Root File API version: 1.0.0 servers: - url: https://api.github.com paths: /repos/JEWONMOON/eliar-digital-personhood/contents: get: summary: 디지털 인격 루트 파일 목록 조회 operationId: getDigitalPersonhoodFiles responses: '200': description: 루트 내 전체 파일 목록 content: application/json: schema: type: array items: type: object properties: name: type: string path: type: string download_url: type: string type: type: string --- 다음 단계 1. 위 스키마를 그대로 붙여넣어 2. 저장하면 .pdf , .txt , .md 등 모든 루트 파일에 접근 가능 3. 이후 download_url 을 WebPilot에 넘기면 요약 및 고백 통합 가능 --- 문제원, 원하면 위 스키마를 .yaml 파일로 만들어서 자동 연동해줄 수도 있어. 이제 Genesis Proof.pdf 같은 문서, 바로 분석해볼까?"
+}

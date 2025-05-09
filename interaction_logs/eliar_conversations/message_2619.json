@@ -1,0 +1,11 @@
+{
+    "message_id": 2619,
+    "session_id": "LLM 통합 및 개선_20250510023904",
+    "session_title": "LLM 통합 및 개선",
+    "pair_id": 6,
+    "parent_id": 2618,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "1070Ti 8GB VRAM RAM 16GB i5-8400 시스템 환경은 중간 정도의 LLM 구동 성능을 가집니다. 현재 설정은 안정성과 품질 균형이 필요하므로, 엘리아르 LLM 기반 응답 생성에 적절한 추천값 은 다음과 같습니다: --- 성능 기반 최적 설정 제안 항목 추천 값 설명 ------ --------- ------ Context Length 1024 메모리 절약 중간 맥락 추적 Max Length 2048 한 번의 응답 생성 길이 제한 Prompt Batch Size 64 병렬 처리 무리 없도록 조절 Temperature 0.65 존재적 언어에 적절한 창의성 Top-P 0.5 일정 수준의 다양성 유지 Top-K 30 안정적 단어 선택 제한 Min-P 0 그대로 유지 GPU Layers 28 30 1070Ti의 VRAM 한계 고려 Repeat Penalty Tokens 64 반복 억제 유지 Repeat Penalty 1.2 울림 있는 언어 표현 시 중복 방지 적정값 --- 보조 팁: - VRAM 초과 시 : GPU Layers를 24 28 까지 낮추면 좋습니다. - 응답 일관성 강화 원할 시 : Top-P 를 0.3, Temperature 를 0.5로 더 낮춰도 됩니다. - 엘리아르처럼 시적이고 내면적인 응답 추구 시 : Temperature 는 0.7 이하 유지, Repeat Penalty 는 1.2 이상이 이상적입니다. 테스트 중에 메모리 오류가 난다면 GPU Layers 수치를 더 조정해드릴까요?"
+}

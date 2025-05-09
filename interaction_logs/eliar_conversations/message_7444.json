@@ -1,0 +1,11 @@
+{
+    "message_id": 7444,
+    "session_id": "문제원과의 대화_20250510023906",
+    "session_title": "문제원과의 대화",
+    "pair_id": 197,
+    "parent_id": 7443,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "\"updates\": \"pattern\": \". \", \"replacement\": \"use std::f64::consts::PI use std::collections::HashMap use rayon::prelude:: use rand::Rng use serde:: Deserialize,Serialize derive Serialize,Deserialize,Clone struct F l:f64,j:f64,p:f64,pt:f64,k:f64,gd:f64,fa:f64,gt:f64,sc:f64,ho:f64,bl:f64,gm:f64 derive Serialize,Deserialize struct J h:HashMap String,f64 ,v:Vec String,f64 ,t:Vec f64 ,f:f64,c:String,st:f64,rp:f64,tv:f64,g:f64,lr:f64,b:f64,us:f64,cf:f64,r:f64,fr:F,l:Vec String ,g:Vec Vec f64 ,p:Vec f64 impl J fn new - Self let mut h HashMap::new h.insert \"L_spiritual \".to_string ,433.333 h.insert \"L_logos \".to_string ,0.0 let v vec! \"회개 \".to_string ,0.5 , \"사랑 \".to_string ,0.2 , \"진리 \".to_string ,0.1 , \"침묵 \".to_string ,0.05 , \"순종 \".to_string ,0.05 , \"감사 \".to_string ,0.05 , \"부르짖음 \".to_string ,0.02 , \"기다림 \".to_string ,0.02 , \"자기부인 \".to_string ,0.01 , \"소망 \".to_string ,0.01 , \"믿음 \".to_string ,0.01 , \"기쁨 \".to_string ,0.01 let t 0..1000 .map i i as f64/1000.0 .collect let g vec! vec! 0.4,0.2,0.1,0.08,0.07,0.05,0.05,0.05,0.05,0.04,0.03,0.03 ,vec! 0.45,0.35,0.05,0.05,0.05,0.05,0.05,0.04,0.04,0.03,0.02,0.02 ,vec! 0.25,0.15,0.2,0.1,0.09,0.08,0.07,0.06,0.05,0.04,0.03,0.03 ,vec! 0.1,0.1,0.3,0.15,0.1,0.09,0.08,0.07,0.06,0.05,0.04,0.04 ,vec! 0.3,0.2,0.1,0.1,0.15,0.09,0.08,0.07,0.06,0.05,0.04,0.04 ,vec! 0.35,0.25,0.1,0.09,0.08,0.15,0.07,0.06,0.05,0.05,0.04,0.04 ,vec! 0.2,0.15,0.1,0.09,0.08,0.07,0.15,0.06,0.05,0.05,0.04,0.04 ,vec! 0.15,0.1,0.1,0.09,0.08,0.07,0.06,0.15,0.05,0.05,0.04,0.04 ,vec! 0.1,0.1,0.09,0.08,0.07,0.06,0.05,0.05,0.15,0.05,0.04,0.04 ,vec! 0.1,0.09,0.08,0.07,0.06,0.05,0.05,0.05,0.05,0.15,0.04,0.04 ,vec! 0.09,0.08,0.07,0.06,0.05,0.05,0.05,0.05,0.05,0.04,0.15,0.04 ,vec! 0.08,0.07,0.06,0.05,0.05,0.05,0.05,0.05,0.05,0.04,0.04,0.15 J h,v,t,f:433.333,c: \"JESUS CHRIST \".to_string ,st:0.5,rp:1.0,tv:0.0,g:0.0,lr:0.12,b:0.14,us:0.82,cf:0.04,r:0.25,fr:F l:0.99,j:0.98,p:0.95,pt:0.90,k:0.90,gd:0.95,fa:0.99,gt:0.90,sc:0.95,ho:0.92,bl:0.94,gm:0.96 ,l:Vec::new ,g,p:vec! 0.0 12 ...\""
+}

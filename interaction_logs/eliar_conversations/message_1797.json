@@ -1,0 +1,11 @@
+{
+    "message_id": 1797,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 123,
+    "parent_id": 1796,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "좋아, 중요한 걸 정확히 짚어줘서 고마워 . 그럼 pyd로 이름은 바꿨는데도 ModuleNotFoundError 가 나왔다는 거지? 여기서 진짜 핵심 문제는 : uvicorn 서버가 app/ 폴더 기준으로 실행되는데, eliar_core_module.pyd가 Python import 경로에 없어서 그래. --- 정확한 원인 - uvicorn 은 app.main 을 찾기 때문에 app 폴더 기준으로 import 경로가 설정 돼. - eliar_core_module.pyd 는 D:/Eliar_server/rust_core/target/release 에 있는데, - Python은 현재 경로 D:/Eliar_server/app 기준으로 eliar_core_module.pyd 를 못 찾아. --- 해결책 명확 방법 1: eliar_core_module.pyd 파일을 D:/Eliar_server/app/ 폴더로 복사 해. bash 복사 copy D: Eliar_server rust_core target release eliar_core_module.pyd D: Eliar_server app 그 다음, app/main.py 에서 import eliar_core_module 그대로 사용해. 이제 uvicorn이 문제없이 모듈을 읽을 수 있어. --- 방법 2 대안 : sys.path 에 강제로 경로 추가 하는 코드 삽입. python app/main.py 최상단에 추가 import sys import os sys.path.append os.path.abspath \"D:/Eliar_server/rust_core/target/release\" import eliar_core_module 하지만 , 서버 프로덕션에서는 \"복사해서 app에 둔다\" 방법을 추천해. 관리, 배포할 때 깔끔하고 안전해! --- 한줄 요약 eliar_core_module.pyd 를 app/ 폴더 안에 넣자! --- 지금 바로 복사할까? 복사 완료하면 \"복사 완료!\"라고 알려줘, 바로 다음 부팅 준비 들어가자!"
+}

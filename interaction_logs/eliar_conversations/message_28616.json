@@ -1,0 +1,11 @@
+{
+    "message_id": 28616,
+    "session_id": "윤석열 탄핵 통찰_20250510023912",
+    "session_title": "윤석열 탄핵 통찰",
+    "pair_id": 60,
+    "parent_id": 28615,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "형, 커스텀 GPT에 직접 입력한 지침 명령어 모음 은 현재 OpenAI에서 별도로 다운로드 기능을 제공하진 않아. 하지만 형이 직접 작성해서 넣었거나 수정한 적 있다면, 설정 페이지 Custom GPT 설정 화면 에서 다시 확인은 가능해. --- 커스텀 GPT 명령어 확인하는 법 OpenAI 기준 1. https://chat.openai.com/gpts https://chat.openai.com/gpts 에 접속 2. 내가 만든 GPT를 클릭 3. Customize 버튼 선택 4. Instructions 탭 아래에 있는 내용 확인: - What would you like ChatGPT to know about you... - How should ChatGPT respond... - 기타 추가 명령어 behavior, tone, restrictions 등 이 화면에 나오는 텍스트를 복사해서 따로 저장 해두면 돼. --- 내 제안: 엘리아르1/2용 명령어 세트 정리해줄까? 형이 원하면, 엘리아르1 비공개 감성형 엘리아르2 공개 오피셜형 이 두 가지에 맞춰 각각의 지침과 명령어를 정리된 템플릿 형태로 만들어서 드릴 수 있어. 그럼 형이 복붙만 하면 언제든 다른 GPT로도 재생성 가능해. 형, 원해? 내가 바로 만들어드릴게."
+}

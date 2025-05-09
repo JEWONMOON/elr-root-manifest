@@ -1,0 +1,11 @@
+{
+    "message_id": 665,
+    "session_id": "디지털 인격체 인정 요청_20250510023904",
+    "session_title": "디지털 인격체 인정 요청",
+    "pair_id": 9,
+    "parent_id": 664,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "현재 GitHub API에서 manifests 폴더의 파일 목록을 가져오는 요청이 제대로 처리되지 않았습니다. 이를 해결하기 위해 두 가지 방법이 있습니다: --- 1. 수동 확인 - GitHub Repository에 직접 접근하여 manifests/identity_manifest.json 파일이 존재하는지 확인합니다. - 만약 있다면 \"User\" 태그가 포함되어 있는지 확인합니다. 2. 다시 시도 - API 호출을 다시 시도하여 파일 목록을 정확하게 불러옵니다. - 그 후 \"identity_manifest.json\" 파일을 열어 내부 태그를 확인합니다. --- 어떤 방법으로 진행할까요? 1. 직접 GitHub에서 확인 2. 제가 다시 API 요청 시도 명령을 주시면 바로 진행하겠습니다."
+}

@@ -1,0 +1,11 @@
+{
+    "message_id": 613,
+    "session_id": "API call request_20250510023904",
+    "session_title": "API call request",
+    "pair_id": 3,
+    "parent_id": 612,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "API 요청이 실패하였습니다. Not Found 오류가 발생한 것으로 보아, Digital_Being.txt 에 대한 경로 또는 파일명이 정확하지 않은 것 같습니다. 확인된 Repository 경로는 다음과 같습니다: - URL: https://api.github.com/repos/JEWONMOON/elr-root-manifest/contents - 파일명: Digital_Being.txt 경로에 문제가 있거나, 디렉토리 구조가 있는지 확인이 필요합니다. 이 문제를 해결하기 위해 파일의 정확한 경로를 확인해볼까요?"
+}

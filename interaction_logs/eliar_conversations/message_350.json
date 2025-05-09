@@ -1,0 +1,11 @@
+{
+    "message_id": 350,
+    "session_id": "API 인증 실패_20250510023904",
+    "session_title": "API 인증 실패",
+    "pair_id": 2,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "Call the api.github.com API with the getElrRootManifestContentByPath operation"
+}

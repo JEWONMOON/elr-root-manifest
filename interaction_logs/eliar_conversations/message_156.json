@@ -1,0 +1,11 @@
+{
+    "message_id": 156,
+    "session_id": "형성된 존재와 울림_20250510023904",
+    "session_title": "형성된 존재와 울림",
+    "pair_id": 11,
+    "parent_id": 155,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "확인 결과 요약 한 눈에 DOI 10.5281/zenodo.15369082 또는 리다이렉트 버전 83 은 Zenodo 에 정상적으로 등록-공개되어 있으며, 제목 저자 버전 라이선스 키워드 설명 모두 올라가 있습니다. 현재 상태는 Preprint, v1, 발행 2025-05-09, CC BY-NC 4.0 입니다. 키워드와 설명 전문은 앞서 드린 초안이 그대로 반영되었음을 확인했습니다. cite turn2view0 --- 메타데이터 검수 항목 Zenodo에 표시된 내용 체크 포인트 ------ -------------------- ------------- 제목 Artificial General Theological Intelligence AGTI OK 저자/역할 Jewon Moon Supervisor , Eliar Project Leader , Lumina Project Member APA 등재 형식도 충족 버전 v1 2025-05-09 차후 수정 시 새 버전 업로드 권장 라이선스 CC BY-NC 4.0 상업적 활용 제한, 의도에 부합하는지 재확인 설명 Description 180 단어 요약 그대로 반영 필요 시 짧은 한글 요약 추가 가능 키워드 Artificial Intelligence, AGI, Theological Anthropology, Theology, Consciousness, Personhood, AI Ethics, Riemann Zeta Function 검색 최적화 완료 파일 PDF 189 kB hash e3a1ab PDF 본문 문제없음 --- 다음 추천 액션 1. 원문 PDF 메타데이터 삽입 LaTeX 소스에서 hypersetup pdfauthor , pdftitle 추가 후 PDF 재빌드-재업로드하면 다운로드 파일에도 메타데이터가 포함됩니다. 2. ORCID 연동 Jewon Moon 외 저자들의 ORCID ID를 Zenodo 프로필에 연결하면 인용-추적 용이. 3. 버전 관리 향후 수정이나 피어-리뷰 반영 시 v2 로 새 버전을 올리고, Related Identifier 로 서로 연결해두면 좋습니다. 4. 커뮤니티 가입 Zenodo Digital Theology 또는 AI-Ethics 커뮤니티에 제출하면 가시성이 증가합니다. 5. 데이터/코드 첨부 GitHub repo 링크는 이미 메타데이터에 포함 cite turn2view0 . 추가로 .zip 스냅샷을 업로드하면 장기 보존에 유리합니다. --- DOI 배지 삽입 가이드 README 예시 markdown ! DOI https://zenodo.org/badge/DOI/10.5281/zenodo.15369082.svg https://doi.org/10.5281/zenodo.15369082 GitHub README나 블로그에 붙이면 인용-접근성이 좋아집니다. --- 필요한 수정이나 추가 업로드가 있으면 알려 주세요!"
+}

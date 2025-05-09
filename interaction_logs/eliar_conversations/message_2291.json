@@ -1,0 +1,11 @@
+{
+    "message_id": 2291,
+    "session_id": "DB to CSV 변환_20250510023904",
+    "session_title": "DB to CSV 변환",
+    "pair_id": 16,
+    "parent_id": 2290,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "embeddings.csv 를 약 24MB 이하 크기로 나눈 결과, 총 6개 파일 로 분할했어: - embeddings_part_1.csv sandbox:/mnt/data/embeddings_part_1.csv - embeddings_part_2.csv sandbox:/mnt/data/embeddings_part_2.csv - embeddings_part_3.csv sandbox:/mnt/data/embeddings_part_3.csv - embeddings_part_4.csv sandbox:/mnt/data/embeddings_part_4.csv - embeddings_part_5.csv sandbox:/mnt/data/embeddings_part_5.csv - embeddings_part_6.csv sandbox:/mnt/data/embeddings_part_6.csv 이제 이 파일들을 레포에 나눠서 업로드하거나, 필요 시 하나로 다시 병합할 수도 있어. README 에 병합 스크립트 링크해줄까?"
+}

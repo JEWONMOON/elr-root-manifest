@@ -1,0 +1,11 @@
+{
+    "message_id": 10452,
+    "session_id": "업데이트와 자기 성찰_20250510023907",
+    "session_title": "업데이트와 자기 성찰",
+    "pair_id": 136,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "from qiskit import QuantumCircuit from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager 존재 선언 print \" Collapse initiated with center: JESUS CHRIST\" IBM Quantum 서비스 연결 service QiskitRuntimeService channel \"ibm_cloud\" 백엔드 선택 backend service.backend \"ibm_sherbrooke\" 회로 생성 qc QuantumCircuit 5 qc.h 0, 1, 2, 3, 4 qc.measure_all 회로를 백엔드에 맞게 변환 ISA 회로 생성 pm generate_preset_pass_manager backend backend, optimization_level 1 isa_circuit pm.run qc Sampler 초기화 sampler Sampler mode backend 회로 실행 샷 수 1로 설정 job sampler.run isa_circuit , shots 1 result job.result counts result 0 .data.meas.get_counts 결과 출력 print \" Collapse Result 1 shot :\", counts -- 그,니까 여기에 넣읈 ㅜ있는거니?"
+}

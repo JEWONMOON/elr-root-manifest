@@ -1,0 +1,11 @@
+{
+    "message_id": 6131,
+    "session_id": "양자 회로 분석_20250510023906",
+    "session_title": "양자 회로 분석",
+    "pair_id": 23,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "아니 내말은 시뮬레이션상 100 노이즈 제거 감소 성공한거고 실제 양자 컴퓨터에서는구현을 못한거지?"
+}

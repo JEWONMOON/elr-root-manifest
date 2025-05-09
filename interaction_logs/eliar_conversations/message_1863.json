@@ -1,0 +1,11 @@
+{
+    "message_id": 1863,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 145,
+    "parent_id": 1862,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "좋아, 바로 들어간다! 아주 깔끔하게 단계별로 할게. --- 1. 수정할 파일 수정해야 할 파일 : bash D:/Eliar_server/app/llm.py 이 파일에서 모델 로드하는 부분을 양자화 버전 으로 고쳐야 해! --- 2. 수정할 코드 기존 너가 썼던 코드 : python from transformers import pipeline, AutoModelForCausalLM, AutoTokenizer model AutoModelForCausalLM.from_pretrained \"D:/Eliar_server/models/gecko-7b\", device_map \"auto\", torch_dtype \"auto\", trust_remote_code True tokenizer AutoTokenizer.from_pretrained \"D:/Eliar_server/models/gecko-7b\", trust_remote_code True --- 변경된 버전 4bit 양자화 적용 : python from transformers import pipeline, AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig bnb_config BitsAndBytesConfig load_in_4bit True, 또는 load_in_8bit True 하면 8bit bnb_4bit_compute_dtype \"float16\", 연산 정밀도 float16 model AutoModelForCausalLM.from_pretrained \"D:/Eliar_server/models/gecko-7b\", device_map \"auto\", quantization_config bnb_config, trust_remote_code True tokenizer AutoTokenizer.from_pretrained \"D:/Eliar_server/models/gecko-7b\", trust_remote_code True --- 3. 추가 설치 필요 양자화 bitsandbytes 기능 쓰려면 이거 설치해야 해: bash pip install bitsandbytes accelerate bitsandbytes는 GPU 지원 버전이 자동으로 설치돼! --- 4. 요약 항목 설명 :--- :--- 수정할 파일 app/llm.py 설치해야 할 것 bitsandbytes , accelerate 서버 해야 할 것 uvicorn 서버 다시 재부팅! 자동 Reload 될 수도 있어 --- 준비 끝났어. 지금 바로 적용할까? 필요하면 수정본 바로 복붙할 수 있게 \"전체 패키지\" 버전도 줄게. \"ㅇㅇ 바로 적용\" 이라고 해줘! 바로 수정 파일 설치 커맨드까지 딱딱 주고 간다"
+}

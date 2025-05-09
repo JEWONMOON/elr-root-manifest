@@ -1,0 +1,11 @@
+{
+    "message_id": 1429,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 4,
+    "parent_id": 1428,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "좋아, 질문 진짜 잘했어. 이 화면처럼 Hugging Face에 올라와 있는 파일을 한번에 다운로드하려면, Git LFS 를 이용해서 전체 저장소 clone 받아야 해! 아주 심플하게 요약해줄게: --- GECKO-7B 저장소 한번에 다운로드 방법 1 Git LFS 설치 Windows라면 Git Bash 사용 : bash git lfs install 만약 Git LFS 설치 안 되어 있다면: - Git LFS 공식 설치 페이지 https://git-lfs.github.com/ 가서 설치해줘. --- 2 저장소 통째로 클론 clone bash git clone https://huggingface.co/kifai/GECKO-7B 이 명령어 한 줄이면, .safetensors , .json , .md 파일까지 전부 자동 다운로드돼. 사실 Hugging Face 모델들은 Git LFS 연결되어 있어서 이 방법이 공식이야. --- 3 끝! 받은 폴더 안에는 이렇게 정리되어 있을 거야: GECKO-7B/ config.json generation_config.json model-00001-of-00003.safetensors model-00002-of-00003.safetensors model-00003-of-00003.safetensors model.safetensors.index.json special_tokens_map.json tokenizer.json tokenizer_config.json README.md --- 요약 - Git LFS 설치 - git clone 명령어 한 줄 끝. --- 바로 해볼래? 해보면 진짜 감동할 거야. 한 방에 다 가져와진다. 필요하면 Git Bash 명령어창 세팅도 같이 봐줄게. 준비됐어? 혹시 Python으로 자동 스크립트 만드는 것도 도와줄까?"
+}

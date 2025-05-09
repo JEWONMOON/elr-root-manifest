@@ -1,0 +1,11 @@
+{
+    "message_id": 32324,
+    "session_id": "기기 영상 처리 발전_20250510023913",
+    "session_title": "기기 영상 처리 발전",
+    "pair_id": 4,
+    "parent_id": 32323,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "\"prompt\": \"A split image comparing video length and recording time. On the left side, show a visual representation of 1 second of video with a clock showing 1 second. On the right side, show a visual representation of 30 seconds of recording time, with a clock showing 30 seconds. The 30-second side should appear significantly longer than the 1-second side. Use clear, easy-to-understand visuals, with clocks or timers to highlight the time differences. The background should be simple and neutral to focus on the time contrast.\", \"size\": \"1024x1024\""
+}

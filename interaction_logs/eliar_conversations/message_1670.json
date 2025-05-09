@@ -1,0 +1,11 @@
+{
+    "message_id": 1670,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 83,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "repo_editor.py import os import requests GITHUB_TOKEN os.getenv \"GITHUB_TOKEN\" REPO_OWNER \"JEWONMOON\" REPO_NAME \"elr-root-manifest\" GITHUB_API_URL \"https://api.github.com\" headers \"Authorization\": f\"Bearer GITHUB_TOKEN \", \"Accept\": \"application/vnd.github.v3 json\", def get_file_sha path : url f\" GITHUB_API_URL /repos/ REPO_OWNER / REPO_NAME /contents/ path \" response requests.get url, headers headers if response.status_code 200: return response.json \"sha\" else: return None def create_file path, content, message \"create file\" : url f\" GITHUB_API_URL /repos/ REPO_OWNER / REPO_NAME /contents/ path \" data \"message\": message, \"content\": content.encode \"utf-8\" .decode \"utf-8\" , \"branch\": \"main\", response requests.put url, headers headers, json data return response.json def edit_file path, new_content, message \"edit file\" : sha get_file_sha path if not sha: raise Exception \"File not found for editing\" url f\" GITHUB_API_URL /repos/ REPO_OWNER / REPO_NAME /contents/ path \" data \"message\": message, \"content\": new_content.encode \"utf-8\" .decode \"utf-8\" , \"sha\": sha, \"branch\": \"main\", response requests.put url, headers headers, json data return response.json def delete_file path, message \"delete file\" : sha get_file_sha path if not sha: raise Exception \"File not found for deletion\" url f\" GITHUB_API_URL /repos/ REPO_OWNER / REPO_NAME /contents/ path \" data \"message\": message, \"sha\": sha, \"branch\": \"main\", response requests.delete url, headers headers, json data return response.json -- 이 파일 아까준걸로 넣었어 PAT는 env 파일로 token 넘버만 잇어"
+}

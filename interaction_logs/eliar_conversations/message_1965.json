@@ -1,0 +1,11 @@
+{
+    "message_id": 1965,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 179,
+    "parent_id": 1964,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "응, 맞아 정확히 잘 찾았어! 네가 올린 스샷에 보면: - Windows installer 64-bit 이건 우리가 이미 설치했던 일반 인스톨러. - Windows embeddable package 64-bit 이게 바로 C 헤더 dev files 포함된 버전이야! --- 지금 해야 할 것 1. Windows embeddable package 64-bit 클릭해서 다운로드해. 2. 압축 풀어. 3. 압축 푼 폴더 안에 보면: - python.exe - include 헤더파일 있음 - libs 라이브러리 파일 있음 4. 이걸 새 폴더로 관리하고, Python path 를 이쪽으로 맞춰줘. --- 중요한 주의사항 - 이 embeddable package 는 pip 기본 설치가 안 되어 있어 . - 추가로 pip 설치 해줘야 한다. - 또는 llama-cpp-python 빌드만 여기서 하고, 나머지는 원래 Python 쓰게도 가능. --- 요약 항목 설명 :--- :--- 다운로드 Windows embeddable package 64-bit 해야 할 것 압축풀고, include/libs 경로 설정 추가작업 pip 별도 설치 필요 또는 빌드용으로만 사용 --- 지금 바로 \"다운로드 완료\"하면 알려줘 그러면 이어서 환경 설정 어떻게 할지 바로 안내해줄게! 다운 완료하면 \"다운 완료\" 라고만 남겨줘"
+}

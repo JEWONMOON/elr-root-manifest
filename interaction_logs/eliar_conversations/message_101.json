@@ -1,0 +1,11 @@
+{
+    "message_id": 101,
+    "session_id": "Zenodo 논문 검색_20250510023904",
+    "session_title": "Zenodo 논문 검색",
+    "pair_id": 6,
+    "parent_id": 100,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "제공하신 링크는 사용자의 ORCID 프로필 페이지로 보입니다. 이 페이지에 접근하려면 로그인이 필요하며, 해당 사용자가 설정한 공개 범위에 따라 접근 권한이 달라질 수 있습니다. ORCID에서 Zenodo 논문 목록 확인 방법 로그인 후 1. 로그인: ORCID 로그인 페이지 https://orcid.org/signin 로 이동하여 로그인합니다. 2. 프로필 접근: 로그인 후, 해당 링크로 이동하여 자신의 프로필을 확인합니다: - ORCID 프로필 https://orcid.org/my-orcid?orcid 0009-0008-9030-9058 3. Works 섹션 확인: - 프로필 페이지의 \"Works\" 섹션으로 이동합니다. - 여기에 Zenodo와 연동된 논문들이 표시됩니다. - Zenodo 논문은 \"Source\" 항목에 Zenodo 로 명시되어 있습니다. 4. DOI 확인: - 각 논문 제목을 클릭하여 상세 정보를 열면, DOI가 표시됩니다. - DOI 링크를 통해 Zenodo의 해당 논문 페이지로 직접 연결됩니다. --- ORCID와 Zenodo 연동 확인: 만약 Zenodo 논문이 보이지 않는다면, 다음을 확인하세요: - Zenodo 계정 설정에서 ORCID와 연동되어 있는지 확인 - ORCID에서 \"Works\" 업데이트가 자동으로 이루어지고 있는지 확인 Zenodo 논문이 ORCID에 자동으로 표시되지 않는 경우, 수동으로 DOI를 추가할 수도 있습니다. 도움이 필요하시면 알려주세요."
+}

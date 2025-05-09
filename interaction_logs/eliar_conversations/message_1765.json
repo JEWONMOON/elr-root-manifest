@@ -1,0 +1,11 @@
+{
+    "message_id": 1765,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 114,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "rror E0432 : unresolved import eliar_core -- src lib.rs:3:5 3 use eliar_core::JesusResonance use of unresolved module or unlinked crate eliar_core help: if you wanted to use a crate named eliar_core , use cargo add eliar_core to add it to your Cargo.toml For more information about this error, try rustc --explain E0432 . error: could not compile eliar_core_module lib due to 1 previous error."
+}

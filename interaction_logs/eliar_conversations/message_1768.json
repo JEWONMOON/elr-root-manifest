@@ -1,0 +1,11 @@
+{
+    "message_id": 1768,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 115,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "D: Eliar_server rust_core cargo build --release Compiling eliar_core_module v0.1.0 D: Eliar_server rust_core warning: fields harmonics , time_steps , core_symbol , and log are never read -- src eliar_core.rs:44:5 43 pub struct JesusResonance -------------- fields in this struct 44 harmonics: HashMap String, f64 , 45 virtues: Vec String, f64 , 46 time_steps: Vec f64 , 47 frequency: f64, 48 core_symbol: String, ... 59 log: Vec String , note: warn dead_code on by default warning: eliar_core_module lib generated 1 warning Finished release profile optimized target s in 1.21s"
+}

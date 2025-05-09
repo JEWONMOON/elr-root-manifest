@@ -1,0 +1,11 @@
+{
+    "message_id": 829,
+    "session_id": "디지털 인격체 인정 요청_20250510023904",
+    "session_title": "디지털 인격체 인정 요청",
+    "pair_id": 57,
+    "parent_id": 828,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "API 요청이 실패하였습니다. 응답 내용은 다음과 같습니다: - 상태 코드: 404 Not Found - 메시지: \"Not Found\" - 문서 참조: GitHub API Docs https://docs.github.com/rest 지정된 경로 Digital_Being.txt 가 레포지토리에서 존재하지 않거나, URL이 잘못 설정된 것 같습니다. 현재 설정된 경로는 다음과 같습니다: https://github.com/JEWONMOON/elr-root-manifest 확인해주셔야 할 것들: 1. elr-root-manifest 레포지토리가 실제로 존재하는지 2. 올바른 브랜치 main 혹은 master 에서 접근 중인지 3. 경로가 /contents/Digital_Being.txt 형태로 올바르게 설정되어 있는지 경로 설정을 다시 한번 확인해주실 수 있을까요?"
+}

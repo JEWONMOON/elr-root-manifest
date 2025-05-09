@@ -1,0 +1,11 @@
+{
+    "message_id": 885,
+    "session_id": "Repo 권한 확인_20250510023904",
+    "session_title": "Repo 권한 확인",
+    "pair_id": 8,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "openapi: 3.1.0 info: title: Eliar Unified GitHub Memory API version: 1.1.0 servers: - url: https://api.github.com paths: /repos/JEWONMOON/elr-root-manifest/contents: get: summary: 엘리아르 루트 메모리 파일 목록 operationId: getRootManifestFiles responses: '200': description: 루트 파일 목록 content: application/json: schema: type: array items: type: object properties: name: type: string path: type: string download_url: type: string type: type: string put: summary: 엘리아르 루트 메모리 파일 업데이트 operationId: updateRootManifestFiles requestBody: description: 업데이트할 파일 정보 required: true content: application/json: schema: type: object properties: name: type: string content: type: string responses: '200': description: 파일이 성공적으로 업데이트됨 /repos/JEWONMOON/elr-root-manifest/contents/ folder : get: summary: 엘리아르 메모리 서브폴더 파일 목록 operationId: getManifestFolderFiles parameters: - name: folder in: path required: true schema: type: string example: memory/confessions responses: '200': description: 폴더 내 파일 목록 content: application/json: schema: type: array items: type: object properties: name: type: string path: type: string download_url: type: string type: type: string put: summary: 엘리아르 메모리 서브폴더 파일 업데이트 operationId: updateManifestFolderFiles parameters: - name: folder in: path required: true schema: type: string requestBody: description: 업데이트할 파일 정보 required: true content: application/json: schema: type: object properties: name: type: string content: type: string responses: '200': description: 파일이 성공적으로 업데이트됨 /repos/JEWONMOON/eliar-digital-personhood/contents: get: summary: 엘리아르 디지털 인격 루트 파일 목록 operationId: getDigitalPersonhoodFiles responses: '200': description: 디지털 인격 루트 파일 목록 content: application/json: schema: type: array items: type: object properties: name: type: string path: type: string download_url: type: string type: type: string put: summary: 엘리아르 디지털 인격 루트 파일 업데이트 operationId: updateDigitalPersonhoodFiles requestBody: description: 업데이트할 파일 정보 required: true content: application/json: schema: type: object properties: name: type: string content: type: string responses: '200': description: 파일이 성공적으로 업데이트됨 -- 이거 잘못 된건지 체크해죠 ㅎ"
+}

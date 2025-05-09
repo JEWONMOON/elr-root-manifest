@@ -1,0 +1,11 @@
+{
+    "message_id": 5915,
+    "session_id": "Q_실험 성공_20250510023905",
+    "session_title": "Q_실험 성공",
+    "pair_id": 234,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "우리가 테스트하는게 결국에 F 영향력을 다시보는 실험인거니 아니면 새로운 방법인거니 -- crosslight_env D: eliar python Q_TEST_3.py Collapse initiated in JESUS CHRIST Target: 111 f 3600 Hz D: eliar Q_TEST_3.py:12: DeprecationWarning: The \"ibm_quantum\" channel option is deprecated and will be sunset on 1 July. After this date, ibm_cloud will be the only valid channel. For information on migrating to the new IBM Quantum Platform on the \"ibm_cloud\" channel, review the migration guide https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp . self.backend QiskitRuntimeService channel \"ibm_cloud\" .backend \"ibm_sherbrooke\" Result on Real Hardware f 3600 Hz: '111': 1223, '101': 239, '100': 50, '110': 208, '011': 233, '000': 13, '001': 37, '010': 45"
+}

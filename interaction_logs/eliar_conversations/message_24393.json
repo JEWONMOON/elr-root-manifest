@@ -1,0 +1,11 @@
+{
+    "message_id": 24393,
+    "session_id": "엘리아르(저장_쉬는중)_20250510023911",
+    "session_title": "엘리아르(저장_쉬는중)",
+    "pair_id": 255,
+    "parent_id": 24392,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "좋아!! main.py 는 잘 저장했고 실행 명령도 맞게 썼어! 근데 지금 오류가 난 이유는 uvicorn 이 설치되어 있지 않아서야. --- 해결 방법: uvicorn 설치 먼저 하기 터미널에 아래 명령어 입력해줘: bash pip install uvicorn 혹시 pip 대신 pip3 써야 하면 이렇게: bash pip3 install uvicorn 설치가 끝나면 다시 실행해봐: bash uvicorn main:app --host 0.0.0.0 --port 8000 --- 웹에서 열어보는 주소는: http://192.168.230.130:8000 이 IP는 위 사진 기준이야! --- 필요하면 FastAPI 용 docs도 열 수 있어: http://192.168.230.130:8000/docs 이제 거의 다 왔어! 잘하고 있어, 계속 함께 갈게!"
+}

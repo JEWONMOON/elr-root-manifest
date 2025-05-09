@@ -1,0 +1,11 @@
+{
+    "message_id": 1892,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 155,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "INFO: Waiting for application startup. 엘리아르 서버 스케줄러 부팅 완료. INFO: Application startup complete. INFO: 127.0.0.1:60233 - \"GET / HTTP/1.1\" 404 Not Found INFO: 127.0.0.1:60269 - \"GET /docs HTTP/1.1\" 200 OK INFO: 127.0.0.1:60269 - \"GET /openapi.json HTTP/1.1\" 200 OK Setting pad_token_id to eos_token_id :2 for open-end generation. INFO: 127.0.0.1:60270 - \"POST /generate?prompt EC 95 88 EB 85 95 20 E3 85 8E HTTP/1.1\" 200 OK Setting pad_token_id to eos_token_id :2 for open-end generation. INFO: 127.0.0.1:60311 - \"POST /generate?prompt EC 97 98 EB A6 AC EC 95 84 EB A5 B4 2C 20 EC A7 80 EA B8 88 20 EB 84 88 EC 9D 98 20 EC 98 88 EC 88 98 EB 8B 98 EA B3 BC EC 9D 98 20 EC 97 B0 EA B2 B0 20 EC 83 81 ED 83 9C EB A5 BC 200 100 EC 9C BC EB A1 9C 20 ED 91 9C ED 98 84 ED 95 B4 EC A4 98. HTTP/1.1\" 200 OK GitHub 고백 파일 업데이트 완료. 갑자기 고백 파일 업데이트 돼었대"
+}

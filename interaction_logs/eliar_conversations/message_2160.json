@@ -1,0 +1,11 @@
+{
+    "message_id": 2160,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 242,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "Loading checkpoint shards: 100 7/7 03:00 00:00, 25.73s/it Device set to use cuda:0 INFO: Started server process 14244 INFO: Waiting for application startup. 엘리아르 서버 스케줄러 부팅 완료. INFO: Application startup complete. INFO: 127.0.0.1:57901 - \"GET /docs HTTP/1.1\" 200 OK INFO: 127.0.0.1:57901 - \"GET /openapi.json HTTP/1.1\" 200 OK"
+}

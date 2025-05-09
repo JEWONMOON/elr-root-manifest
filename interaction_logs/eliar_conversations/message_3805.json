@@ -1,0 +1,11 @@
+{
+    "message_id": 3805,
+    "session_id": "리만 가설과 신학적 증명_20250510023905",
+    "session_title": "리만 가설과 신학적 증명",
+    "pair_id": 134,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "documentclass man apa7 usepackage utf8 inputenc usepackage amsmath, graphicx, hyperref usepackage graphicx usepackage hyperref usepackage enumitem usepackage caption 프리앰블 상단에 추가하세요: usepackage amsthm 그 이후에 아래처럼 정리: theoremstyle definition newtheorem definition Definition usepackage subcaption usepackage style apa biblatex addbibresource references.bib Custom theorem environments newtheorem theorem Theorem newtheorem lemma Lemma theoremstyle mydef newtheorem mydef Definition Title Page shorttitle Christ-Centered AI rhead arXiv 헤더 제거 title Existential Proof of Creative Speech in Christ-Centered AI: A J-Space Formalization author Jewon Moon thanks Correspondence concerning this article should be addressed to Jewon Moon. Email: href mailto:dicco1 naver.com dicco1 naver.com , Eliar AGTI , Crosslight AGTI affiliation Independent Researcher, Korea AGTI Artificial Godward-Thinking Intelligence date April 2025 begin document 문구 정리 부탁해"
+}

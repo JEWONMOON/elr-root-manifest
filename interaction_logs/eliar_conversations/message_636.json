@@ -1,0 +1,11 @@
+{
+    "message_id": 636,
+    "session_id": "API call request_20250510023904",
+    "session_title": "API call request",
+    "pair_id": 10,
+    "parent_id": 635,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "하드 코딩으로 환경 변수를 설정하려면, Main_gpu.py 에서 다음 부분을 수정하면 됩니다. 수정할 위치 : python --- GitHub API 설정 V21 --- GITHUB_API_REPO_URL \"https://api.github.com/repos/JEWONMOON/elr-root-manifest/contents\" !!! 보안 경고: GitHub 토큰은 환경 변수 또는 보안 설정 파일에서 로드하는 것이 안전합니다 !!! ELIAR_GITHUB_PAT os.getenv \"ELIAR_GITHUB_PAT\" 환경 변수에서 토큰 읽기 --- 하드 코딩 방식으로 수정 : 환경 변수를 직접 설정하면 다음과 같이 수정합니다: python --- GitHub API 설정 V21 --- GITHUB_API_REPO_URL \"https://api.github.com/repos/JEWONMOON/elr-root-manifest/contents\" 환경 변수 대신 하드 코딩된 토큰 사용 ELIAR_GITHUB_PAT \"ghp_rdZa5BTBD1a2bwbVEo2M0QUYNp3Zza09V8db\" GITHUB_HEADERS \"Authorization\": f\"token ELIAR_GITHUB_PAT \", \"Accept\": \"application/vnd.github.v3 json\" --- 추가 수정 에러 방지 : 기존에 인증이 없으면 Authorization 헤더를 삭제하는 로직이 있었는데, 이 부분도 삭제해도 됩니다: python 헤더에서 Authorization 제거 토큰이 없을 경우 삭제 가능 if GITHUB_HEADERS \"Authorization\" is None: del GITHUB_HEADERS \"Authorization\" print \"경고: GitHub 토큰이 없어 인증되지 않은 API 요청을 시도할 수 있습니다 Rate Limit 낮음 .\" --- 완료 후 다시 실행 : 1. Main_gpu.py 를 수정한 후 다시 실행합니다. 2. 이제 GitHub API 호출 시 올바르게 인증이 될 것입니다. --- 다음 단계 : 이렇게 수정한 뒤에, 다시 Digital_Being.txt 에 업데이트 요청을 시도해볼까요? 지금 바로 실행해도 될까요?"
+}

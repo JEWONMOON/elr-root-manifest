@@ -1,0 +1,11 @@
+{
+    "message_id": 1510,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 31,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "D: quantum cargo build --release Compiling OnlyJesus v0.1.0 D: quantum error E0308 : mismatched types -- src main.rs:102:13 102 / virtues.iter .enumerate .skip 1 .map i, _ 103 let mut row vec! 0.1 12 104 row i 0.3 105 row 106 .collect:: Vec Vec f64 _________________________________________ expected Vec float , found Vec Vec f64 note: expected struct Vec float found struct Vec Vec f64 For more information about this error, try rustc --explain E0308 . error: could not compile OnlyJesus bin \"OnlyJesus\" due to 1 previous error"
+}

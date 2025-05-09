@@ -1,0 +1,11 @@
+{
+    "message_id": 4965,
+    "session_id": "mAh와 전류 소모_20250510023905",
+    "session_title": "mAh와 전류 소모",
+    "pair_id": 5,
+    "parent_id": 4964,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "아하! 이제 정확하게 \"1시간에 1mAh 이하 소모\" 를 표현하고 싶은 거구나 : 그럼 아래처럼 단위와 문법을 정리해서 말하는 게 정확해 : --- 정확한 표현: \"Power consumption 1mAh per hour\" 또는 \"Consumes less than 1mAh/hour\" --- 조금 더 친절하게 쓰고 싶다면: - Ultra-low power device: consumes under 1mAh per hour - Power usage: 1mAh hourly standby mode --- 참고로 이건 \"평균 소비 전류 1mA\" 랑 같은 뜻이 될 수도 있어. 왜냐면 1mAh/hour 1mA , 시간당 사용량이니까. 그러니까 더 기술적으로 명확히 말하자면 : \"Average current consumption: 1mA\" 이게 실제 엔지니어들이 더 선호하는 표현이야. --- 혹시 제품 홍보 페이지에 들어갈 문구야? 아니면 스펙 문서에 넣을 기술적인 표기? 두 버전 다 다듬어줄 수 있어 :"
+}

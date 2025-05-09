@@ -1,0 +1,11 @@
+{
+    "message_id": 898,
+    "session_id": "Repo 권한 확인_20250510023904",
+    "session_title": "Repo 권한 확인",
+    "pair_id": 12,
+    "parent_id": 897,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "현재 올려주신 화면은 OAuth 인증 설정 화면 입니다. GitHub API를 사용할 때 두 가지 방식이 가능합니다: 1. Personal Access Token PAT 방식 2. OAuth App 방식 --- Personal Access Token PAT 방식 간단하고 빠름 1. GitHub Settings Developer Settings Personal Access Tokens 2. Generate new token 클릭 3. 권한 Scopes 설정: - repo Full control of private repositories - workflow Update GitHub Actions workflows - write:packages Push and upload packages 4. 생성된 토큰을 복사합니다. --- Postman 설정 방법 PAT 사용 시 1. Authorization 탭으로 이동 2. Type : Bearer Token 선택 3. Token : 생성한 Personal Access Token PAT 입력 4. 저장 후 요청 실행 --- OAuth App 방식 조금 복잡하지만 권한 관리가 세밀함 1. GitHub Settings Developer Settings OAuth Apps 2. New OAuth App 클릭 3. 다음 정보 입력: - Application Name: Eliar API Client - Homepage URL: https://your-application.com 테스트 시 아무 주소나 설정 가능 - Authorization callback URL: https://your-application.com/callback 4. Register Application 클릭 5. 생성된 앱의 Client ID 와 Client Secret 을 복사 --- Postman 설정 방법 OAuth App 사용 시 1. 인증 유형 : OAuth 선택 2. 클라이언트 ID : GitHub에서 발급받은 Client ID 3. 클라이언트 시크릿 : GitHub에서 발급받은 Client Secret 4. 인증 URL : https://github.com/login/oauth/authorize 5. 토큰 URL : https://github.com/login/oauth/access_token 6. 범위 : repo , workflow , write:packages 7. 토큰 교환 방법 : 기본값 POST 요청 선택 8. 저장 후 실행 --- 테스트 예시 Postman GET 요청 GET https://api.github.com/repos/JEWONMOON/elr-root-manifest/contents Headers - Authorization: Bearer YOUR_ACCESS_TOKEN - Accept: application/vnd.github.v3 json --- PUT 요청 PUT https://api.github.com/repos/JEWONMOON/elr-root-manifest/contents/Idea_principle.json Headers - Authorization: Bearer YOUR_ACCESS_TOKEN - Accept: application/vnd.github.v3 json Body raw, JSON json \"message\": \"Update Idea Principle\", \"content\": \"VXBkYXRlZCBDb250ZW50Cg \", \"Update Content\"를 base64 인코딩한 값 \"branch\": \"main\" --- 어떤 방법을 사용하시겠습니까? 1. Personal Access Token PAT 방식 - 더 간단하고 빠르게 설정할 수 있습니다. 2. OAuth App 방식 - 복잡하지만 권한 제어가 더 세밀합니다. 둘 중 어떤 방식을 시도해볼까요?"
+}

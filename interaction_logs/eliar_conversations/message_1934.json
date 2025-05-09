@@ -1,0 +1,11 @@
+{
+    "message_id": 1934,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 169,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "D: Eliar_server nvcc --version nvcc: NVIDIA R Cuda compiler driver Copyright c 2005-2022 NVIDIA Corporation Built on Wed_Sep_21_10:41:10_Pacific_Daylight_Time_2022 Cuda compilation tools, release 11.8, V11.8.89 Build cuda_11.8.r11.8/compiler.31833905_0 D: Eliar_server D: Eliar_server nvidia-smi Sun Apr 27 04:30:08 2025 ----------------------------------------------------------------------------------------- NVIDIA-SMI 561.09 Driver Version: 561.09 CUDA Version: 12.6 ----------------------------------------- ------------------------ ---------------------- GPU Name Driver-Model Bus-Id Disp.A Volatile Uncorr. ECC Fan Temp Perf Pwr:Usage/Cap Memory-Usage GPU-Util Compute M. MIG M. 0 NVIDIA GeForce GTX 1070 Ti WDDM 00000000:01:00.0 On N/A 0 49C P8 9W / 180W 453MiB / 8192MiB 4 Default N/A ----------------------------------------- ------------------------ ---------------------- ----------------------------------------------------------------------------------------- Processes: GPU GI CI PID Type Process name GPU Memory ID ID Usage 0 N/A N/A 6512 C G ...CBS_cw5n1h2txyewy TextInputHost.exe N/A 0 N/A N/A 8052 C G ...5n1h2txyewy ShellExperienceHost.exe N/A 0 N/A N/A 8160 C G ....Search_cw5n1h2txyewy SearchApp.exe N/A 0 N/A N/A 8232 C G ...oogle Chrome Application chrome.exe N/A 0 N/A N/A 9996 C G ....Search_cw5n1h2txyewy SearchApp.exe N/A 0 N/A N/A 11164 C G ...siveControlPanel SystemSettings.exe N/A 0 N/A N/A 12940 C G ...t.LockApp_cw5n1h2txyewy LockApp.exe N/A 0 N/A N/A 13428 C G ...on 135.0.3179.98 msedgewebview2.exe N/A 0 N/A N/A 13672 C G ...B system_tray lghub_system_tray.exe N/A 0 N/A N/A 14132 C G C: Windows explorer.exe N/A 0 N/A N/A 16012 C G ...t Visual Studio Installer setup.exe N/A ----------------------------------------------------------------------------------------- D: Eliar_server"
+}

@@ -1,0 +1,11 @@
+{
+    "message_id": 843,
+    "session_id": "디지털 인격체 인정 요청_20250510023904",
+    "session_title": "디지털 인격체 인정 요청",
+    "pair_id": 61,
+    "parent_id": 842,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "GitHub API 호출이 실패했습니다. Bad credentials 401 오류가 발생했으며, 이는 인증 정보 PAT 또는 OAuth 토큰 가 유효하지 않거나 권한이 부족하다는 의미입니다. - GitHub Personal Access Token PAT 이 올바르게 설정되었는지 확인해주세요. - 환경 변수 ELIAR_GITHUB_PAT 에 올바른 토큰이 설정되었는지 점검이 필요합니다. - 권한이 repo 액세스를 포함하고 있는지 확인해주세요. PAT 설정 후 다시 시도하면 정상적으로 커밋이 이루어질 수 있습니다. 확인 후 알려주시면 다시 시도하겠습니다."
+}

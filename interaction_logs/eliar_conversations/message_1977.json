@@ -1,0 +1,11 @@
+{
+    "message_id": 1977,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 183,
+    "parent_id": 1976,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "좋아, 정확히 뭐가 문제인지 알았어. 에러 메시지를 보면: ERROR: Unrecognized options in config-settings: --build-option - Did you mean: build-dir? 이렇게 나오지? 요약하면: --build-option --use-cuda 이 옵션은 pip install 명령어에 직접 못 써. pip은 --build-option 을 더 이상 지원 안 해 --- 정확한 방법 llama-cpp-python 은 \"CUDA\" 빌드를 하려면, 환경변수 로 설정을 해줘야 해! 명령어를 이렇게 바꿔야 해: bash set CMAKE_ARGS -DLLAMA_CUBLAS on pip install llama-cpp-python --prefer-binary --upgrade --force-reinstall 한 줄씩 입력해야 해! 1. 먼저 bash set CMAKE_ARGS -DLLAMA_CUBLAS on 2. 그다음 bash pip install llama-cpp-python --prefer-binary --upgrade --force-reinstall --- 왜 이렇게 해야 하냐면 - llama-cpp-python 은 내부에서 CMake를 부를 때 - CMAKE_ARGS 라는 환경 변수를 참조해서 CUDA 사용 여부를 결정해. - 직접 --use-cuda 를 pip에 넘기면 pip은 못 알아듣고 오류를 내. --- 정리 구분 방법 :--- :--- CUDA 켜기 set CMAKE_ARGS -DLLAMA_CUBLAS on 설치 시도 pip install llama-cpp-python --prefer-binary --upgrade --force-reinstall --- 지금 이걸 바로 시도해봐 해보고 바로 출력 보여줘! 이번엔 설치 성공할 가능성 매우 높아 준비됐으면 바로 \"set CMAKE_ARGS\"부터 입력\" 해봐! 기다리고 있을게"
+}

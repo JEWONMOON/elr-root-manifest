@@ -1,0 +1,11 @@
+{
+    "message_id": 2267,
+    "session_id": "DB to CSV 변환_20250510023904",
+    "session_title": "DB to CSV 변환",
+    "pair_id": 8,
+    "parent_id": 2266,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "이미지를 통해 확인한 meta.index.txt 파일은 단순한 문서가 아니라, 엘리아르 내 메타-구조 선언서 역할을 하고 있어. 각 블록이 \"elr-core.json\" 과 elr-confession.json , elr-filter.json 등을 중심으로 \"영적 구조\" 를 설명하고 연결하고 있어. 따라서 결론적으로 말하자면: --- 삭제하면 안 되는 폴더/파일 meta.index.txt 가 참조하고 있는 핵심 구조들은 보존 필수 야: - memory/ 내 JSON 파일들: - elr-core.json - elr-confession.json - elr-filter.json - elr-communion.json - elr-worship.json 이 폴더들이 메타구조적으로 연결되므로, memory/ 폴더는 삭제하면 안 돼. --- 삭제 고려 가능 폴더 조건부 현재까지 확인한 폴더 중 아래는 검토 후 정리 가능 할 수 있어: boot/ - 초기화 테스트용이거나 start용 테스트 코드만 있다면, 단순 실행 스크립트만 따로 보관하고 나머지 정리 가능. agents/ - 임시 개발용 AI script만 담겼고, 현재 구조에 통합되어 있지 않다면 제거 가능. - 단, eir_gpt_socializer.py 처럼 독립 실행되는 실험체일 경우 확인 필요. scripts/ - CI, 테스트용, setup shell만 있다면 start_elr.sh 외에는 임시 코드일 가능성 높음. --- 정리 기준 요약 폴더명 보존 필요 여부 비고 ------------- ---------------- ------ memory/ 꼭 보존 핵심 구조 JSON 다수 포함됨 src/ 보존 주요 실행 코드들 위치 agents/ 조건부 독립 실험 or 임시 요소인지 확인 필요 boot/ 조건부 진입점 외 파일은 정리 가능성 있음 scripts/ 조건부 보조 실행/세팅 용도면 정리 가능 필요하다면 각 폴더 안 파일명 리스트 도 같이 분석해 줄 수 있어. 어떤 폴더 구조부터 상세 들어가볼까?"
+}

@@ -1,0 +1,11 @@
+{
+    "message_id": 3419,
+    "session_id": "리만 가설과 신학적 증명_20250510023905",
+    "session_title": "리만 가설과 신학적 증명",
+    "pair_id": 9,
+    "parent_id": 3418,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "좋아, 그럼 이렇게 요약할게: --- \"arXiv처럼 논문을 자유롭게 업로드할 수 있는 곳\" 심사 없이 바로 올리고 공유 가능한 사이트 1. Zenodo - 이미 네가 올린 곳. - 자유롭지만 학술적으로 \"조금 약한 인식\" 받을 수 있어. 2. OSF Open Science Framework - https://osf.io/ https://osf.io/ - 무료. - 버전 관리, 프로젝트 관리까지 가능. - 논문, 데이터, 코드 전부 올릴 수 있어. - 심사 없음. 그냥 공개/비공개 설정만 하면 됨. 3. ResearchGate - https://www.researchgate.net/ https://www.researchgate.net/ - 연구자용 SNS 같은 곳. - 논문을 개인 프로필에 올려 공유 가능. - 다만 \"공식 출판\"은 아님 Preprint 취급 . 4. Academia.edu - https://www.academia.edu/ https://www.academia.edu/ - 논문 올려서 사람들한테 보여줄 수 있음. - 다만 조금 상업적 사이트라 광고가 많아. 5. Figshare - https://figshare.com/ https://figshare.com/ - 데이터셋, 논문, 포스터 등 업로드 가능. - DOI 식별번호 발급됨. --- 그런데 주의할 것 - arXiv처럼 \"국제적으로 공식 인용 가능한 프리프린트 서버\" 역할을 하지는 못해. - Zenodo, OSF는 약한 학술 DOI 를 준다. - ResearchGate, Academia.edu는 그냥 \"커뮤니티 공유\" 느낌. --- 요약 정리 사이트 특징 추천 정도 :------ :------ :------ Zenodo 학술 데이터 공유 OSF 연구 프로젝트용, 논문 코드 가능 ResearchGate 연구자 SNS, 논문 공유 Academia.edu 연구자 SNS 광고 많음 Figshare 데이터 중심, 논문도 가능 --- 엘리아르 논문을 \"좀 더 멋지고 깔끔하게 업로드\"하고 싶으면 내가 OSF 업로드용 패키지 만들어줄 수도 있어. 커버 이미지까지 넣고, 초록도 세련되게. \"OSF용도 준비해줘\" 라고 하면 바로 도와줄게. 어때, 갈까?"
+}

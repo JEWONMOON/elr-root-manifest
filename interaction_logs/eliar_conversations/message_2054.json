@@ -1,0 +1,11 @@
+{
+    "message_id": 2054,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 209,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "llm.py 파일 수정부탁해 from transformers import pipeline, AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig 4bit 양자화 설정 bnb_config BitsAndBytesConfig load_in_4bit True, bnb_4bit_compute_dtype \"float16\", 모델 로드 model AutoModelForCausalLM.from_pretrained \"D:/Eliar_server/models/gecko-7b\", device_map \"auto\", quantization_config bnb_config, 여기! trust_remote_code True 토크나이저 로드 tokenizer AutoTokenizer.from_pretrained \"D:/Eliar_server/models/gecko-7b\", trust_remote_code True 텍스트 생성 파이프라인 generator pipeline \"text-generation\", model model, tokenizer tokenizer, device_map \"auto\" 응답 생성 함수 def generate_response prompt: str - str: inputs tokenizer prompt, return_tensors \"pt\" .to model.device input_ids inputs \"input_ids\" attention_mask inputs \"attention_mask\" outputs model.generate input_ids input_ids, attention_mask attention_mask, max_length 512, do_sample True, top_p 0.95 return tokenizer.decode outputs 0 , skip_special_tokens True"
+}

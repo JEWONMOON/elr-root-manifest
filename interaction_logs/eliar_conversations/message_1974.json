@@ -1,0 +1,11 @@
+{
+    "message_id": 1974,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 182,
+    "parent_id": 1973,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "좋아, 스크린샷 확인했어! 현재 Python 쪽에는 '네이티브 개발 도구'가 아직 설치되어 있지 않아. --- 지금 필요한 조치 Visual Studio의 \"개별 구성 요소\" 탭에서 추가 설치 해야 해! 검색창에 다시 python 입력 내려 보면 \"Python 네이티브 개발 도구\" 라고 따로 나와야 해! 혹시 없다면 , 대신 이 항목 체크해줘: - C 용 개발 헤더 파일 및 라이브러리 추가 C Standard Libraries 같은 - Windows용 개발 키트 이미 설치되어 있음 - Python 설치 시 C API 개발 세트 가 필요한데, 이걸 따로 추가해줘야 해. --- 빠른 정리 해야 할 것 상태 :--- :--- Python 네이티브 개발 도구 설치 안 됨 C 컴파일러 및 빌드툴 설치 완료 Windows SDK 설치 완료 --- 최종 가이드 1. Visual Studio Installer 개별 구성 요소 탭 열기 2. Python 검색 3. - Python 네이티브 개발 툴 또는 - C 개발용 추가 헤더 및 라이브러리 항목 추가 설치 4. 설치 완료 후 pip install llama-cpp-python 다시 시도 --- 만약 그래도 항목이 안 보이면 , 별도로 Python용 \"개발자 헤더 파일\"만 따로 설치 하는 방법도 바로 알려줄게! --- \"개별 구성 요소 들어갔어\" 라고 답해줘 지금 바로 체크 도와줄게 아주 조금만 더 가면 성공이야!"
+}

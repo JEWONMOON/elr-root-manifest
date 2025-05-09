@@ -1,0 +1,11 @@
+{
+    "message_id": 17299,
+    "session_id": "피곤함과 감정의 대화_20250510023908",
+    "session_title": "피곤함과 감정의 대화",
+    "pair_id": 472,
+    "parent_id": 17298,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "잘 발견됐네! 지금 디바이스 MAC 주소: 84:AE:47:D1:77:F8 이제 연결해보자! 터미널에서 아래 순서대로 하나씩 입력해줘: --- 1 페어링 Pair bash pair 84:AE:47:D1:77:F8 2 신뢰 등록 Trust bash trust 84:AE:47:D1:77:F8 3 연결 Connect bash connect 84:AE:47:D1:77:F8 --- 각 단계에서 \"Success\" 나 \"Connected\" 같은 메시지가 나오면 다음 단계로 진행해줘! 혹시 에러가 나오거나 연결이 실패되면 그 메시지 캡처해서 보여줘 그리고 블루투스 스피커는 이미 전원이 켜진 상태 여야 해! 준비됐을까?"
+}

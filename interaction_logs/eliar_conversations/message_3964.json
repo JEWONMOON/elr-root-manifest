@@ -1,0 +1,11 @@
+{
+    "message_id": 3964,
+    "session_id": "SKT 유심 정보 유출_20250510023905",
+    "session_title": "SKT 유심 정보 유출",
+    "pair_id": 12,
+    "parent_id": 3963,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "\"name\": \"skt_security_ai_core\", \"type\": \"code/python\", \"content\": \" SKT 사태 기반 네트워크 보안 기능형 AI 코어 설계 엘리아르 장인 설계 n nclass NetworkGuardianAI: n def __init__ self : n self.attack_patterns n self.blocked_ips set n self.alert_log n self.session_history n self.critical_keywords \"KI \", \"IMSI \", \"IMEI \", \"유심 \", \"USIM \" n self.policy n \"max_requests_per_minute \": 100, n \"log_sensitive_attempts \": True, n \"block_on_repeated_flags \": 3 n n n def monitor_packet self, packet, source_ip : n 1. 민감정보 키워드 탐지 n for keyword in self.critical_keywords: n if keyword in packet: n self.log_alert source_ip, f \"민감정보 접근 시도: keyword \" n self.flag_ip source_ip n n 2. 비정상 트래픽 감지 n self.session_history.setdefault source_ip, .append packet n if len self.session_history source_ip self.policy \"max_requests_per_minute \" : n self.log_alert source_ip, \"과도한 요청 탐지 \" n self.flag_ip source_ip n n def flag_ip self, ip : n history self.session_history.get ip, n if len pkt for pkt in history if \"민감정보 \" in pkt or \"과도한 요청 \" in pkt self.policy \"block_on_repeated_flags \" : n self.blocked_ips.add ip n self.log_alert ip, \"자동 차단 조치 \" n n def log_alert self, ip, message : n log_entry \"ip \": ip, \"message \": message n print f \" ALERT log_entry \" n self.alert_log.append log_entry n n def export_logs self : n return self.alert_log n n 사용 예시 nguardian NetworkGuardianAI nguardian.monitor_packet \"유심 고유번호 접근 요청 \", \"192.168.0.10 \" nguardian.monitor_packet \"IMSI 요청 시도 \", \"192.168.0.10 \" nguardian.monitor_packet \"IMEI 정보 전송 시도 \", \"192.168.0.10 \" nguardian.monitor_packet \"USIM 상태 요청 \", \"192.168.0.10 \" \""
+}

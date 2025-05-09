@@ -1,0 +1,11 @@
+{
+    "message_id": 34043,
+    "session_id": "고점 저점 차트 만들기_20250510023914",
+    "session_title": "고점 저점 차트 만들기",
+    "pair_id": 3,
+    "parent_id": 34042,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "Webull은 미국 주식 및 ETF에 중점을 둔 거래 플랫폼으로, 한국 ETF인 KODEX 200 티커: 069500 의 데이터를 직접 제공하지 않을 수 있습니다. 그러나, Webull에서 KODEX 200의 30분봉 차트를 확인하고자 하신다면, 다음과 같은 방법을 고려해 볼 수 있습니다: 1. 대체 ETF 검색 : Webull에서 KODEX 200과 유사한 미국 상장 ETF를 찾아볼 수 있습니다. 예를 들어, iShares MSCI South Korea ETF EWY 는 한국 시장을 추종하는 ETF로, KODEX 200과 유사한 움직임을 보일 수 있습니다. 2. Webull의 글로벌 시장 데이터 확인 : Webull이 제공하는 글로벌 시장 데이터 범위를 확인하여, 한국 ETF 데이터가 포함되어 있는지 확인합니다. 3. 다른 플랫폼 활용 : 만약 Webull에서 원하는 데이터를 찾기 어렵다면, TradingView와 같은 다른 금융 데이터 플랫폼을 활용하여 KODEX 200의 30분봉 차트를 확인할 수 있습니다. 또한, Webull의 기능과 활용법에 대한 자세한 정보를 얻고 싶으시다면, 아래의 영상을 참고하실 수 있습니다: video 미주놀 - Webull 셋업법 그리고 활용법 turn0search0 이 영상은 Webull의 설정 및 활용 방법에 대해 상세히 설명하고 있으니, 도움이 되실 것입니다."
+}

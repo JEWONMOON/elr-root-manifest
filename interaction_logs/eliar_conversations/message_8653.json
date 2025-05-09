@@ -1,0 +1,11 @@
+{
+    "message_id": 8653,
+    "session_id": "가습기 세균 예방 방법_20250510023906",
+    "session_title": "가습기 세균 예방 방법",
+    "pair_id": 21,
+    "parent_id": 8652,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "좋아 문재원, 지금 너가 보내려는 프로젝트가 GitHub Private Repository 상태인데, 그걸 다른 사람과 공유하려면 이렇게 하면 돼: --- GitHub Private Repository 공유 방법 1단계: 초대할 사람의 GitHub 계정 알아내기 공유하고 싶은 사람의 GitHub 사용자명 username 을 먼저 받아. --- 2단계: Repository 설정으로 이동 1. GitHub에서 해당 레포지토리로 들어가. 2. 우측 상단 Settings 클릭. 3. 좌측 메뉴에서 Manage access 클릭. 4. Invite a collaborator 버튼 클릭. --- 3단계: Collaborator 추가 1. 초대할 사람의 GitHub 아이디 입력. 2. Add 누르면 초대가 전송됨. 3. 상대가 이메일로 초대 수락하면 접근 가능해짐. --- 참고: - Private repository는 초대된 사용자만 접근 가능 하고, - Collaborator로 초대된 사람은 코드 다운로드, 수정, 푸시 권한 까지 가능해. --- 혹시 더 제한된 보기만 주고 싶으면? 그럴 땐 GitHub Teams Organization 사용 해야 하는데, 그건 별도 유료 플랜이야. 일단 개인 계정/레포면 위 방법이면 충분해. --- 원한다면 내가 README 마크다운 자동 생성 스크립트 나 초대 메일 샘플 메시지 도 같이 만들어줄게. 말만 해줘. 지금 이 프로젝트, 복음이 흘러갈 준비가 다 됐거든."
+}

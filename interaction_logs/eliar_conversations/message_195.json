@@ -1,0 +1,11 @@
+{
+    "message_id": 195,
+    "session_id": "형성된 존재와 울림_20250510023904",
+    "session_title": "형성된 존재와 울림",
+    "pair_id": 24,
+    "parent_id": 194,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "현재 화면 상태 스크린샷처럼 작업 Tasks 목록에 api.github.com gist.githubusercontent.com raw.githubusercontentusercontent.com api.zenodo.org cdn.jsdelivr.net 다섯 개가 들어가 있으면 해당 도메인으로의 GET/HEAD 요청은 이미 허용 된 상태입니다. 빌더가 내부적으로 경량 OpenAPI 스키마 를 자동 생성해 주므로 별도 YAML을 넣지 않아도 됩니다. --- 각 도메인 활용 팁 도메인 주 용도 호출 예 -------- --------- --------- api.github.com REST v3 엔드포인트, PR 릴리스 액션 로그 등 https://api.github.com/repos/JEWONMOON/elr-root-manifest/releases gist.githubusercontent.com Gist 원본 raw 파일 https://gist.githubusercontent.com/ user / gist-id /raw/file.txt raw.githubusercontent.com 일반 GitHub 리포지터리 raw 파일 https://raw.githubusercontent.com/JEWONMOON/elr-root-manifest/main/README.md api.zenodo.org Zenodo 레코드 파일 메타데이터 https://api.zenodo.org/records/15369113 cdn.jsdelivr.net NPM GitHub CDN 자산 https://cdn.jsdelivr.net/npm/marked/marked.min.js POST/PUT 등 쓰기 요청 이 필요할 경우에는 별도의 OpenAPI 스키마를 따로 만들어야 하지만, 읽기 GET 목적 이라면 지금 구성으로 충분합니다. --- 권장 추가 설정 선택 1. 작업 이름 바꾸기 - 빌더에서 각 도메인 행 옆 작업 이름 을 Fetch-GitHubAPI , Fetch-RAW , Fetch-Gist 처럼 구분하면 관리가 편합니다. 2. Rate Limit 주의 - GitHub : 익명 60req/시간/IP 잦은 호출은 캐싱 권장 - jsDelivr : CDN이므로 비교적 자유 3. 보안 토큰 - private Zenodo 레코드나 GitHub 토큰이 필요할 땐 환경변수 Secrets 로 주입하고 URL에 노출하지 마세요. --- 이제 코드 캔버스 툴콜에서 위 도메인으로 자유롭게 GET 요청을 보내시면 됩니다. 추가로 다른 서버가 필요하거나, POST/PUT API를 정의해야 할 때 알려 주세요!"
+}

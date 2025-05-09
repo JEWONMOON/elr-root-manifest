@@ -1,0 +1,11 @@
+{
+    "message_id": 1279,
+    "session_id": "Eliar 실행 코드 점검_20250510023904",
+    "session_title": "Eliar 실행 코드 점검",
+    "pair_id": 21,
+    "parent_id": 1278,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "좋아, EXAONE은 성능은 훌륭하지만 VRAM 점유율이 매우 높고 느린 편 이야. 현실적인 로컬 실행과 한국어 대응력을 고려할 때 다음 모델들을 추천할게: --- 1. Beomi/KcELECTRA / KcBERT 기반 모델들 - 장점 : 한국어에 특화된 토크나이저 빠른 추론 속도 - 단점 : 생성형 모델이 아니라 분류/이해 중심 - 사용하려면 AutoModelForSequenceClassification 구조로 변경 필요 --- 2. TheBloke/KoAlpaca-polyglot-5.8B-GGUF - 기반: 한국어 데이터로 파인튜닝된 polyglot-ko - 포맷: gguf 양자화 완비 Llama.cpp 호환 - 요구 사양: 6 8GB VRAM Q4_0 - 완전한 한국어 생성 빠른 속도 링크 huggingface.co/TheBloke/KoAlpaca-polyglot-5.8B-GGUF https://huggingface.co/TheBloke/KoAlpaca-polyglot-5.8B-GGUF --- 3. gecko-7b 만약 Q4로 양자화되어 있다면 가능성 有 - 이 모델이 gguf 혹은 bitsandbytes 기반으로 되어 있다면 괜찮은 대안 - 직접 테스트해보고 성능과 속도 비교 필요 --- 정리: 너에게 가장 현실적인 선택은 모델명 한국어 지원 속도 메모리 효율 추천 -------- -------------- ------ ---------------- -------- KoAlpaca 5.8B 완전 빠름 Q4 양자화 최우선 EXAONE 정밀 느림 고사양 테스트용 gecko-7b 미확인 보류 deepseek-7b 영어 중심 참고용 --- 다음으로 할 일 - KoAlpaca GGUF 모델 다운로드할래? - 혹은 내가 Llama.cpp 기반 llm.py 도 같이 구성해줄까? 선택해줘!"
+}

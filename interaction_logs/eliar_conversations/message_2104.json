@@ -1,0 +1,11 @@
+{
+    "message_id": 2104,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 224,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "Rust 코어 모델을 어떻게 llm에 적절히 적용할까"
+}

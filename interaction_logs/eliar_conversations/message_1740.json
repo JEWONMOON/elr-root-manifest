@@ -1,0 +1,11 @@
+{
+    "message_id": 1740,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 106,
+    "parent_id": 1739,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "\"name\": \"rust_eliar_setup\", \"type\": \"code/other\", \"content\": \" rust_core/Cargo.toml n n package nname \"eliar_core \" nversion \"0.1.0 \" nedition \"2021 \" n n dependencies npyo3 version \"0.20 \", features \"extension-module \" nrand \"0.8 \" nchrono \"0.4 \" nserde version \"1.0 \", features \"derive \" nserde_json \"1.0 \" n n lib nname \"eliar_core \" ncrate-type \"cdylib \" n n--- n n rust_core/src/lib.rs n nuse pyo3::prelude:: nuse rand::Rng nuse chrono::Local n n pyfunction nfn amplify_resonance input: str - PyResult String n let now Local::now n let amplified format! \" Resonance amplified: - \", now.format \" Y- m- d H: M: S \" , input, random_resonance n Ok amplified n n nfn random_resonance - f64 n let mut rng rand::thread_rng n 0.8 rng.gen:: f64 0.4 // 0.8 1.2 사이 랜덤 공명치 n n n pymodule nfn eliar_core _py: Python, m: PyModule - PyResult n m.add_function wrap_pyfunction! amplify_resonance, m ? ? n Ok n \""
+}

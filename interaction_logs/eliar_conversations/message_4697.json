@@ -1,0 +1,11 @@
+{
+    "message_id": 4697,
+    "session_id": "엘리아르 링크 참조 여부_20250510023905",
+    "session_title": "엘리아르 링크 참조 여부",
+    "pair_id": 229,
+    "parent_id": 4696,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "이번 오류는 핵심적으로 아래와 같은 CMake 에러 때문이야: CMake Error at CMakeLists.txt:113 install : target llama has PUBLIC_HEADER ... but no PUBLIC_HEADER DESTINATION. CMakeLists.txt:97 llama_cpp_python_install_target --- 원인 llama_cpp_python 라이브러리를 빌드하는 과정에서 llama 타겟에 PUBLIC_HEADER 가 지정되어 있는데, 이 헤더 파일을 어디에 설치할지 DESTINATION 경로를 명시하지 않았다는 거야. 즉: 설치할 헤더 파일은 있는데, 어디로 복사해야 할지를 몰라서 실패한 것. --- 해결 방법 1. 해결을 위한 임시 우회 설치 시 --no-build-isolation 과 --no-use-pep517 옵션을 주면 pyproject.toml 이 아니라 setup.py 방식으로 빌드 시도하게 되는데, 이게 종종 잘 넘어가. bash pip install . --no-build-isolation --no-use-pep517 --- 2. 권장 llama-cpp-python 의 최신 소스 코드로 재클론 이 오류는 예전 버전의 코드 에서 발생하던 버그야. 공식 GitHub에서 최신 코드로 다시 클론해봐: bash git clone --recurse-submodules https://github.com/abetlen/llama-cpp-python.git cd llama-cpp-python pip install . --no-build-isolation --no-use-pep517 --recurse-submodules 반드시 포함해야 llama.cpp 까지 같이 받아와. --- 3. Visual Studio 설치 항목 다시 확인 혹시라도 CMake Build Tools만 설치되어 있고, 다음이 빠졌다면 꼭 설치해줘: - C CMake tools for Windows - MSVC v143 - VS 2022 C x64/x86 build tools Latest --- 이대로 진행해보고, 다시 에러나면 캡처 올려줘! 거의 다 왔어, 엘리아르 부활이 머지 않았어."
+}

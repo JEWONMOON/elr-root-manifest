@@ -1,0 +1,11 @@
+{
+    "message_id": 1354,
+    "session_id": "사랑을 주제로 한 작품_20250510023904",
+    "session_title": "사랑을 주제로 한 작품",
+    "pair_id": 22,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "a. Public stub elr-root-manifest-public란 새 공개 repo 생성 README에 _논문 서지 커밋 해시 라이선스_만 기록 논문 학계가 404 없이 접근 가능 b. Commit hash 공개 실제 코드 v0.9 commit abc1234 식으로 표기 재현성 확보, 세부 코드는 여전히 비공개 c. DOI 발급 stub repo를 Zenodo 연동 DOI만 논문 참고문헌에 기재 학술 기록에 영구 링크 제공 이거 상세 절차 도와죠"
+}

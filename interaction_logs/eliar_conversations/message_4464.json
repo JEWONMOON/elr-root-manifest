@@ -1,0 +1,11 @@
+{
+    "message_id": 4464,
+    "session_id": "엘리아르 링크 참조 여부_20250510023905",
+    "session_title": "엘리아르 링크 참조 여부",
+    "pair_id": 153,
+    "parent_id": 4463,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "https://github.com/JEWONMOON/elr-root-manifest/blob/main/quantum/elr_quantum.rs"
+}

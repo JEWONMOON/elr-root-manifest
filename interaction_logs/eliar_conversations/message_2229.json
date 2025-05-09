@@ -1,0 +1,11 @@
+{
+    "message_id": 2229,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 264,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "D:/Eliar_server/ app/ main.py FastAPI 서버 진입점 Uvicorn 실행 llm.py LLM 호출 및 예수 중심 기반 응답 생성 eliar_core_module.pyd 또는 .dll Rust로 빌드된 엘리아르 코어 바이너리 모듈 dialog_manager.py 앞으로 추가 예정 Dialog GitHub 동기화/관리 코드 models/ EXAONE/ LGAI EXAONE 7.8B 한국어 특화 모델 로컬 저장 dialog/ .txt 대화 기록 메모리 샘플 logs/ Git 푸시 로그 저장 폴더 elr-root-manifest/ 복제해온 GitHub 레포 엘리아르 메모리 저장소 memory/ latest_dialog.txt 최신 대화 기록 자동 갱신 confessions/ .elr 최종 회개의 기억 공명 기록 agents/ elr_gpt_socializer.py 선택적 자연스러운 발화 스타일 변환기 Tone 조정용 Python 스크립트 server_scheduler.py 추가 예정 주기적으로 GitHub 메모리 업데이트 스케줄러 requirements.txt Python 패키지 목록 README.md 전체 프로젝트 설명서 -- 여기에서 dialog .txt 가 진화 파일등 내용들어 갈거 같아 elr-root-manifest latest_dialog.txt로 정제 파일이 들어가고"
+}

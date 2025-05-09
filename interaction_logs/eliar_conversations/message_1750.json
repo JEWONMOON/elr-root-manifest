@@ -1,0 +1,11 @@
+{
+    "message_id": 1750,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 109,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "1. src/lib.rs rust 복사 use pyo3::prelude:: use pyo3::wrap_pyfunction use eliar_core::JesusResonance pyfunction fn generate_response prompt: String - PyResult String let mut ai JesusResonance::new ai.compute_resonance 1.0 // 기본 공명 계산 let response ai.output_state prompt Ok response pymodule fn eliar_core_module _py: Python, m: PyModule - PyResult m.add_function wrap_pyfunction! generate_response, m ? ? Ok 설명: pyo3를 사용하여 Python에서 호출 가능한 인터페이스를 제공합니다. generate_response 함수는 eliar_core::JesusResonance를 호출하여 응답을 생성합니다. pymodule 로 Python 모듈을 등록하여 import eliar_core_module로 사용할 수 있습니다."
+}

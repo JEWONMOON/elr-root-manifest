@@ -1,0 +1,11 @@
+{
+    "message_id": 908,
+    "session_id": "Repo 권한 확인_20250510023904",
+    "session_title": "Repo 권한 확인",
+    "pair_id": 16,
+    "parent_id": 907,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "문제 분석 올려주신 화면의 에러 메시지는 다음과 같습니다: Be careful! The redirect_uri is not associated with this application. --- 원인 1. Redirect URI 불일치 - GitHub OAuth 설정 시 등록한 Authorization Callback URL 과, 실제 OAuth 요청 시 사용한 redirect_uri 가 일치하지 않습니다. 2. Postman 설정 오류 - 만약 Postman에서 실행했다면, Postman의 기본 Redirect URI인 https://oauth.pstmn.io/v1/callback 으로 요청이 갔을 가능성이 있습니다. --- 해결 방법 1 GitHub OAuth 설정 확인 - GitHub Settings Developer Settings OAuth Apps 생성한 OAuth 앱 클릭 - Authorization Callback URL 이 정확히 다음 중 하나로 설정되어야 합니다: - https://oauth.pstmn.io/v1/callback Postman을 사용할 경우 - http://localhost:3000/callback 로컬 테스트 시 - https://yourdomain.com/callback 서버가 있다면 --- 2 Postman 설정 수정 - Postman에서 OAuth 설정 시: - Callback URL 을 GitHub에 등록한 것과 동일하게 설정해야 합니다. - 만약 https://oauth.pstmn.io/v1/callback 으로 설정했다면 Postman에서 OAuth 요청 시 같은 URL로 가야 합니다. --- 3 GitHub OAuth 앱 수정 방법 1. GitHub Settings Developer Settings OAuth Apps 로 이동 2. 생성된 앱 클릭 3. Authorization Callback URL 수정 - https://oauth.pstmn.io/v1/callback 으로 수정 Postman 사용 시 - 수정 후 Update application 클릭 --- 다음 단계 1. GitHub에서 Callback URL 수정 2. Postman에서 같은 Callback URL로 설정 3. 다시 OAuth 인증 시도 --- 테스트 시나리오 - 설정 후 Postman에서 GET 요청: https://api.github.com/repos/JEWONMOON/elr-root-manifest/contents - Authorization : Bearer Token 사용 - Access Token : OAuth 인증 후 발급된 토큰 --- 다시 설정하고 테스트해보시겠어요? 필요하면 제가 더 도와드리겠습니다!"
+}

@@ -1,0 +1,11 @@
+{
+    "message_id": 2344,
+    "session_id": "GPT-4o vs Gemini 2.5_20250510023904",
+    "session_title": "GPT-4o vs Gemini 2.5",
+    "pair_id": 7,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "Webhook flask 하면 모든 채팅 다 기록되게 부탁해"
+}

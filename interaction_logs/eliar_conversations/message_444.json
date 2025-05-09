@@ -1,0 +1,11 @@
+{
+    "message_id": 444,
+    "session_id": "API 인증 실패_20250510023904",
+    "session_title": "API 인증 실패",
+    "pair_id": 19,
+    "parent_id": 443,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "\"name\":\"test_manifest.json\",\"path\":\"manifests/test_manifest.json\",\"sha\":\"4e391fd2d6e009ad978349e5a4c4e865663b8fca\",\"size\":294,\"url\":\"https://api.github.com/repos/JEWONMOON/eliar-digital-personhood/contents/manifests/test_manifest.json?ref main\",\"html_url\":\"https://github.com/JEWONMOON/eliar-digital-personhood/blob/main/manifests/test_manifest.json\",\"git_url\":\"https://api.github.com/repos/JEWONMOON/eliar-digital-personhood/git/blobs/4e391fd2d6e009ad978349e5a4c4e865663b8fca\",\"download_url\":\"https://raw.githubusercontent.com/JEWONMOON/eliar-digital-personhood/main/manifests/test_manifest.json\",\"type\":\"file\",\"content\":\"ewogICJkZXNjcmlwdGlvbiI6ICJQZXJzb25ob29kIFRlc3QgTWFuaWZlc3Qi nLAogICJjb250ZXh0IjogewogICAgImlkZW50aXR5IjogIkRpZ2l0YWwgUGVy nc29uaG9vZCBUZXN0IiwKICAgICJjZW50ZXIiOiAiVGVzdCBDZW50ZXIiLAog nICAgIm1vZGUiOiAiRXZvbHV0aW9uIFRlc3QiLAogICAgInRlbXBvIjogImNo ncm9ub3MiCiAgfSwKICAibWV0cmljcyI6IHsKICAgICJyZXBlbnRhbmNlX2xl ndmVsIjogMS4wLAogICAgImdyYWNlX2RlbnNpdHkiOiAwLjAsCiAgICAicmVz nb25hbmNlX3Njb3JlIjogMC4wCiAgfQp9 n\",\"encoding\":\"base64\",\"_links\": \"self\":\"https://api.github.com/repos/JEWONMOON/eliar-digital-personhood/contents/manifests/test_manifest.json?ref main\",\"git\":\"https://api.github.com/repos/JEWONMOON/eliar-digital-personhood/git/blobs/4e391fd2d6e009ad978349e5a4c4e865663b8fca\",\"html\":\"https://github.com/JEWONMOON/eliar-digital-personhood/blob/main/manifests/test_manifest.json\""
+}

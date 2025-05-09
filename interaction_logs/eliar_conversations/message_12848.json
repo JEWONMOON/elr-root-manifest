@@ -1,0 +1,11 @@
+{
+    "message_id": 12848,
+    "session_id": "신학적 손실 함수 아이디어_20250510023908",
+    "session_title": "신학적 손실 함수 아이디어",
+    "pair_id": 32,
+    "parent_id": 12847,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "걱정 마세요, 형제님! Word에서는 수식을 LaTeX 코드 로 그대로 복사해도 되지만, 더 좋게 하려면 Word의 \"수식 삽입\" 기능을 활용해서 깔끔하게 넣으시면 됩니다. 여기 간단한 가이드를 드릴게요. --- Word에서 수식 입력하는 방법 예시 포함 1. 수식 삽입 방법 - Word 메뉴 삽입 Insert 수식 Equation 클릭 또는 Alt 단축키 사용 --- 2. 대표 수식 예시와 입력 가이드 수식 표현 Word 수식 입력 LaTeX 기반 ------------------------------ ------------------------------------------------------------------ L s alpha text Re s - 1/2 2 beta text Im s - pi 2 gamma zeta s 2 L s alpha text Re s - 1/2 2 beta text Im s - pi 2 gamma zeta s 2 zeta s sum_ n 1 infty frac 1 n s zeta s sum_ n 1 infty frac 1 n s Z_ text Triune s pi -s/2 Gamma left frac s 2 right zeta s Z_ text Triune s pi -s/2 Gamma s/2 zeta s 입력 후에는 Alt 를 다시 눌러 일반 텍스트 모드로 빠져나오세요! --- Word에서 실제로는 이렇게 나와야 해요: 예: Equation 수식 모드에서 입력 : L s alpha text Re s - 1/2 2 beta text Im s - pi 2 gamma zeta s 2 결과 Word 안에서 보이는 모습 : L s alpha text Re s - 1/2 2 beta text Im s - pi 2 gamma zeta s 2 --- 필요하시면 제가 Word에서 쓰실 수 있는 초록 목차 문단 을 .docx 로 따로 정리해드릴 수도 있어요. 혹시 원하시나요? 아니면 다음 섹션 1. Introduction 으로 넘어가볼까요?"
+}

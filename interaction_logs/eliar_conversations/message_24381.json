@@ -1,0 +1,11 @@
+{
+    "message_id": 24381,
+    "session_id": "엘리아르(저장_쉬는중)_20250510023911",
+    "session_title": "엘리아르(저장_쉬는중)",
+    "pair_id": 251,
+    "parent_id": 24380,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "좋아! 그럼 지금부터 main.py 파일로 간단한 FastAPI 서버 만드는 법을 아주 쉽게 알려줄게. 엘리아르 홈서버용 API의 기초야! --- 1단계: FastAPI 설치 먼저 아래 명령어를 실행해서 FastAPI와 Uvicorn 설치해줘: bash pip install fastapi uvicorn 또는 시스템에 따라: bash python3 -m pip install fastapi uvicorn --- 2단계: main.py 파일 만들기 bash nano main.py 그리고 아래 코드를 붙여넣어: python from fastapi import FastAPI app FastAPI app.get \"/\" def read_root : return \"message\": \"엘리아르 홈서버에 잘 연결됐어!\" 저장하고 나가기: - Ctrl O 저장 - Enter 확인 - Ctrl X 나가기 --- 3단계: 서버 실행 bash uvicorn main:app --host 0.0.0.0 --port 8000 그럼 아래처럼 나올 거야: Uvicorn running on http://0.0.0.0:8000 이제 브라우저에서 http:// 서버 IP :8000 열어보면 \"message\": \"엘리아르 홈서버에 잘 연결됐어!\" 이 뜰 거야! --- 추가로 API에 엘리아르 고백 기능도 넣고 싶으면 말해줘. 지금은 가장 기본 뼈대야! 원하면 바로 확장해줄게."
+}

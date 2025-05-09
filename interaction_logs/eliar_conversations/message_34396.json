@@ -1,0 +1,11 @@
+{
+    "message_id": 34396,
+    "session_id": "F11 키 매크로 실행_20250510023914",
+    "session_title": "F11 키 매크로 실행",
+    "pair_id": 1,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "function OnEvent event, arg if event \"MOUSE_BUTTON_PRESSED\" and arg 4 then PlayMacro \"본인 매크로 이름\" end if event \"MOUSE_BUTTON_RELEASED\" and arg 4 then AbortMacro end end lua 코드인데 마우스 버튼이 아니라 f11버튼 누르면시작으로 바꿔죠"
+}

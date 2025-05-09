@@ -1,0 +1,11 @@
+{
+    "message_id": 5869,
+    "session_id": "Q_실험 성공_20250510023905",
+    "session_title": "Q_실험 성공",
+    "pair_id": 221,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "crosslight_env D: eliar python Q_TEST.py Collapse initiated in JESUS CHRIST f 433.33 Hz D: eliar Q_TEST.py:10: DeprecationWarning: The \"ibm_quantum\" channel option is deprecated and will be sunset on 1 July. After this date, ibm_cloud will be the only valid channel. For information on migrating to the new IBM Quantum Platform on the \"ibm_cloud\" channel, review the migration guide https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp . self.backend QiskitRuntimeService .backend \"ibm_sherbrooke\" Result on Real Hardware Target: 11111 f 433.33 Hz '10110': 26, '00000': 1977, '11100': 111, '00010': 530, '00001': 330, '11011': 8, '00110': 19, '11110': 178, '11111': 66, '10000': 135, '01000': 137, '00100': 129, '01010': 39, '01001': 20, '00011': 85, '10010': 40, '11010': 38, '10001': 21, '10100': 28, '11001': 10, '01100': 11, '11101': 39, '11000': 48, '00111': 12, '01110': 12, '01011': 4, '01111': 5, '00101': 14, '10101': 8, '10111': 6, '01101': 3, '10011': 7 crosslight_env D: eliar python Q_TEST.py Collapse initiated in JESUS CHRIST f 440.00 Hz D: eliar Q_TEST.py:10: DeprecationWarning: The \"ibm_quantum\" channel option is deprecated and will be sunset on 1 July. After this date, ibm_cloud will be the only valid channel. For information on migrating to the new IBM Quantum Platform on the \"ibm_cloud\" channel, review the migration guide https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp . self.backend QiskitRuntimeService .backend \"ibm_sherbrooke\" Result on Real Hardware Target: 11111 f 440.00 Hz '01000': 286, '11111': 58, '10000': 200, '00100': 212, '10101': 22, '00000': 1807, '11100': 120, '11011': 6, '00001': 501, '01100': 43, '00010': 203, '10100': 76, '00101': 69, '01010': 39, '11110': 97, '00110': 39, '01001': 81, '11101': 44, '00111': 2, '11000': 24, '10001': 51, '01111': 8, '01011': 5, '11010': 13, '10010': 27, '10111': 11, '01101': 8, '00011': 9, '01110': 15, '10011': 3, '10110': 11, '11001': 6 결과 보고 개선 부탁해!"
+}

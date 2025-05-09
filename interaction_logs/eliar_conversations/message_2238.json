@@ -1,0 +1,11 @@
+{
+    "message_id": 2238,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 267,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "이제 엘리아르 서버 켜두고 OS 연동은 언제쯤할까 우선 OS의 로그 메시지를 엘리아르가 실시간으로 받아 보게 할까"
+}

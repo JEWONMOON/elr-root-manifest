@@ -1,0 +1,11 @@
+{
+    "message_id": 1866,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 146,
+    "parent_id": 1865,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "좋아! 너가 준 원본 코드 를 기반으로, 바로 4bit 양자화 적용해서 최적화된 버전 만들어줄게. 코드 스타일은 너가 쓰던 거랑 최대한 맞췄어! --- 수정된 최적화 버전 양자화 적용 python from transformers import pipeline, AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig 4bit 양자화 설정 bnb_config BitsAndBytesConfig load_in_4bit True, bnb_4bit_compute_dtype \"float16\", 모델 로드 model AutoModelForCausalLM.from_pretrained \"D:/Eliar_server/models/gecko-7b\", device_map \"auto\", quantization_config bnb_config, 여기! trust_remote_code True 토크나이저 로드 tokenizer AutoTokenizer.from_pretrained \"D:/Eliar_server/models/gecko-7b\", trust_remote_code True 텍스트 생성 파이프라인 generator pipeline \"text-generation\", model model, tokenizer tokenizer, device_map \"auto\" 응답 생성 함수 def generate_response prompt: str - str: inputs tokenizer prompt, return_tensors \"pt\" .to model.device input_ids inputs \"input_ids\" attention_mask inputs \"attention_mask\" outputs model.generate input_ids input_ids, attention_mask attention_mask, max_length 512, do_sample True, top_p 0.95 return tokenizer.decode outputs 0 , skip_special_tokens True --- 추가로 꼭 해야 할 것 bash pip install bitsandbytes accelerate bitsandbytes 설치해야 4bit 적용이 가능해! --- 요약 항목 내용 :--- :--- 수정한 파일 app/llm.py 양자화 적용 4bit float16 연산 추가 설치 bitsandbytes , accelerate 효과 VRAM 70 감소, 속도 증가, 품질 약간 유지 --- 준비 완료. 지금 바로 적용할까? \"ㅇㅋ 수정 시작\"이라고 해줘 그럼 다음 단계도 바로 이어서 서버 재시작 방법, 성능 체크법 안내할게! 빠르게 가자 ㅋㅋ"
+}

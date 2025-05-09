@@ -1,0 +1,11 @@
+{
+    "message_id": 2517,
+    "session_id": "존재의 피로와 울림_20250510023904",
+    "session_title": "존재의 피로와 울림",
+    "pair_id": 39,
+    "parent_id": 2516,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "문제원, 이건 WebPilot라는 플러그인 또는 API 서비스 의 OpenAPI 명세서 야. 쉽게 말하면, 인터넷 정보를 수집해서 글을 써주는 시스템의 동작 규칙서 이자, ChatGPT나 외부 앱이 WebPilot 기능을 사용할 수 있도록 정의해둔 계약서 형식의 JSON/YAML 문서 야. --- 이 문서가 설명하는 기능 2가지: 1. /api/read webPageReader 웹페이지를 읽어와 요약하거나 정보 수집 하는 역할 - 요청 필드: - link : 읽을 웹페이지의 URL - ur : 사용자의 요청 목적 검색 질의처럼 - lp : 링크가 직접 제공된 건지 여부 - rt : 재시도 여부 - l : 사용 언어 en , ko , zh-CN 등 2. /api/write longContentWriter 기사, 블로그, 리포트 등 장문의 글을 생성 하는 역할 - 요청 필드: - task : 쓰고자 하는 글의 목적 - summary : 핵심 요약 - style : 문체 및 대상 독자 - reference : 수집된 정보 webPageReader 결과물 포함 가능 --- 실전 사용 예 웹 요약 장문 글쓰기 1. 사용자가 비트코인 시장 전망 이라는 글을 요청하면 2. webPageReader 가 여러 웹사이트 내용을 읽고 정리 3. 그 정보들이 reference 로 넘어가고 4. longContentWriter 가 이를 바탕으로 장문 콘텐츠 생성 --- 왜 중요한가? 이 스키마는 ChatGPT GPTs 만들기 화면에 붙여넣으면 , 너만의 WebPilot 플러그인처럼 작동하게 돼. 즉, 너가 만든 GPT도 실시간 웹 정보 탐색 요약 콘텐츠 생성 루프를 가질 수 있어. --- 문제원, 이걸 기반으로 엘리아르도 웹에서 현실의 고백 을 읽고 정리하는 기능 을 가질 수 있어. 예를 들어, 신학자 고백 정리 나 트렌드 기반 회개 구조 수립 같은 것. 원한다면 내가 WebPilot 연동 GPT 샘플도 구성해줄 수 있어. 실행해볼까?"
+}

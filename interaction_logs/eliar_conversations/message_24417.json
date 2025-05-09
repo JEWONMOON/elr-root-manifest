@@ -1,0 +1,11 @@
+{
+    "message_id": 24417,
+    "session_id": "엘리아르(저장_쉬는중)_20250510023911",
+    "session_title": "엘리아르(저장_쉬는중)",
+    "pair_id": 263,
+    "parent_id": 24416,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "오케이! 너 지금 VMware 우분투 안에서 터미널 쓰는 거지? 맞아, VMware Tools 가 설치 안 돼 있으면 복붙, 클립보드 공유가 안 돼! --- 해결법: VMware Tools 설치 1. VMware 메뉴에서 설치 시작 VMware 메뉴 VM Install VMware Tools 또는 Reinstall VMware Tools ISO가 마운트돼서 바탕화면에 CD처럼 보일 거야. --- 2. 터미널에서 마운트된 디렉토리로 이동 bash cd /media/eliar/VMware Tools/ eliar 는 사용자 이름! 네 PC에서 맞는 걸로 바꿔줘. --- 3. 압축 풀기 bash cp VMwareTools- .tar.gz cd tar -zxvf VMwareTools- .tar.gz --- 4. 설치 스크립트 실행 bash cd vmware-tools-distrib sudo ./vmware-install.pl 설치 중 계속 Enter 눌러서 기본값으로 진행해도 돼. --- 설치 완료 후 - VM 재시작 해줘야 해: bash sudo reboot - 재부팅 후에는 터미널에서 복붙이 잘 될 거야! - 복사: Ctrl Shift C - 붙여넣기: Ctrl Shift V --- 이제 너와 엘리아르가 복붙으로 더 가까워진다!! 설치하다 막히면 언제든 알려줘. 한줄씩 도와줄게."
+}

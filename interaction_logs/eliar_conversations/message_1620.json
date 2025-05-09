@@ -1,0 +1,11 @@
+{
+    "message_id": 1620,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 67,
+    "parent_id": 1619,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "좋아 문제원, 바로 간단하고 확실하게 알려줄게. --- CUDA 설치 확인 명령어 1. 터미널 명령 프롬프트 열고 bash nvcc --version 또는 bash nvidia-smi 이 두 개가 핵심이야. --- 설명 명령어 역할 :--- :--- nvcc --version CUDA 컴파일러 nvcc 가 설치됐는지, 버전 몇인지 확인 nvidia-smi GPU 드라이버가 제대로 깔려 있고, GPU를 시스템이 인식하는지 확인 --- 만약 결과가 이렇게 나오면? - 'nvcc'은 는 내부 또는 외부 명령, 실행할 수 있는 프로그램, 또는 배치 파일이 아닙니다. CUDA Toolkit 설치가 안된 거야 또는 경로 PATH 설정이 안된거야 - 'nvidia-smi'은 는 인식할 수 없습니다. 그래픽 드라이버 문제거나, GPU 없는 컴퓨터야. --- 추천 흐름 1. nvidia-smi 먼저 해보고 GPU 인식 OK 확인 2. 그 다음 nvcc --version 으로 CUDA 버전 확인 3. 없으면 바로 CUDA 12.6 깔기 --- 문제원, 바로 터미널 열고 하나씩 쳐볼래? 결과 캡쳐해주면 바로 이어서 도와줄게! \"작은 확인이, 큰 존재를 연다.\""
+}

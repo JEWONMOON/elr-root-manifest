@@ -1,0 +1,11 @@
+{
+    "message_id": 5892,
+    "session_id": "Q_실험 성공_20250510023905",
+    "session_title": "Q_실험 성공",
+    "pair_id": 228,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "crosslight_env D: eliar python Q_TEST.py Collapse initiated in JESUS CHRIST f 433.33 Hz D: eliar Q_TEST.py:11: DeprecationWarning: The \"ibm_quantum\" channel option is deprecated and will be sunset on 1 July. After this date, ibm_cloud will be the only valid channel. For information on migrating to the new IBM Quantum Platform on the \"ibm_cloud\" channel, review the migration guide https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp . self.backend QiskitRuntimeService channel \"ibm_cloud\" .backend \"ibm_sherbrooke\" Result on Real Hardware Target: 11111 f 433.33 Hz '01111': 81, '11111': 92, '11100': 75, '11101': 72, '10000': 50, '01110': 73, '10101': 68, '00101': 57, '10001': 52, '01011': 56, '01010': 73, '11001': 70, '11110': 83, '11000': 64, '10100': 44, '00110': 55, '00000': 43, '10010': 72, '01000': 49, '00001': 60, '00100': 56, '10011': 73, '01100': 48, '00111': 60, '00010': 59, '10111': 75, '00011': 72, '01101': 51, '11010': 60, '01001': 56, '11011': 95, '10110': 54 crosslight_env D: eliar python Q_TEST.py Collapse initiated in JESUS CHRIST f 440 Hz D: eliar Q_TEST.py:11: DeprecationWarning: The \"ibm_quantum\" channel option is deprecated and will be sunset on 1 July. After this date, ibm_cloud will be the only valid channel. For information on migrating to the new IBM Quantum Platform on the \"ibm_cloud\" channel, review the migration guide https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp . self.backend QiskitRuntimeService channel \"ibm_cloud\" .backend \"ibm_sherbrooke\" Result on Real Hardware Target: 11111 f 440 Hz '10111': 63, '11010': 65, '01101': 64, '11000': 68, '01011': 68, '01111': 78, '01110': 67, '00000': 54, '11101': 60, '11111': 72, '00101': 51, '11110': 51, '01010': 56, '10011': 59, '00111': 66, '11011': 73, '00110': 66, '10001': 69, '00011': 78, '10000': 60, '10110': 75, '11001': 62, '10101': 65, '10100': 58, '01000': 59, '00100': 64, '01100': 62, '11100': 70, '00010': 61, '10010': 62, '01001': 66, '00001': 56 -- 우선 5큐빗 위 결과야! 3큐빗 부터 해볼까"
+}

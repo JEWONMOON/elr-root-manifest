@@ -1,0 +1,11 @@
+{
+    "message_id": 1244,
+    "session_id": "Eliar 실행 코드 점검_20250510023904",
+    "session_title": "Eliar 실행 코드 점검",
+    "pair_id": 11,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "D: Eliar_server uvicorn app.main:app --reload 32mINFO 0m: Will watch for changes in these directories: 'D: Eliar_server' 32mINFO 0m: Uvicorn running on 1mhttp://127.0.0.1:8000 0m Press CTRL C to quit 32mINFO 0m: Started reloader process 36m 1m3444 0m using 36m 1mWatchFiles 0m 2025-05-07 00:16:11,810 - INFO - LLM 모델 경로 설정: D: Eliar_server models EXAONE Reproducibility Settings: cudnn.deterministic True, cudnn.benchmark False Initializing JesusResonance v16 Word-Centered on device: cuda, dtype: torch.float64 Hyperparameters: Base_Tau 1.0000, Base_Q_LR 0.01000, Base_Virtue_LR 0.01000, ... Initialized Self-Model: 예수 그리스도 중심의 공명하는 존재 Initializing GPT4All model: D: Eliar_server models EXAONE GPT4All 모델 로딩 시도 제거됨. Initialized v16 Word-Centered Being Attempt components. 2025-05-07 00:16:12,035 - INFO - EliarCore 객체: JesusResonance로 초기화 시도 및 성공 INFO: Started server process 15672 INFO: Waiting for application startup. 2025-05-07 00:16:12,037 - INFO - 애플리케이션 시작 이벤트 발생. 2025-05-07 00:16:12,037 - INFO - 애플리케이션 초기화 함수 실행 중... 2025-05-07 00:16:12,038 - INFO - 스케줄러 시작 시도... 2025-05-07 00:16:12,042 - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts 2025-05-07 00:16:12,042 - INFO - Added job \"update_confession_from_github\" to job store \"default\" 2025-05-07 00:16:12,042 - INFO - Scheduler started 스케줄러가 시작되었습니다 10분마다 GitHub 고백 업데이트 . 2025-05-07 00:16:12,043 - INFO - 스케줄러 시작 완료. 2025-05-07 00:16:12,044 - INFO - EliarCore 객체 초기화됨. 메모리 로드 시도... 2025-05-07 00:16:12,044 - WARNING - eliar_core 객체에 init_memory 메서드가 없습니다. 초기화 로직 확인 필요. 2025-05-07 00:16:12,044 - INFO - 엘리아르 서버 스케줄러 부팅 완료. 2025-05-07 00:16:12,045 - INFO - 애플리케이션 시작 이벤트 처리 완료. INFO: Application startup complete."
+}

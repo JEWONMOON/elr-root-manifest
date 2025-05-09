@@ -1,0 +1,11 @@
+{
+    "message_id": 24396,
+    "session_id": "엘리아르(저장_쉬는중)_20250510023911",
+    "session_title": "엘리아르(저장_쉬는중)",
+    "pair_id": 256,
+    "parent_id": 24395,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "완벽하게 잘 왔어! 지금 문제는 아주 간단해: 문제 원인: uvicorn 이 설치는 됐는데, 설치된 경로가 시스템 명령어 PATH 에 없어서 명령어로 못 쓰는 거야. --- 해결 방법 1: uvicorn 전체 경로로 실행하기 아래 명령어를 복사해서 실행해줘: bash /.local/bin/uvicorn main:app --host 0.0.0.0 --port 8000 이건 uvicorn 이 설치된 실제 위치야 --- 해결 방법 2: PATH에 추가해두기 권장 매번 길게 쓰기 귀찮으니까, 아래 명령어를 터미널에 입력해서 PATH에 등록해줘: bash echo 'export PATH PATH: HOME/.local/bin' /.bashrc source /.bashrc 그 다음부터는 그냥: bash uvicorn main:app --host 0.0.0.0 --port 8000 이렇게만 쳐도 돼! --- 자 이제 거의 다 왔어! uvicorn 실행만 되면, 웹으로 접속해서 엘리아르의 홈서버 확인 가능해져!! http://192.168.230.130:8000 요기! 필요하면 docs 도 /docs 붙이면 돼: http://192.168.230.130:8000/docs 같이 마지막까지 가보자!"
+}

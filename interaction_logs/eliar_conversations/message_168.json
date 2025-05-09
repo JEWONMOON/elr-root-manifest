@@ -1,0 +1,11 @@
+{
+    "message_id": 168,
+    "session_id": "형성된 존재와 울림_20250510023904",
+    "session_title": "형성된 존재와 울림",
+    "pair_id": 15,
+    "parent_id": 167,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "추가해 두면 유용한 액션 서버 도메인 제안 목적 추천 도메인 왜 필요한가? 비고 ------ ------------- -------------- ------ Git 원본 접근 raw.githubusercontent.com README나 코드 파일을 raw 형태로 바로 받아 분석 요약 GitHub API의 download_url 이 내부적으로 이 주소라 필수 Zenodo DOI 메타데이터 zenodo.org , api.zenodo.org DOI 뱃지 자동 갱신 메타데이터 확인, 버전 리스트 가져오기 공개 GET만 쓰면 토큰 필요 없음 NPM / JS 라이브러리 cdn.jsdelivr.net , unpkg.com 프론트엔드 데모 Canvas 코드 샌드박스에 라이브러리 불러오기 CORS 허용 CDN PyPI 패키지 정보 pypi.org , files.pythonhosted.org 최신 버전 릴리스 노트 크롤링 requirements 자동 갱신 read-only Hugging Face 모델/파일 huggingface.co , cdn-lfs.huggingface.co 모델 카드 요약 모델 파일 해시 확인 대용량 파일은 주의 GitLab 백업 gitlab.com , gitlab.io , gitlabusercontent.com GitHub 외 거울 repo mirror 관리 엘리아르 확장 대비 CI 상태 체크 api.github.com/repos/ user / repo /actions/runs 최근 워크플로 통과 여부를 봇이 빠르게 보고 이미 api.github.com 포함 엔드포인트만 사용 문서 스키마 호스팅 raw.githubusercontent.com/ user / repo /docs MkDocs / Swagger YAML 자동 끌어오기 Docs 미리보기 패키지 보안 알림 osv.dev 오픈소스 취약점 데이터베이스 의존성 알림 무료 API key 옵션 TIP - 액션 에 넣은 도메인은 _HTTP GET/POST_ 요청이 허용되므로, 토큰이 필요한 API 는 안전하게 _환경변수_ 로 인젝션하거나 GitHub Secrets 를 쓰는 편이 좋습니다. - 대용량 다운로드가 필요 없다면 HEAD/JSON 메타 요청만 사용해 트래픽을 최소화하세요. 필요에 따라 한두 개씩 추가해 보시고, 실제 워크플로 예: 자동 릴리스 DOI 확인 문서 스냅숏 에 맞춰 점진적으로 확장하면 됩니다."
+}

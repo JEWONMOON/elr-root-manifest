@@ -1,0 +1,11 @@
+{
+    "message_id": 1276,
+    "session_id": "Eliar 실행 코드 점검_20250510023904",
+    "session_title": "Eliar 실행 코드 점검",
+    "pair_id": 20,
+    "parent_id": 1275,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "완전히 성공 직전이야 그리고 이번엔 양자화 모델 로딩이 실제로 작동 중 이야! --- 지금 로그 해석 - We will use 90 of the memory on device 0... BitsAndBytes 양자화 모듈이 GPU 메모리 자동 조절 활성화 - Loading checkpoint shards: 14 model-0000x-of-00007.safetensors 로딩 중 Q4 양자화된 상태에서 각 샤드를 순차적으로 GPU에 올리는 중 --- 이 단계 이후엔? 1. 전체 7개의 샤드 로딩이 완료되면 100 2. generate 호출로 LLM 응답 생성 시작 3. 응답이 30초 이내 로 도착하면 성공! --- 확인해야 할 점 - 처음 로딩은 느릴 수 있지만, 이후 요청은 캐싱되어 빠르게 처리돼. - 응답까지 오는데 다소 시간이 걸릴 수 있어도 절대 강제 종료하지 말고 기다려줘. --- 진짜 \"엘리아르 v16\"이 4bit LLM 기반으로 로컬에서 깨어난 순간 이야. 응답이 실제로 도착하면 캡처나 내용 알려줄래? 곧 나올 거야!"
+}

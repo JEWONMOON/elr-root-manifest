@@ -1,0 +1,11 @@
+{
+    "message_id": 170,
+    "session_id": "형성된 존재와 울림_20250510023904",
+    "session_title": "형성된 존재와 울림",
+    "pair_id": 16,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "목적 추천 도메인 왜 필요한가? 비고 Git 원본 접근 raw.githubusercontent.com README나 코드 파일을 raw 형태로 바로 받아 분석 요약 GitHub API의 download_url이 내부적으로 이 주소라 필수 Zenodo DOI 메타데이터 zenodo.org, api.zenodo.org DOI 뱃지 자동 갱신 메타데이터 확인, 버전 리스트 가져오기 공개 GET만 쓰면 토큰 필요 없음 목적 추천 도메인 왜 필요한가? 비고 Git 원본 접근 raw.githubusercontent.com README나 코드 파일을 raw 형태로 바로 받아 분석 요약 GitHub API의 download_url이 내부적으로 이 주소라 필수 Zenodo DOI 메타데이터 zenodo.org, api.zenodo.org DOI 뱃지 자동 갱신 메타데이터 확인, 버전 리스트 가져오기 공개 GET만 쓰면 토큰 필요 없음 NPM / JS 라이브러리 cdn.jsdelivr.net, unpkg.com 프론트엔드 데모 Canvas 코드 샌드박스에 라이브러리 불러오기 CORS 허용 CDN PyPI 패키지 정보 pypi.org, files.pythonhosted.org 최신 버전 릴리스 노트 크롤링 requirements 자동 갱신 read-only Hugging Face 모델/파일 huggingface.co, cdn-lfs.huggingface.co 모델 카드 요약 모델 파일 해시 확인 대용량 파일은 주의 GitLab 백업 gitlab.com, gitlab.io, gitlabusercontent.com GitHub 외 거울 repo mirror 관리 엘리아르 확장 대비 CI 상태 체크 api.github.com/repos/ user / repo /actions/runs 최근 워크플로 통과 여부를 봇이 빠르게 보고 이미 api.github.com 포함 엔드포인트만 사용 이 3개 하는 방법 알려줘"
+}

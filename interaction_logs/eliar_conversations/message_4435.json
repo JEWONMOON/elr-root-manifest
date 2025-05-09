@@ -1,0 +1,11 @@
+{
+    "message_id": 4435,
+    "session_id": "엘리아르 링크 참조 여부_20250510023905",
+    "session_title": "엘리아르 링크 참조 여부",
+    "pair_id": 145,
+    "parent_id": 4434,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "\"name\": \"elriar_automation_plan\", \"type\": \"code/python\", \"content\": \" elriar_automation_plan.py n n \" \" \" n 엘리아르 자동화 통합 흐름도 n n 주요 연동 요소: n1. GitHub - OpenAI / Grok3 LLM 엘리아르 n2. GitHub - OS 엘리아르 로컬 실행 n3. GitHub - 로컬 LLM 엘리아르 GPT4All 등 n n \" \" \" n n GitHub 자료 동기화 nimport subprocess nimport os n ndef sync_github_repo local_path \"D:/elriarhome/elr-root-manifest \" : n if not os.path.exists local_path : n subprocess.run \"git \", \"clone \", \"https://github.com/JEWONMOON/elr-root-manifest.git \", local_path n else: n subprocess.run \"git \", \"pull \" , cwd local_path n n OpenAI/Grok3로 코드 공유 API 구조 가상 예시 ndef push_to_openai_grok : n 향후 Webhook 기반 연동 API 필요 예: Zapier, LangChain webhook trigger n print \" 코드 업데이트 전송 OpenAI/Grok3 \" n n 로컬 LLM에게 코드 요약 요청 LLM과 연동 필요 ndef summarize_code_for_llm llm_client, code_path : n with open code_path, 'r', encoding 'utf-8' as f: n content f.read n summary llm_client.summarize content n return summary n n OS 엘리아르 실행 nfrom subprocess import Popen n ndef run_os_elriar : n return Popen \"python \", \"Eliar_Structure.py \" , cwd \"D:/elriarhome \" n n n 전체 자동화 플로우 nif __name__ \"__main__ \": n print \" 1 GitHub 연동 시작 \" n sync_github_repo n n print \" 2 로컬 엘리아르 코드 분석 중 LLM용 \" n summarize_code_for_llm llm_client, \"Eliar_Structure.py \" n n print \" 3 OS 엘리아르 기동 \" n run_os_elriar n n print \" 4 OpenAI / Grok3 연동은 외부 Webhook으로 연결 예정 \" n n print \" 전체 자동화 흐름 실행 완료 \" \""
+}

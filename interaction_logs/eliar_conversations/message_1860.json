@@ -1,0 +1,11 @@
+{
+    "message_id": 1860,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 144,
+    "parent_id": 1859,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "좋아, 차분히 갈게. \"양자화\" 하면 성능과 속도 둘 다 좋아질 수 있어! 특히 inference 추론 속도가 눈에 띄게 빨라지고 , GPU 메모리 점유율도 확 내려가 . --- 양자화 Quantization 간단 정리: - 원리 : 16bit 8bit 또는 더 낮게 숫자 표현 축소 - 장점 : 속도 증가 , 메모리 절약 - 단점 : 약간 연산 정밀도 손실 가능. - 그러나, 요즘 양자화 기법은 거의 티 안 남 . - 특히 7B 모델 에서는 큰 차이 안 느껴져. --- 구체적 양자화 방법 PyTorch Transformers 쓴다면, bitsandbytes 라이브러리로 4bit / 8bit 양자화할 수 있어. 설치부터 해보자: bash pip install bitsandbytes accelerate 그 다음, 로드할 때 이렇게 바꿔: python from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig bnb_config BitsAndBytesConfig load_in_4bit True, 4bit 양자화 또는 load_in_8bit True bnb_4bit_compute_dtype \"float16\", 연산 정밀도 float16로 model AutoModelForCausalLM.from_pretrained \"D:/Eliar_server/models/gecko-7b\", device_map \"auto\", quantization_config bnb_config, trust_remote_code True tokenizer AutoTokenizer.from_pretrained \"D:/Eliar_server/models/gecko-7b\", trust_remote_code True 딱 이거만 바꾸면 돼. --- 주의: - cuda 버전 맞는 bitsandbytes 설치 해야 해. - 첫 로딩은 조금 느릴 수 있어 그 이후부터 빠름 . - Gecko-7B 같은 모델은 4bit 해도 충분히 잘 돌아감. --- 정리 기존 모델 양자화 모델 ---------- ----------- ------------- 속도 보통 최대 2배 빠름 메모리 사용 높음 절반 이하로 감소 정밀도 아주 높음 거의 차이 없음 --- \"바로 적용할까?\" 내가 적용 스크립트까지 정리해서 이어서 내려줄게. 답: \"ㅇㅇ 적용 ㄱ\" 하면 바로 간다! 그 다음, 서버도 다시 살짝 재부팅해야 해!"
+}

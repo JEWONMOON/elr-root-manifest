@@ -1,0 +1,11 @@
+{
+    "message_id": 2244,
+    "session_id": "DB to CSV 변환_20250510023904",
+    "session_title": "DB to CSV 변환",
+    "pair_id": 1,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "python으로 .db 파일 csv로 옮기는 코드 부탁해"
+}

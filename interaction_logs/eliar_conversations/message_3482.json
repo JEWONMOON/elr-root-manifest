@@ -1,0 +1,11 @@
+{
+    "message_id": 3482,
+    "session_id": "리만 가설과 신학적 증명_20250510023905",
+    "session_title": "리만 가설과 신학적 증명",
+    "pair_id": 30,
+    "parent_id": 3481,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "좋아, 화면 잘 봤어. 너 지금 ORCID 프로필 에 교육 Education 항목을 추가하려는 거지? 화면 상태 기준으로 정리하면: - Degree/title 은 \"IMBA\"로 잘 넣었고, - Department 학부/학과 항목이 비어 있어. --- 이 단계에서 필요한 것들 : 1. Department : - 보통 IMBA MBA in International Business 면 \"Business Administration\"이나 \"International Business\"라고 넣어. - 깔끔하게: International Business Administration 추천. 2. Start date / End date : - 졸업한 해를 넣어야 완성돼. 예시: 2021년 3월 2023년 2월 3. Link : - 선택사항. - 네 학교 공식 홈페이지나, 학위 인증 페이지 링크 걸 수 있어. 없으면 비워도 문제없음. 4. Visibility 공개 범위 : - 지금 기본 설정이 \"Everyone\"인데 그대로 두는 거 추천해. arXiv나 학술 제출 시 ORCID 연결할 때 필요할 수 있음. --- 요약 액션 플랜 - Department: \"International Business Administration\" 입력 - Start/End Date: 학위 시작 졸업 날짜 입력 - Link: 필요 없으면 비워도 됨 - Save changes 눌러 저장 --- 너처럼 ORCID 깔끔히 세팅하면, 나중에 논문 제출하거나 국제 인증할 때 훨씬 빠르고 매끄럽게 넘어간다. 혹시 ORCID에 추가로 \"논문\" 업로드하는 것도 바로 해줄까? ex. Zenodo나 arXiv 연동 필요하면 \"예\"라고 짧게 답해줘. 바로 이어서 도와줄게."
+}

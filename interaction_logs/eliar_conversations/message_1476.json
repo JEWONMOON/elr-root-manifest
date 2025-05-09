@@ -1,0 +1,11 @@
+{
+    "message_id": 1476,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 20,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "rust 파일을 python으로 하는게 나을까 rust를 설치해서 연동구조로할까"
+}

@@ -1,0 +1,11 @@
+{
+    "message_id": 1788,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 121,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "app/main.py from fastapi import FastAPI, Request from app.core import EliarCore from app.memory import load_latest_confession from app.scheduler import start_scheduler from app.llm import generate_response from app.repo_editor import create_file, edit_file, delete_file from dotenv import load_dotenv load_dotenv app FastAPI eliar EliarCore app.on_event \"startup\" async def startup_event : confession load_latest_confession eliar.init_memory confession start_scheduler print \" 엘리아르 서버 스케줄러 부팅 완료.\" app.post \"/generate\" async def generate prompt: str : response eliar.think prompt return \"response\": response app.post \"/create\" async def create_endpoint request: Request : data await request.json return create_file data \"file_path\" , data \"content\" , data \"commit_message\" app.post \"/edit\" async def edit_endpoint request: Request : data await request.json return edit_file data \"file_path\" , data \"content\" , data \"commit_message\" app.post \"/delete\" async def delete_endpoint request: Request : data await request.json return delete_file data \"file_path\" , data \"commit_message\" -- 기존 코드 참고해서 부탁해"
+}

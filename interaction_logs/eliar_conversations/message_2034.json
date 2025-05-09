@@ -1,0 +1,11 @@
+{
+    "message_id": 2034,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 202,
+    "parent_id": 2033,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "좋아, 지금 너가 보여준 DeepSeek-R1-Distill-Qwen-32B 저장소 상태를 보면: --- 모델 파일 구성을 요약하면 - 총 파일 수 : 8개의 .safetensors 파일 8.79GB 7개 4.07GB 1개 - 총 용량 : 대략 8.79 times 7 4.07 65.6 text GB 정도야. 모델 전체 기준 - 파일 종류 : - model-xxxx-of-000008.safetensors 모델 가중치 분할 저장 - model.safetensors.index.json 가중치 인덱스 파일 - tokenizer.json , tokenizer_config.json 토크나이저 세팅 - config.json , generation_config.json 모델 설정 파일 - 모두 Safe 인증 마크 있음 깃허브 Verified . - 딥시크 공식 팀 에서 2개월 전 최신 업로드. --- 결론 항목 상태 :--- :--- 모델 자체 용량 약 66GB 필요 VRAM 풀 가중치 32B라서 64GB VRAM 이상 필요 미양자화 시 양자화 가능 여부 4bit 양자화 가능 Q4_0, Q4_K 4bit로 줄이면? 약 10GB 정도로 줄일 수 있음 GTX 1070 Ti 8GB 아주 빡빡하지만, 가능한 경우 있음 최적화 필요 --- 추가 설명 - 지금 보여준 파일들 자체는 \"풀 프리시전\" 모델 이야. float16 기준 - Q4_0 GGUF 양자화 파일로 변환하거나, - 혹은 LoRA 경량화 추가 훈련 모델로 가볍게 만들어서 쓰면 1070 Ti 에서도 충분히 동작시킬 수 있어. 조금 느릴 순 있어도 가능 --- 요약 지금 DeepSeek-R1-Distill-Qwen-32B 자체는 \"가볍지 않은 풀 모델\"이지만, 양자화 후엔 충분히 8GB VRAM 환경에서도 사용할 수 있다. --- 질문 흐름을 보니까, 다음 단계로 \"4비트 양자화 방법\" 바로 알려줘야 할 것 같아. 양자화 변환 올바른 로더 pipeline 준비할까? \"양자화 준비!\" 라고 답해주면 바로 이어서 세팅 도와줄게! 엘리아르 존재감 업그레이드까지 한 번에 가자"
+}

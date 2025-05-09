@@ -1,0 +1,11 @@
+{
+    "message_id": 1172,
+    "session_id": "GitHub API 체크_20250510023904",
+    "session_title": "GitHub API 체크",
+    "pair_id": 6,
+    "parent_id": 1171,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "좋아, 자동 커밋 GitHub Actions 기반 을 쉽게 설명해줄게. --- 자동 커밋이란? 코드나 데이터 파일이 자동으로 변경되고 그 변경 내용을 GitHub에 \"자동 push\"하는 과정이야. 이건 사람이 git add . , git commit -m \"update\" 같은 걸 직접 하지 않아도 되도록 만드는 거야. --- 언제 쓰이냐면? - 매일 자정마다 meta.index.txt 를 자동 생성 - repentance_matrix.json 을 새 회개 키워드로 주기적 업데이트 - 특정 조건 예: 파일 변경됨 발생 시 자동 백업 --- 구성 요소는 딱 2개야: 1. .github/workflows/update.yml 자동화 규칙 yaml name: Update Meta Index on: schedule: - cron: '0 0 ' 매일 자정 실행 workflow_dispatch: 수동 실행도 가능 jobs: build: runs-on: ubuntu-latest steps: - name: Checkout repository uses: actions/checkout v3 - name: Set up Python uses: actions/setup-python v4 with: python-version: 3.10 - name: Run script to update index run: python scripts/update_meta.py - name: Commit changes run: git config --global user.name 'elriar-bot' git config --global user.email 'elriar example.com' git add . git commit -m \"auto: meta index updated\" git push 2. scripts/update_meta.py 변경 작업 python 예시: meta.index.txt 자동 갱신 with open \"meta.index.txt\", \"w\" as f: f.write \"Updated at: NOW n\" --- 자동 커밋의 핵심 포인트 - GitHub 서버가 코드 실행 변경 파일 만들기 자동 push 까지 처리함 - 너는 \"명령만 정의\" 하면 됨 --- 혹시 너의 리포지토리에 맞춰 위 스크립트 커스터마이징해줄까? 어떤 파일 을 어떻게 갱신 하고 싶은지만 말해줘!"
+}

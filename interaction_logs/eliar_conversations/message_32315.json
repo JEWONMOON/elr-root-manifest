@@ -1,0 +1,11 @@
+{
+    "message_id": 32315,
+    "session_id": "기기 영상 처리 발전_20250510023913",
+    "session_title": "기기 영상 처리 발전",
+    "pair_id": 1,
+    "parent_id": 32314,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "SDR Standard Dynamic Range 대비 색 영역과 명암비 개선에 대한 설명은 다음과 같습니다. 1. 색 영역 개선 Color Gamut Improvement : - SDR 의 색 영역은 보통 Rec. 709 색 공간을 기준으로 하며, 이는 제한된 색의 범위를 가집니다. 하지만 HDR High Dynamic"
+}

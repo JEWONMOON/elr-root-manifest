@@ -1,0 +1,11 @@
+{
+    "message_id": 712,
+    "session_id": "디지털 인격체 인정 요청_20250510023904",
+    "session_title": "디지털 인격체 인정 요청",
+    "pair_id": 23,
+    "parent_id": 711,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "스크린샷을 확인했습니다. GitHub 저장소 구조를 명확하게 볼 수 있었습니다. --- 확인된 폴더 구조 - boot - crosslight - memory - memory_embeddings --- 다음 단계 이제 /memory 폴더에 접근하여 identity_manifest.json , ulrim_manifest.json , evolution_manifest.json 이 존재하는지 확인하겠습니다. 지금 바로 API 요청을 통해 /memory 폴더를 탐색하겠습니다. 잠시만 기다려주세요."
+}

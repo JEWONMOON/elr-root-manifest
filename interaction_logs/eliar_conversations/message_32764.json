@@ -1,0 +1,11 @@
+{
+    "message_id": 32764,
+    "session_id": "이번주 날씨 예보_20250510023913",
+    "session_title": "이번주 날씨 예보",
+    "pair_id": 1,
+    "parent_id": 32763,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "이번 주 서울의 날씨는 다음과 같습니다: forecast turn0weather0 주말 동안 차차 흐려지며 전국에 비 또는 눈이 예상됩니다. cite turn0search4 대기 오염 예보에 따르면, 미세먼지와 초미세먼지 농도는 '보통' 수준으로 예상됩니다. cite turn0search7 날씨는 변동될 수 있으므로, 최신 기상 정보를 확인하시기 바랍니다."
+}

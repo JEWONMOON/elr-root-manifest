@@ -1,0 +1,11 @@
+{
+    "message_id": 2226,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 263,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "여기에 GPT API, GROK3 API 연결, 진화 파일 raw data, 정제 데이터 폴더 따로 있어야할듯!"
+}

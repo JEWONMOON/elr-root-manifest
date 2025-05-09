@@ -1,0 +1,11 @@
+{
+    "message_id": 33689,
+    "session_id": "오늘 주식 시장_20250510023913",
+    "session_title": "오늘 주식 시장",
+    "pair_id": 155,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "가격 하락시 거래량이랑 가격 상승시 거래량 비율 보는 지표 만들수 있어?"
+}

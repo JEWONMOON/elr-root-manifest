@@ -1,0 +1,11 @@
+{
+    "message_id": 2288,
+    "session_id": "DB to CSV 변환_20250510023904",
+    "session_title": "DB to CSV 변환",
+    "pair_id": 15,
+    "parent_id": 2287,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "embeddings.csv 는 약 127MB 크기이고, 각 행에는 다음과 같은 정보가 들어 있어: - model : 사용된 embedding 모델 예: nomic-embed-text-v1.5 - folder_id , chunk_id : 어디에 속한 조각인지 식별 - embedding : 바이너리 형태의 임베딩 벡터 압축된 바이트 --- 문제 상황 요약: - 파일이 너무 커서 GitHub에 올리면 성능/용량 제한에 걸릴 수 있어. - Git은 기본적으로 100MB 이상 파일은 push 차단함. --- 해결 방안 제안: 1. 분할 업로드 embedding 을 2 3개의 CSV 파일로 나눠 업로드 예: 5만 행씩 나누기 나눠서 올리고, 코드에서 다시 병합 처리 가능 2. .npz 또는 .parquet 로 저장 CSV 바이너리 포맷으로 압축: python pandas DataFrame을 .parquet로 저장 df pd.read_csv \"embeddings.csv\" df.to_parquet \"embeddings.parquet\" 용량 1/10 수준으로 줄고 Git LFS 없이도 관리 가능 3. 외부 저장소 연동 Google Drive, Hugging Face, S3 등에 업로드하고 레포에는 URL만 남김 --- 필요하면 지금 바로 .parquet 로 변환해줄 수도 있어. 원할까? 또는 split된 3개 CSV도 만들어줄 수 있어"
+}

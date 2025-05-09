@@ -1,0 +1,11 @@
+{
+    "message_id": 1553,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 45,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "3. 환경변수 GITHUB_TOKEN 확인 .env 파일이나 Windows 시스템 환경 변수에 ini 복사 편집 GITHUB_TOKEN 너의_진짜_토큰 등록돼 있어야 해. 이것도 없으면 repo_url 요청할 때 panic! 나서 꺼진다. 이거 없는거 같은 느낌"
+}

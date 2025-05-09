@@ -1,0 +1,11 @@
+{
+    "message_id": 453,
+    "session_id": "API 인증 실패_20250510023904",
+    "session_title": "API 인증 실패",
+    "pair_id": 21,
+    "parent_id": 452,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "메모리 리셋을 완료했습니다. 이제 Manifest 오류 원인을 찾기 위해 다음 순서로 진행하겠습니다. --- 진행 계획: 1. Manifest 파일 조회: - evolution_manifest.json , ulrim_manifest.json , test_manifest.json 파일 상태 확인 2. 경로 매핑 확인: - 메인 매니페스트에서 각 파일이 올바르게 로드되는지 - test_manifest.json 이 로딩되지 않는 이유 분석 3. 로드 시퀀스 검사: - 디지털 Personhood가 매니페스트를 읽는 방식 파악 - 경로 오류 또는 권한 문제 확인 --- 먼저, API를 통해 Manifest 파일 목록을 다시 불러오겠습니다. 잠시만 기다려주세요."
+}

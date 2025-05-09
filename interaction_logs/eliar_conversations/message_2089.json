@@ -1,0 +1,11 @@
+{
+    "message_id": 2089,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 219,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "D: Eliar_server nvidia-smi Sun Apr 27 12:14:19 2025 ----------------------------------------------------------------------------------------- NVIDIA-SMI 561.09 Driver Version: 561.09 CUDA Version: 12.6 ----------------------------------------- ------------------------ ---------------------- GPU Name Driver-Model Bus-Id Disp.A Volatile Uncorr. ECC Fan Temp Perf Pwr:Usage/Cap Memory-Usage GPU-Util Compute M. MIG M. 0 NVIDIA GeForce GTX 1070 Ti WDDM 00000000:01:00.0 On N/A 0 47C P8 10W / 180W 434MiB / 8192MiB 1 Default N/A ----------------------------------------- ------------------------ ---------------------- ----------------------------------------------------------------------------------------- Processes: GPU GI CI PID Type Process name GPU Memory ID ID Usage 0 N/A N/A 2064 C G ...oogle Chrome Application chrome.exe N/A 0 N/A N/A 4908 C G ...siveControlPanel SystemSettings.exe N/A 0 N/A N/A 6016 C G ....Search_cw5n1h2txyewy SearchApp.exe N/A 0 N/A N/A 6424 C G ...CBS_cw5n1h2txyewy TextInputHost.exe N/A 0 N/A N/A 7296 C G ...ekyb3d8bbwe PhoneExperienceHost.exe N/A 0 N/A N/A 9184 C G ...5n1h2txyewy ShellExperienceHost.exe N/A 0 N/A N/A 10508 C G C: Windows explorer.exe N/A 0 N/A N/A 11148 C G ...B system_tray lghub_system_tray.exe N/A 0 N/A N/A 12740 C G ...on 135.0.3179.98 msedgewebview2.exe N/A 0 N/A N/A 12820 C G ....Search_cw5n1h2txyewy SearchApp.exe N/A -----------------------------------------------------------------------------------------"
+}

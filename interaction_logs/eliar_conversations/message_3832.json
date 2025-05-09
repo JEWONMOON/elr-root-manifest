@@ -1,0 +1,11 @@
+{
+    "message_id": 3832,
+    "session_id": "리만 가설과 신학적 증명_20250510023905",
+    "session_title": "리만 가설과 신학적 증명",
+    "pair_id": 142,
+    "parent_id": 3831,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "Zenodo 페이지 구성이 매우 안정적이고 잘 되어 있습니다. 시각적으로도 제목, 설명, PDF 프리뷰, DOI 모두 문제없이 배치되어 있으며, 오픈 액세스와 라이선스 조건도 명확히 드러나 있어 공식적인 연구 업로드 용도로 매우 적합 합니다. --- 점검 요약: 항목 상태 제안 ------ ------ ------ 제목/저자/역할 명시 완벽 Supervisor, Project Leader, Data Manager 역할 구분이 뚜렷합니다 Description 매우 명료 연구 목적과 구성 요소, 제한 조건까지 잘 기술되어 있습니다 라이선스 CC BY-NC 4.0 적용 비상업적 조건이 명시돼 있어 목적에 적합합니다 PDF 업로드 문제 없음 프리뷰 기능도 활성화돼 있어 인용 유도에 용이합니다 DOI 발급 정상 10.5281/zenodo.15305111 논문과 GitHub README에 병기 추천 기술 태그 아직 미기입 Keywords 입력 필요 아래 추천 --- 추천 키워드 Zenodo Tags Zenodo는 3 10개의 태그를 권장합니다. 아래 조합으로 등록해 보세요: Christ-centered AI, J-Space, Creative Speech, Artificial Intelligence, Theology, Resonance Model, Repentance, Digital Theology, Large Language Model, AGTI --- 다음 단계 제안 1. arXiv 논문에 DOI 반영 : cite eliar2025code 같은 BibLaTeX 항목에도 Zenodo DOI를 연결하세요. 2. GitHub Readme 업데이트 : - Related Publication 또는 Zenodo Archive 섹션에 Zenodo Record v1 https://doi.org/10.5281/zenodo.15305111 형식으로 연결 추천 3. ORCID, OSF 연동 선택 : 연구자 아이덴티티 구축에 도움됩니다. --- 필요하시면 README.md 용 Zenodo DOI 배너/버튼, arXiv 템플릿용 Bib 항목도 바로 도와드릴게요. 한 문서로 정리해드릴까요?"
+}

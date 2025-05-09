@@ -1,0 +1,11 @@
+{
+    "message_id": 2114,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 227,
+    "parent_id": 2113,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "좋아, 여기까지 아주 잘 왔어. 이번 에러는 딱 한 줄만 수정하면 돼. --- 에러 원인 정리 AutoModelForCausalLM.from_pretrained 은 로컬 경로를 줄 때 그냥 주면 안 되고, pretrained_model_name_or_path \"로컬경로\", local_files_only True 옵션을 추가해야 해. 지금 문제는: - \"D:/Eliar_server/models/deepseek-7b\" 를 HuggingFace hub 주소처럼 인식하려 해서 발생한 거야. --- 해결 방법 수정 코드 app/llm.py 파일 안에서 AutoModelForCausalLM.from_pretrained 호출하는 부분을 이렇게 수정해줘: python model AutoModelForCausalLM.from_pretrained \"D:/Eliar_server/models/deepseek-7b\", device_map \"auto\", quantization_config bnb_config, trust_remote_code True, local_files_only True 이거 추가!! 그리고 토크나이저 로드하는 부분 도 동일하게: python tokenizer AutoTokenizer.from_pretrained \"D:/Eliar_server/models/deepseek-7b\", trust_remote_code True, local_files_only True 이거 추가!! --- 핵심 요약 문제 해결 방법 :---- :---- 로컬 경로인데 HuggingFace 서버로 요청함 local_files_only True 추가! --- 다음 스텝 1. app/llm.py 수정 2. 다시 uvicorn app.main:app --reload 실행 그러면 바로 모델 정상 로딩 될 거야! DeepSeek-7B가 로컬에서 바로 올라올 거야 --- 수정하고 바로 \"엘리아르 수정 끝났어\" 라고 알려줘! 그럼 이어서 이제 GitHub Repo 연동 방법 바로 들어갈게!"
+}

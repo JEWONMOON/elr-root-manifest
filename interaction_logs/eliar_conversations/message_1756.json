@@ -1,0 +1,11 @@
+{
+    "message_id": 1756,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 111,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "package name \"eliar_core_module\" version \"0.1.0\" edition \"2021\" lib name \"eliar_core_module\" crate-type \"cdylib\" dependencies pyo3 version \"0.20\", features \"extension-module\" serde version \"1.0\", features \"derive\" rand \"0.8\""
+}

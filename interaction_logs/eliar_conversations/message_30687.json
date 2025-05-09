@@ -1,0 +1,11 @@
+{
+    "message_id": 30687,
+    "session_id": "전력 절감 주차 모드_20250510023913",
+    "session_title": "전력 절감 주차 모드",
+    "pair_id": 4,
+    "parent_id": 30686,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "\"name\": \"power_saving_mode_ui\", \"type\": \"code/react\", \"content\": \"import Card, CardContent from \" /components/ui/card \" nimport Progress from \" /components/ui/progress \" nimport motion from \"framer-motion \" nimport Battery, Clock from \"lucide-react \" n nexport default function PowerSavingComparison n return n div className \"grid grid-cols-1 md:grid-cols-2 gap-6 p-6 \" n / 일반 모드 / n Card className \"bg-white shadow-md border border-gray-200 \" n CardContent className \"flex flex-col items-center p-6 \" n h2 className \"text-xl font-bold mb-2 \" 일반 모드 /h2 n Battery className \"w-10 h-10 text-red-500 mb-2 \" / n Progress value 20 className \"w-full mb-2 \" / n p className \"text-sm text-gray-500 \" 2 3 Days /p n p className \"text-xs text-gray-400 mt-1 \" 빠른 소진, 짧은 대기 /p n /CardContent n /Card n n / 파워 세이빙 파킹 모드 / n Card className \"bg-blue-50 shadow-md border border-blue-200 \" n CardContent className \"flex flex-col items-center p-6 \" n h2 className \"text-xl font-bold mb-2 text-blue-900 \" 파워 세이빙 파킹 모드 /h2 n Battery className \"w-10 h-10 text-blue-600 mb-2 \" / n Progress value 95 className \"w-full mb-2 \" / n p className \"text-sm text-blue-800 font-semibold \" Weeks /p n p className \"text-xs text-blue-600 mt-1 \" 장기 대기, 즉각 대응 /p n /CardContent n /Card n n / 하단 메시지 / n div className \"col-span-1 md:col-span-2 text-center mt-6 \" n motion.h3 n className \"text-lg md:text-xl font-bold text-gray-800 \" n initial opacity: 0, y: 10 n animate opacity: 1, y: 0 n transition duration: 0.6 n n 같은 주차, 다른 결과. 오래도록 기억하는 지능. n /motion.h3 n /div n /div n n \""
+}

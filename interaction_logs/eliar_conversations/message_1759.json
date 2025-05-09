@@ -1,0 +1,11 @@
+{
+    "message_id": 1759,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 112,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "우선 지금은 로컬에서 데이터 두고 나중에는 python에서 repo에 업로드한 src나 이런거 기반으로 가져오면될듯"
+}

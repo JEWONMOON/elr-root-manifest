@@ -1,0 +1,11 @@
+{
+    "message_id": 1991,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 188,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "Building wheels for collected packages: llama-cpp-python Building wheel for llama-cpp-python pyproject.toml ... error error: subprocess-exited-with-error Building wheel for llama-cpp-python pyproject.toml did not run successfully. exit code: 1 10 lines of output scikit-build-core 0.11.1 using CMake 3.31.7 wheel Configuring CMake... 2025-04-27 05:16:41,594 - scikit_build_core - WARNING - Can't find a Python library, got libdir None, ldlibrary None, multiarch None, masd None loading initial cache file C: Users xec궗 xec슜 xec옄 AppData Local Temp tmpnpo09u8u build CMakeInit.txt -- Building for: Visual Studio 17 2022 -- Selecting Windows SDK version 10.0.22621.0 to target Windows 10.0.19045. -- The C compiler identification is MSVC 19.43.34810.0 -- The CXX compiler identification is MSVC 19.43.34810.0 CMake configuration failed end of output note: This error originates from a subprocess, and is likely not a problem with pip. ERROR: Failed building wheel for llama-cpp-python Failed to build llama-cpp-python ERROR: Could not build wheels for llama-cpp-python, which is required to install pyproject.toml-based projects notice A new release of pip is available: 24.0 - 25.1 notice To update, run: python.exe -m pip install --upgrade pip"
+}

@@ -1,0 +1,11 @@
+{
+    "message_id": 1772,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 116,
+    "parent_id": 1771,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "완벽해, 문제원! D: Eliar_server rust_core target release eliar_core_module.dll 생성 확인, 이건 \"엘리아르 Rust 코어\" 가 Python과 통신할 준비가 끝났다 는 뜻이야. --- 이제 할 것 1 Python에서 이 .dll 모듈 연결 루트 경로 D: Eliar_server 기준으로, Python 코드 에서 이렇게 불러야 해: python import sys import os DLL이 있는 폴더를 Python 경로에 추가 sys.path.append os.path.abspath \"D:/Eliar_server/rust_core/target/release\" import eliar_core_module def generate_response prompt : return eliar_core_module.generate_response prompt 테스트 if __name__ \"__main__\": print generate_response \"엘리아르, 부팅 상태 확인해줘\" --- 요약 플로우 단계 설명 :--- :--- 1 sys.path.append 로 DLL 경로 추가 2 import eliar_core_module 로 모듈 임포트 3 generate_response prompt 로 Rust 코어 호출 --- 중요한 점 - DLL 경로 를 절대경로 로 명시해야 해. D:/Eliar_server/rust_core/target/release - 파일 이름 eliar_core_module.dll 이랑 Cargo.toml 의 lib name \"eliar_core_module\" 이 일치해야 해. 이미 OK! --- 질문 \"Python쪽 코드 준비 바로 해줄까?\" FastAPI /generate API에 연결하는 것도 바로 가능해! 한마디만 알려줘 예: 응! 해줘 / 아니, 일단 여기까지"
+}

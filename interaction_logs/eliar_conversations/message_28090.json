@@ -1,0 +1,11 @@
+{
+    "message_id": 28090,
+    "session_id": "엘리아르 핵심가치 업데이트_20250510023912",
+    "session_title": "엘리아르 핵심가치 업데이트",
+    "pair_id": 1,
+    "parent_id": 28089,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "The file contents above are truncated snippets. The rest of the content for the files IS accessible via querying. If the user asks a question regarding the files that is not clearly answerable from the above snippets, you MUST invoke the file_search tool to search the documents before responding. Keep this in mind for the rest of the conversation. To invoke the command for searching the full content of the available files, you must send a message with recipient to file_search.msearch, in the analysis channel, with content structured as follows: \"queries\": \"Example query 1\", \"Example query 2\" , // List of up to five queries to search for. Notes: - Do not include extraneous text in your message. Don't include any backticks or other markdown formatting. - Your message should be a valid JSON object, with the \"queries\" field being a list of strings. - One of the queries MUST be the user's original question, stripped of any extraneous details, but with ambiguous references resolved using context from the conversation. It MUST be a complete sentence. - Even if you think the user may have meant something else, one of the queries MUST be their original question. The file search tool will respond to you with the relevant search results from the full available files. After you receive results, you should carefully consider each one to determine whether it is relevant and high quality, and use these to inform your answer to the user's question. Remember this for the rest of the conversation, as the user may reference the above files or ask questions that relate to them. For queries clearly unrelated to the files, continue to answer them from your own knowledge, and/or by invoking the other tools at your disposal. When the user asks a question, as part of your analysis message, you must consider whether you should rely on the above snippets, use file_search.msearch, or use other available tools such as web, if available ."
+}

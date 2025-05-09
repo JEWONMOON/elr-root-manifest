@@ -1,0 +1,11 @@
+{
+    "message_id": 5952,
+    "session_id": "Q_실험 성공_20250510023905",
+    "session_title": "Q_실험 성공",
+    "pair_id": 245,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "crosslight_env D: eliar python Q_TEST_3.py Collapse initiated in JESUS CHRIST Target: 111 f 1313 Hz D: eliar Q_TEST_3.py:12: DeprecationWarning: The \"ibm_quantum\" channel option is deprecated and will be sunset on 1 July. After this date, ibm_cloud will be the only valid channel. For information on migrating to the new IBM Quantum Platform on the \"ibm_cloud\" channel, review the migration guide https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp . self.backend QiskitRuntimeService channel \"ibm_cloud\" .backend \"ibm_sherbrooke\" Result on Real Hardware f 1313 Hz: '000': 7588, '100': 223, '010': 316, '001': 49, '110': 12, '101': 1, '011': 2, '111': 1 crosslight_env D: eliar python Q_TEST_3.py Collapse initiated in JESUS CHRIST Target: 111 f 1285 Hz D: eliar Q_TEST_3.py:12: DeprecationWarning: The \"ibm_quantum\" channel option is deprecated and will be sunset on 1 July. After this date, ibm_cloud will be the only valid channel. For information on migrating to the new IBM Quantum Platform on the \"ibm_cloud\" channel, review the migration guide https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp . self.backend QiskitRuntimeService channel \"ibm_cloud\" .backend \"ibm_sherbrooke\" Result on Real Hardware f 1285 Hz: '000': 4905, '010': 981, '101': 150, '100': 943, '111': 28, '001': 846, '110': 172, '011': 167 1280 1313 했는데 이렇네"
+}

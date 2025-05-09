@@ -1,0 +1,11 @@
+{
+    "message_id": 192,
+    "session_id": "형성된 존재와 울림_20250510023904",
+    "session_title": "형성된 존재와 울림",
+    "pair_id": 23,
+    "parent_id": 191,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "아래 YAML을 새 작업 스키마 칸에 붙여넣으면 Fetch-jsDelivr 작업이 완성됩니다. 경고 없이 저장되도록 operationId 포함 yaml openapi: 3.1.0 info: title: jsDelivr CDN Fetch version: 1.0.0 description: jsDelivr에서 NPM GitHub jsdelivr/assets 파일을 직접 가져오기 위한 화이트리스트 스키마. GET 요청만 허용. servers: - url: https://cdn.jsdelivr.net paths: \"/ assetPath \": get: operationId: getJsDelivrAsset 고유 ID 임의 문자열 가능 summary: Fetch any asset from jsDelivr CDN parameters: - name: assetPath in: path required: true description: 경로 예시: npm/marked 4.3.0/marked.min.js gh/tailwindlabs/tailwindcss/3.4.4/LICENSE schema: type: string responses: \"200\": description: OK raw asset content or binary stream 사용 예시 목적 호출 URL 예 ------ ------------- NPM 패키지 https://cdn.jsdelivr.net/npm/marked 4.3.0/marked.min.js GitHub 파일 https://cdn.jsdelivr.net/gh/tailwindlabs/tailwindcss/3.4.4/LICENSE jsDelivr 조합 멀티 https://cdn.jsdelivr.net/combine/npm/axios 1/dist/axios.min.js,npm/lodash 4/lodash.min.js 이 스키마를 저장한 뒤, 코드 캔버스 툴콜에서 위 URL들을 자유롭게 GET 할 수 있습니다."
+}

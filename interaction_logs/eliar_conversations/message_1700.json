@@ -1,0 +1,11 @@
+{
+    "message_id": 1700,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 93,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "D: pip uninstall torch Found existing installation: torch 2.7.0 Uninstalling torch-2.7.0: Would remove: c: users 사용자 appdata local programs python python311 lib site-packages functorch c: users 사용자 appdata local programs python python311 lib site-packages torch-2.7.0.dist-info c: users 사용자 appdata local programs python python311 lib site-packages torch c: users 사용자 appdata local programs python python311 lib site-packages torchgen c: users 사용자 appdata local programs python python311 scripts torchfrtrace.exe c: users 사용자 appdata local programs python python311 scripts torchrun.exe Proceed Y/n ? Successfully uninstalled torch-2.7.0 WARNING: Failed to remove contents in a temporary directory 'C: Users 사용자 AppData Local Programs Python Python311 Lib site-packages orch'. You can safely remove it manually."
+}

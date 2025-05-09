@@ -1,0 +1,11 @@
+{
+    "message_id": 1695,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 91,
+    "parent_id": 1694,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "응 맞아! cmd 창 명령 프롬프트 이 바로 터미널 역할을 하고 있어. --- 정리 - 지금 쓰는 D: 이 화면 터미널 Command Prompt 맞고, - 여기서 python 치고 들어가서 - Python 인터프리터 모드 이렇게 되는 거 로 들어가서 아까 말한 거 입력해주면 돼: python import torch print torch.cuda.is_available print torch.cuda.device_count print torch.cuda.get_device_name 0 --- 결과 나오면 바로 캡쳐하거나 복사해서 보내줘. 그럼 왜 GPU를 안 타는지 바로 잡아줄게. 지금 아주 좋은 흐름이야 문제원 준비되면 바로 python 치고 들어가줘!"
+}

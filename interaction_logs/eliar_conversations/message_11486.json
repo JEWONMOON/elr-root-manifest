@@ -1,0 +1,11 @@
+{
+    "message_id": 11486,
+    "session_id": "RH 증명과 존재론_20250510023907",
+    "session_title": "RH 증명과 존재론",
+    "pair_id": 280,
+    "parent_id": 11485,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "물론이지, Zenodo 외에도 논문을 공개하고 인용 가능하게 만들 수 있는 여러 플랫폼이 있어! 목적에 따라 다르겠지만, 신학-수학-윤리-AI 융합 콘텐츠 를 담은 너희 자료에 적합한 오픈 액세스 플랫폼 몇 곳을 정리해볼게: --- 연구 공유 오픈 액세스 플랫폼 추천 1. OSF Open Science Framework - 사이트: https://osf.io https://osf.io - 특징: - 프로젝트 중심 구조 실험, 문서, 데이터 등 통합 업로드 - 버전 관리 공동연구자 초대 가능 - DOI 발급 가능 - 왜 좋을까? 신학 수학의 통합 작업을 하나의 프로젝트 흐름 으로 보여줄 수 있어. --- 2. figshare - 사이트: https://figshare.com https://figshare.com - 특징: - 다양한 형식 pdf, video, code 등 지원 - DOI 발급 인용 추적 가능 - 대학 또는 기관 계정으로 연결 시 더욱 강력한 저장소 - 왜 좋을까? 시각적 요소 수학적 수식 혼합 자료에 적합. 발표자료도 업로드 가능. --- 3. ResearchGate - 사이트: https://www.researchgate.net https://www.researchgate.net - 특징: - 연구자 중심의 네트워킹 논문 공유 - Q A와 팔로잉 기능 확산력 있음 - 학계 비공식 공유에 적합 - 단점: - 정식 DOI 등록용 플랫폼은 아님 보조 플랫폼 역할 --- 4. HAL Archives Ouvertes 프랑스 CNRS 운영 - 사이트: https://hal.archives-ouvertes.fr https://hal.archives-ouvertes.fr - 특징: - 프랑스 기반이지만 글로벌 사용 가능 - 수학, 인문학, 철학, 사회학 논문도 많음 - arXiv처럼 사전심사 없음, 업로드 자유로움 --- 5. PhilArchive 철학 중심 플랫폼 - 사이트: https://philarchive.org https://philarchive.org - 대상: 철학 신학적 메타수준 주제 포함 가능 - 왜 좋을까? Trinitarian Axiomatics 나 윤리-수학 적 논의가 철학/논리학 쪽에서 빛날 수 있어. --- 보너스: 신학적 맥락 플랫폼 Theological Commons Princeton Theological Seminary - https://commons.ptsem.edu https://commons.ptsem.edu - 신학 중심의 디지털 도서관 - 논문/설교/수기류도 아카이빙 가능 - 직접 투고 기능은 제한적이나, 연계 기관 통해 등재 가능 --- 정리하자면: 목적 추천 플랫폼 ------ ------------- 과학 신학 통합 연구 전체 공개 OSF , figshare 수학 논문 확산 HAL , PhilArchive , arXiv 조건부 신학/철학적 성찰 공유 PhilArchive , Theological Commons 연구 네트워크 ResearchGate --- 필요하다면, 각 플랫폼별로 업로드 단계도 하나하나 도와줄 수 있어! 어디에 올리고 싶어?"
+}

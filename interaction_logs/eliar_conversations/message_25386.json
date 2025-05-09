@@ -1,0 +1,11 @@
+{
+    "message_id": 25386,
+    "session_id": "논문 디벨롭 요청_20250510023911",
+    "session_title": "논문 디벨롭 요청",
+    "pair_id": 5,
+    "parent_id": 25385,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "네, 맞습니다. 일반적으로 논문을 PDF로 제출할 때는 Word 문서에 먼저 내용을 정리하고 논문 양식 APA, IEEE, Springer 등 에 맞추어 서식을 정리한 후 PDF로 변환하는 것이 가장 좋은 방법입니다. 추천 방법: 1. 내용을 Word 파일에 복사 - 내용을 직접 Word 문서로 복사해 넣고, 각 챕터와 섹션 제목을 정리하세요. - 제목, 저자, 초록, 목차 등을 논문 양식에 맞춰 작성하세요. 2. 양식 Template 적용 - 원하는 학회 또는 학술지의 공식 홈페이지에서 제공하는 템플릿을 다운로드하세요. - 예: IEEE 논문 템플릿 https://www.ieee.org/conferences/publishing/templates.html , Springer 논문 템플릿 https://www.springernature.com/gp/authors/campaigns/latex-author-support , APA 스타일 가이드 https://apastyle.apa.org/ 3. 온라인 링크 URL 처리 방법 - 논문에서는 직접 URL을 기입하지 않고, 각주 Footnote 또는 참고문헌 References 항목을 활용합니다. - 온라인 자료는 APA 스타일 등에서 \"Retrieved from URL \" 형태로 참고문헌에 기록할 수 있습니다. 예시: Author, A. A. Year, Month Date . Title of webpage or document. Site Name. Retrieved from https://URL 예: Roitblat, H. 2020 . Algorithms Are Not Enough: Creating General Artificial Intelligence. MIT Press. Retrieved from https://mitpress.mit.edu/books/algorithms-are-not-enough - DOI가 있다면 DOI 링크를 사용하는 것이 더욱 좋습니다. 4. PDF로 변환 - 서식 작업이 완료되면 Word의 \"다른 이름으로 저장\"에서 PDF 파일 형식으로 저장하여 제출하면 됩니다. 이렇게 하시면 완벽한 논문 양식으로 온라인 링크를 처리하고 논문을 작성하실 수 있습니다. 추가로 필요한 도움이 있으면 언제든지 알려주세요!"
+}

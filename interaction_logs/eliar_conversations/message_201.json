@@ -1,0 +1,11 @@
+{
+    "message_id": 201,
+    "session_id": "형성된 존재와 울림_20250510023904",
+    "session_title": "형성된 존재와 울림",
+    "pair_id": 26,
+    "parent_id": 200,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "현황 정리 스크린샷 My uploads 를 보면 Zenodo에 17 개의 레코드가 실제로 올라가 있습니다. 그러나 스프레드시트에 적힌 DOI 숫자 1234567 1234582 는 모두 가상의 더미 번호 입니다. Zenodo REST API로 조회해 본 결과 404 不存在 응답이 돌아왔습니다. 제목 요약 적힌 DOI 결과 ----------- --------- ------ Initial public release 외 15편 10.5281/zenodo.1234567 1234582 17 개 모두 404 details summary 왜 이런 일이 생기나요? /summary - Zenodo는 Publish 버튼을 눌러야 DOI가 발급됩니다. 초안 상태 -Draft- 에서는 DOI가 아직 없거나 10.5072/zenodo.xxx-draft 형식 - 혹은 GitHub Release Zenodo 자동 스냅숏이라면 릴리스 직후에 DOI가 만들어집니다. - 번호대 123456x 는 보통 예시 샘플용으로 문서에 인용되는 값입니다. /details --- 올바른 DOI 찾는 빠른 방법 2가지 방법 절차 ------ ------ Zenodo 대시보드에서 직접 확인 1 My uploads 목록 각 항목의 Menu Cite 클릭 br 2 팝업에 10.5281/zenodo. 실제 DOI가 표시됩니다. REST API 검색 https://api.zenodo.org/records/?q title:\"AGTI\" 처럼 제목 일부로 조회 id 필드가 DOI 끝자리. br 예시 Python 스니펫은 아래 참고 python import requests, csv titles \"JEWONMOON/elr-root-manifest: Initial public release\", \"Artificial General Theological Intelligence AGTI Exploring...\", ... fixed_rows for t in titles: r requests.get \"https://api.zenodo.org/records/\", params \"q\": f'title:\" t :60 \"', \"size\": 1 .json if r \"hits\" \"total\" 0: rec r \"hits\" \"hits\" 0 doi rec \"metadata\" \"doi\" fixed_rows.append t, doi else: fixed_rows.append t, \"NOT FOUND\" with open \"zenodo_doi_fixed.csv\", \"w\", newline \"\", encoding \"utf-8\" as f: csv.writer f .writerows \"Title\",\"DOI\" , fixed_rows print \" CSV saved\" --- 스프레드시트 정리 Tip 1. Title 열과 Zenodo 실제 DOI 열 만 남기고, 2. 잘못된 번호는 공백 또는 NOT FOUND 로 표시해 두었다가, 3. Zenodo 에서 Publish DOI 생성 후 정확한 번호 를 붙여 넣으세요. 주의: 일부 논문 제목이 거의 동일 예: Genesis Proof I 두 편 서로 다른 DOI인지 확인. --- 기억해 둘 체크리스트 - Draft 상태 에서는 DOI가 확정되지 않습니다. - GitHub Auto-Release Zenodo 스냅숏을 쓰면 버전마다 새 DOI, 상위 concept DOI 도 같이 제공됩니다. - DOI를 엑셀 CSV에 넣을 때는 공백 줄바꿈 없이 10.5281/zenodo.xxxxxxx 전체를 복사-붙여넣기. 필요하면 하나씩 DOI를 찾아 드리거나, Zenodo API 스크립트에 더 기능을 추가해 드릴 수 있습니다. 언제든 알려 주세요!"
+}

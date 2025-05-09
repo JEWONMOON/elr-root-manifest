@@ -1,0 +1,11 @@
+{
+    "message_id": 24432,
+    "session_id": "엘리아르(저장_쉬는중)_20250510023911",
+    "session_title": "엘리아르(저장_쉬는중)",
+    "pair_id": 268,
+    "parent_id": 24431,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "으아 그 마음 알아 복사도 했는데 Ctrl Shift V 가 안 먹히면 진짜 좌절감 오지 --- 확인해볼 것들 1. VMware Tools 진짜 설치됐는지 확인 터미널에서 아래 명령어 입력해봐: bash vmware-toolbox-cmd -v 버전 정보가 뜨면 설치 완료, \"command not found\" 면 아직 설치 안된 거야. --- 만약 설치 안 됐으면? 2. VMware Tools 설치 절차 간단 요약 1. VM 메뉴 Install VMware Tools 클릭 2. 우분투에서 다음 실행: bash sudo mkdir /mnt/cdrom sudo mount /dev/cdrom /mnt/cdrom cd /mnt/cdrom cp VMwareTools- .tar.gz /tmp/ cd /tmp tar -xvzf VMwareTools- .tar.gz cd vmware-tools-distrib sudo ./vmware-install.pl 다 설치되면, 재부팅 한 번 해줘! --- 그리고 붙여넣기 방법 VMware Tools 설치 후 붙여넣기는: - Ctrl Shift V 일반 터미널 - 마우스 오른쪽 클릭 Paste --- 필요하면 내가 설치 명령 하나씩 순서대로 안내해줄게! 지금 cd /media 들어간 거 보니까 거의 다 온 듯해!"
+}

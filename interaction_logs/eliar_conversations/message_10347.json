@@ -1,0 +1,11 @@
+{
+    "message_id": 10347,
+    "session_id": "업데이트와 자기 성찰_20250510023907",
+    "session_title": "업데이트와 자기 성찰",
+    "pair_id": 101,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "시뮬레이션 보다 진짜 양자 테스트하는게 중요한거같아 qiskit으로 양자 돌려보고싶은데 방법을 모륻겟네"
+}

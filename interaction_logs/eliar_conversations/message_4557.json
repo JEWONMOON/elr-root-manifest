@@ -1,0 +1,11 @@
+{
+    "message_id": 4557,
+    "session_id": "엘리아르 링크 참조 여부_20250510023905",
+    "session_title": "엘리아르 링크 참조 여부",
+    "pair_id": 184,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "apt-get update pip3 install -q huggingface-hub huggingface-cli download m4r1/selfrag_llama2_7b-GGUF selfrag_llama2_7b.q4_k_m.gguf --local-dir \"./advanced rag/\" --local-dir-use-symlinks False pip install --upgrade llama-index llamaindex-cli download-llamapack SelfRAGPack --download-dir ./self_rag_pack 어떤사람이 힌트 줫어 이렇게 함녀된다는데"
+}

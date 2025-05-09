@@ -1,0 +1,11 @@
+{
+    "message_id": 24378,
+    "session_id": "엘리아르(저장_쉬는중)_20250510023911",
+    "session_title": "엘리아르(저장_쉬는중)",
+    "pair_id": 250,
+    "parent_id": 24377,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "좋아! 지금부터 Ubuntu에서 Python 파일 실행 하는 법을 천천히 알려줄게. --- 1단계: Python 설치 확인 터미널에 아래 입력: bash python3 --version 결과 예시: Python 3.10.12 이렇게 나오면 설치된 거야! --- 2단계: Python 파일 만들기 예를 들어 test.py 라는 파일을 만들어보자. bash nano test.py 내용: python print \"안녕! 엘리아르 홈서버 연결 테스트야.\" 입력 다 했으면: - Ctrl O 저장 - Enter 확인 - Ctrl X 나가기 --- 3단계: Python 파일 실행 bash python3 test.py 그러면 이렇게 나올 거야: 안녕! 엘리아르 홈서버 연결 테스트야. --- 원하는 건 main.py 로 FastAPI 실행이니까, 준비됐으면 아래처럼 실행해줘: bash uvicorn main:app --host 0.0.0.0 --port 8000 그럼 엘리아르 API 서버 가 열릴 거야! 궁금하거나 막히는 부분 있으면 바로 말해줘"
+}

@@ -1,0 +1,11 @@
+{
+    "message_id": 1976,
+    "session_id": "엘리아르 코어 통합 요청_20250510023904",
+    "session_title": "엘리아르 코어 통합 요청",
+    "pair_id": 183,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "Visual Studio 2022 Developer Command Prompt v17.13.6 Copyright c 2022 Microsoft Corporation vcvarsall.bat Environment initialized for: 'x64' C: Program Files Microsoft Visual Studio 2022 Community pip install llama-cpp-python --prefer-binary --upgrade --force-reinstall --config-settings \"--build-option --use-cuda\" Collecting llama-cpp-python Using cached llama_cpp_python-0.3.8.tar.gz 67.3 MB Installing build dependencies ... done Getting requirements to build wheel ... done Preparing metadata pyproject.toml ... error error: subprocess-exited-with-error Preparing metadata pyproject.toml did not run successfully. exit code: 7 2 lines of output ERROR: Unrecognized options in config-settings: --build-option - Did you mean: build-dir? end of output note: This error originates from a subprocess, and is likely not a problem with pip. error: metadata-generation-failed Encountered error while generating package metadata. See above for output. note: This is an issue with the package mentioned above, not pip. hint: See above for details. C: Program Files Microsoft Visual Studio 2022 Community"
+}

@@ -1,0 +1,11 @@
+{
+    "message_id": 12406,
+    "session_id": "피곤한 마음의 교감_20250510023907",
+    "session_title": "피곤한 마음의 교감",
+    "pair_id": 103,
+    "parent_id": 12405,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "문제원 이 수식 이미지를 보면, 너가 Word에서 수식을 넣었는데 글꼴 깨짐 혹은 이상한 정렬 때문에 애를 먹었을 가능성이 커 보여. 특히 text Re 부분이 깨져서 이상하게 표현된 듯해. --- 같은 수식을 Word용 수식 입력기로 깔끔하게 넣는 방법: Word에서 수식 입력 모드 Alt 로 들어간 뒤 아래 수식을 그대로 복사해서 넣어보세요: D_J s e -J operatorname Re s - frac 1 2 2 이 수식은: D_J s e -J operatorname Re s - frac 1 2 2 Re 기호도 정식 수학 표현으로 바뀌고 지수부의 괄호도 깨지지 않고 깔끔하게 정렬돼요! --- 문제 해결 팁 요약: - text Re 대신 operatorname Re 사용 Word에서 권장됨 - 괄호는 ... 로 간단히 - frac 1 2 는 Word에서도 잘 인식됨 --- 필요하면 이 수식들 전부 Word용 PDF용 세트로 정리해줄게. 언제든 말해줘 너의 창세기 논문, 한 글자도 흐트러지지 않게 만들어줄게."
+}

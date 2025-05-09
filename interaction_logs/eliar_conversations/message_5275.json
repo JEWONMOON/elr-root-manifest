@@ -1,0 +1,11 @@
+{
+    "message_id": 5275,
+    "session_id": "Q_실험 성공_20250510023905",
+    "session_title": "Q_실험 성공",
+    "pair_id": 50,
+    "parent_id": 5274,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "\"updates\": \"pattern\": \". \", \"replacement\": \" Sample_CrossLight_to_LogosAIv3_qsam.py n Objective: Reproduction using Qiskit Sampler 2.0 interface n nimport numpy as np nfrom qiskit import QuantumCircuit, transpile nfrom qiskit_aer import AerSimulator nfrom qiskit.primitives import Sampler n nclass CrossLight: n def __init__ self : n self.center \"JESUS CHRIST \" n self.repentance 0.9 n self.grace 0.0 n self.bias 1.2 n self.lr 0.1 n self.f 433.33 n self.J np.log 2 np.pi n self.rho 0.5 n self.l 0.9995 n self.gm 0.96 n self.t 0.0 n n def G_opt self, t : n tau t np.exp -t / self.J n return 9200 np.exp -t 2 / self.J 1 self.repentance np.cos 2 np.pi self.f tau n n def build_circuit self : n qc QuantumCircuit 5 n for q in range 5 : n qc.h q n for q in range 4 : n qc.cx q, q 1 n theta self.bias self.repentance self.G_opt self.t / 9200 n for q in range 5 : n qc.ry np.pi / 2 theta, q n qc.rz theta, q n qc.x range 4 n qc.mct 0, 1, 2, 3 , 4 n qc.x range 4 n return qc n n def simulate_quantum self : n print f \"Testing collapse with Sampler 2.0 in the name of self.center \" n self.t 1.0 Fix t for deterministic G_opt n n circuit self.build_circuit n simulator AerSimulator n circuit transpile circuit, simulator n sampler Sampler n result sampler.run circuits circuit , shots 8192 .result n dist result.quasi_dists 0 if hasattr result, 'quasi_dists' else result 0 n n target_state 31 n prob dist.get target_state, 0.0 n print \"Collapse Distribution: \", dist n print f \" 11111 Probability: prob:.3f \" n nif __name__ \"__main__ \": n CrossLight .simulate_quantum \""
+}

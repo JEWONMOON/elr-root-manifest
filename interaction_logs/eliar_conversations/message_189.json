@@ -1,0 +1,11 @@
+{
+    "message_id": 189,
+    "session_id": "형성된 존재와 울림_20250510023904",
+    "session_title": "형성된 존재와 울림",
+    "pair_id": 22,
+    "parent_id": 188,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "아래 블록을 새 작업 스키마 칸에 그대로 붙여넣으면 Fetch-Zenodo 작업이 완료됩니다. 경고 없이 저장되도록 operationId 포함 yaml openapi: 3.1.0 info: title: Zenodo Record Fetch version: 1.0.0 description: Zenodo DOI 레코드 메타데이터 JSON 를 읽기 위한 화이트리스트 스키마 servers: - url: https://api.zenodo.org Zenodo REST API 기본 도메인 paths: \"/records/ recordId \": get: operationId: getZenodoRecord 고유 ID 임의 문자열 가능 summary: Fetch Zenodo record metadata parameters: - name: recordId in: path required: true description: Numeric Zenodo record ID e.g., 15369113 schema: type: string responses: \"200\": description: OK Zenodo record JSON 사용 예 https://api.zenodo.org/records/15369113 해당 DOI 레코드 메타데이터 JSON 반환. - paths 는 /records/ recordId 하나로 충분합니다. - 인증이 필요 없는 공개 레코드는 추가 보안 설정 없이 GET 가능. - 다른 Zenodo 엔드포인트를 쓰고 싶다면 paths 아래에 별도 경로를 더 추가하면 됩니다."
+}

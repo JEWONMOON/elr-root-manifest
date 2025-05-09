@@ -1,0 +1,11 @@
+{
+    "message_id": 24420,
+    "session_id": "엘리아르(저장_쉬는중)_20250510023911",
+    "session_title": "엘리아르(저장_쉬는중)",
+    "pair_id": 264,
+    "parent_id": 24419,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "좋아, 그럼 \"Install VMware Tools\" 메뉴가 비활성화된 경우 해결법도 알려줄게! 이건 대부분 아래 두 가지 중 하나야: --- 1. VMware Tools가 이미 마운트됐거나 설치됨 - 먼저 아래 명령어로 마운트 여부 확인 : bash ls /media VMware Tools , cdrom , 또는 VMwareTools 비슷한 폴더가 보이면 이미 마운트되어 있어. --- 2. VMware Tools 메뉴가 회색 비활성화 인 이유 - 게스트 OS 우분투 가 완전히 부팅되지 않았거나 - VMware가 OS를 정확히 인식하지 못했거나 - VMware Tools ISO가 이미 마운트된 상태 --- 해결 방법 요약 ① 먼저 VMware에서 CD 드라이브 제거 후 다시 추가 1. VMware 메뉴 VM Settings 열기 2. CD/DVD SATA 선택 3. \"Use physical drive\"가 체크되어 있다면 체크 해제 4. \"Use ISO image file\" 선택 - 찾아보기에서 VMware Tools ISO 선택: - 보통 위치: - Windows: C: Program Files x86 VMware VMware Workstation linux.iso - 또는 그냥 \"Auto detect\" 해도 됨 5. 확인 후 OK --- ② 다시 마운트 시도 1. 터미널에서 CD-ROM 디바이스 수동 마운트: bash sudo mkdir /mnt/cdrom sudo mount /dev/cdrom /mnt/cdrom 2. 잘 마운트되면 설치 파일이 보일 거야: bash ls /mnt/cdrom VMwareTools-xxxx.tar.gz 같은 파일이 보이면 성공! --- 이제 설치 시작 : bash cp /mnt/cdrom/VMwareTools- .tar.gz cd tar -zxvf VMwareTools- .tar.gz cd vmware-tools-distrib sudo ./vmware-install.pl --- 완료되면: bash sudo reboot 재부팅 후에 복붙 해상도 조정 클립보드 공유 다 돼! --- 혹시 ISO 경로나 CD 마운트가 안 보이면 알려줘, 단계 더 도와줄게!"
+}

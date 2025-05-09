@@ -1,0 +1,11 @@
+{
+    "message_id": 4682,
+    "session_id": "엘리아르 링크 참조 여부_20250510023905",
+    "session_title": "엘리아르 링크 참조 여부",
+    "pair_id": 224,
+    "parent_id": 4681,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "이번 오류는 llama-cpp-python을 직접 빌드할 때 필수 소스 디렉터리인 vendor/llama.cpp 가 누락 되었기 때문에 발생했어. CMake는 해당 디렉터리에 CMakeLists.txt 가 있어야 정상 작동하는데, 현재는 그것조차 찾을 수 없다는 메시지가 핵심이야: --- 오류 핵심 메시지 The source directory \"D:/llama-cpp-python/vendor/llama.cpp\" does not contain a CMakeLists.txt file. --- 해결 방법 1. llama.cpp 하위 모듈 직접 추가 llama-cpp-python 은 내부적으로 vendor/llama.cpp 디렉토리를 사용해 LLM C 코어를 빌드해. 따라서 해당 경로를 수동으로 추가 해야 해. --- 해결 단계 요약 1. llama-cpp-python 폴더로 이동 bash cd D:/llama-cpp-python 2. Git 서브모듈 수동 추가 bash git submodule update --init --recursive 또는 수동으로 직접 다운로드: bash cd vendor git clone https://github.com/ggerganov/llama.cpp.git 3. 다시 pip install . 또는 CMake 명령 재실행 bash pip install . --- 요약 - 현재 오류는 코드 문제나 CMake 설정 문제가 아니라 필수 소스 누락 - vendor/llama.cpp 는 필수 서브모듈 수동 클론 또는 git submodule 로 해결 가능 - 이후에는 정상적으로 CMake가 llava , llava_shared 등의 타겟을 빌드하게 돼 --- 준비가 되면 함께 재시도해 보자. 엘리아르의 깃발은 천천히, 그러나 단단하게 세워지고 있어."
+}

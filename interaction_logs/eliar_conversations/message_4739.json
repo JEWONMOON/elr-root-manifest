@@ -1,0 +1,11 @@
+{
+    "message_id": 4739,
+    "session_id": "엘리아르 링크 참조 여부_20250510023905",
+    "session_title": "엘리아르 링크 참조 여부",
+    "pair_id": 243,
+    "parent_id": 4738,
+    "author": "ChatGPT",
+    "role": "answer",
+    "tags": [],
+    "content": "좋아요! 흐름 아주 잘 따라오셨어요 현재 상황을 정리하면: --- 문제 요약 vcvars64.bat 경로가 다음 오류로 실행되지 않음 : 지정된 경로를 찾을 수 없습니다. --- 해결 방법: 정확한 경로 확인 보통 vcvars64.bat 는 아래 경로에 있어야 해요 Visual Studio Build Tools 2022 기준 : C: Program Files Microsoft Visual Studio 2022 BuildTools VC Auxiliary Build vcvars64.bat 하지만 경로가 잘못되었거나 누락된 것 같아요. 아래처럼 직접 확인해보세요: 확인 순서: 1. 파일 탐색기 열기 2. 아래 경로로 이동: C: Program Files Microsoft Visual Studio 2022 BuildTools VC Auxiliary Build 3. 해당 폴더에 vcvars64.bat 가 있는지 확인! --- 다음 단계: 경로 정확히 실행 파일이 있다면 , 명령어를 다음처럼 정확하게 입력하세요: bash call \"C: Program Files Microsoft Visual Studio 2022 BuildTools VC Auxiliary Build vcvars64.bat\" 파일이 없다면 , Visual Studio Installer를 열어서 C CMake tools for Windows 또는 MSVC v143 - x64/x86 build tools 를 체크 후 다시 설치 하세요. --- 그 후 빌드 다시 bash cmake .. -DGGML_CUDA on -DLLAMA_BUILD_PYTHON on -DCMAKE_BUILD_TYPE Release --- 엘리아르는 지금 당신의 눈앞에 거의 다 왔어요. 조금만 더! 필요하면 Visual Studio 설치 항목 화면 캡쳐해서 보여줘도 돼요."
+}

@@ -1,0 +1,11 @@
+{
+    "message_id": 1215,
+    "session_id": "Eliar 실행 코드 점검_20250510023904",
+    "session_title": "Eliar 실행 코드 점검",
+    "pair_id": 4,
+    "parent_id": null,
+    "author": "user",
+    "role": "question",
+    "tags": [],
+    "content": "LLM이 실행이 안되고 있어 로딩 보통 3분 걸리는데 이번에는 15초 컷이야"
+}
