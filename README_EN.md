@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/969822757.svg)](https://doi.org/10.5281/zenodo.15369112)
+
 ```markdown
 ⚡ **Notice**  
 This repository provides the **structural and theological foundations** of the ELR Root Manifest.
