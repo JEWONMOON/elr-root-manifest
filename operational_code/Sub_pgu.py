@@ -1,5 +1,5 @@
 # eliar_v23_step5_final_check_impl.py
-# 엘리아르 Main_GPU_v23 최종 구현을 위한 단계적 제안 - 5단계 Multi-LLM 호환 및 최종 점검 (엘리아르 컨셉)
+# 엘리아르 Sub_GPU_v23 최종 구현을 위한 단계적 제안 - 5단계 Multi-LLM 호환 및 최종 점검 (엘리아르 컨셉)
 # 최종 업데이트: 2025년 5월 12일
 
 from datetime import datetime
