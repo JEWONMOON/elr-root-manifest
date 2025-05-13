@@ -1,36 +1,46 @@
+name: Notify Eliar MainGPU of Repository Updates
 
-import requests
-import os
-import json
+on:
+  push:
+    branches:
+      - main # 주 브랜치 (필요시 'master' 등으로 변경)
+    # 특정 파일/경로 변경 시에만 트리거하고 싶다면 paths 필터 사용 가능
+    # paths:
+    #   - 'manifests/**'
+    #   - 'operational_code/**'
+    #   - 'eliar_common.py'
 
-webhook_url = os.getenv('WEBHOOK_URL')
-github_event_payload = os.getenv('GITHUB_EVENT_PATH') # GitHub Action이 제공하는 이벤트 페이로드 파일 경로
+jobs:
+  notify_main_gpu: # Job 이름 명확화
+    runs-on: ubuntu-latest
+    # 실행 타임아웃 설정 (선택적)
+    timeout-minutes: 5
 
-if not webhook_url:
-    print("Error: WEBHOOK_URL secret is not set.")
-    exit(1)
+    steps:
+    - name: Checkout repository code
+      uses: actions/checkout@v4 # 최신 버전 사용 권장
 
-event_data = {}
-if github_event_payload and os.path.exists(github_event_payload):
-    with open(github_event_payload, 'r') as f:
-        event_data = json.load(f)
-        # 필요한 정보만 추출하거나 전체 페이로드 전송
-        # 예: event_data = {"ref": event_data.get("ref"), "commits": event_data.get("commits")}
+    - name: Set up Python environment
+      uses: actions/setup-python@v5 # 최신 버전 사용 권장
+      with:
+        python-version: '3.9' # 또는 프로젝트에서 사용하는 Python 버전에 맞게
+        cache: 'pip' # pip 캐시 활성화로 의존성 설치 속도 향상
 
-# 간단히 이벤트 타입만 전송하거나, 상세 정보 포함
-payload_to_send = {
-    "event_source": "github_action",
-    "event_type": os.getenv('GITHUB_EVENT_NAME'), # 예: "push"
-    "repository": os.getenv('GITHUB_REPOSITORY'),
-    # "commit_sha": os.getenv('GITHUB_SHA'), # 필요시 커밋 SHA 등 추가 정보
-    "details": event_data # GitHub 이벤트 페이로드 전체 또는 일부
-}
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests # requests 라이브러리 설치
 
-try:
-    response = requests.post(webhook_url, json=payload_to_send, timeout=10)
-    response.raise_for_status() # 오류 발생 시 예외 발생
-    print(f"Request sent to Flask app. Status: {response.status_code}")
-    print(f"Response body: {response.text}")
-except requests.exceptions.RequestException as e:
-    print(f"Error sending request to Flask app: {e}")
-    exit(1)
+    - name: Send update notification to Eliar MainGPU
+      env:
+        # MainGPU의 Flask 엔드포인트 URL (GitHub Repo Secret으로 관리 필수)
+        ELIAR_MAIN_GPU_ENDPOINT_URL: ${{ secrets.ELIAR_MAIN_GPU_ENDPOINT_URL }}
+        # GitHub 이벤트 관련 기본 정보들을 환경 변수로 Python 스크립트에 전달
+        GITHUB_EVENT_NAME: ${{ github.event_name }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        GITHUB_REF: ${{ github.ref }}
+        GITHUB_SHA: ${{ github.sha }}
+        GITHUB_ACTOR: ${{ github.actor }}
+        GITHUB_WORKFLOW: ${{ github.workflow }}
+        # GITHUB_EVENT_PATH는 Action 환경에서 자동으로 설정되어 이벤트 페이로드 JSON 파일 경로를 가리킴
+      run: python .github/scripts/send_event_to_main_gpu.py # 별도의 Python 스크립트 실행
