@@ -1,38 +1,93 @@
-""name: Update Manifest
+name: Eliar Manifest and Code Update Notification
 
 on:
   push:
     branches:
-      - main
+      - main # main 또는 master 등 주 브랜치명으로 수정
+    # 특정 경로의 파일 변경 시에만 실행하도록 필터링 가능 (선택 사항)
+    # paths:
+    #   - 'manifests/**'
+    #   - 'operational_code/**'
+    #   - 'eliar_common.py'
 
 jobs:
-  update_manifest:
+  notify_main_gpu: # Job 이름 변경 (update_manifest -> notify_main_gpu)
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4 # 최신 버전 사용 권장
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5 # 최신 버전 사용 권장
       with:
-        python-version: '3.9'
+        python-version: '3.9' # 또는 사용하시는 Python 버전에 맞게
 
     - name: Install dependencies
       run: |
+        python -m pip install --upgrade pip
         pip install requests
 
-    - name: Send Update Request
+    - name: Send Update Notification to Eliar MainGPU
       env:
-        WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+        # MainGPU의 Flask 엔드포인트 URL (GitHub Repo Secret으로 관리)
+        ELIAR_MAIN_GPU_ENDPOINT_URL: ${{ secrets.ELIAR_MAIN_GPU_ENDPOINT_URL }}
+        # GitHub 이벤트 관련 정보들을 환경 변수로 Python 스크립트에 전달
+        GITHUB_EVENT_NAME: ${{ github.event_name }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        GITHUB_REF: ${{ github.ref }}
+        GITHUB_SHA: ${{ github.sha }}
+        # 푸시 이벤트의 경우, 커밋 정보 (JSON 문자열로 전달)
+        # 주의: 페이로드가 너무 크면 문제가 될 수 있으므로 필요한 정보만 전달하거나 요약
+        # 전체 페이로드는 GITHUB_EVENT_PATH 환경 변수를 통해 파일로 접근 가능
+        # 여기서는 간단히 커밋 메시지와 변경된 파일 목록을 전달하는 예시
+        COMMIT_MESSAGE: ${{ github.event.head_commit.message }} 
+        # 파일 목록은 배열이므로 JSON 문자열로 변환 필요
+        # 이 부분은 인라인 Python에서 처리하기 복잡하므로, 별도 스크립트에서 GITHUB_EVENT_PATH를 읽는 것이 더 좋음
+        # 아래 run 스크립트에서 GITHUB_EVENT_PATH를 활용하도록 변경
       run: |
-        python -c "
-import requests
-import os
+        python .github/scripts/send_event_to_main_gpu.py
+        # 위와 같이 별도의 Python 스크립트 파일을 실행하는 것을 권장합니다.
+        # 아래는 기존 요청에 따라 인라인 Python을 유지하되, 개선한 버전입니다.
+        # 하지만 payload 구성이 복잡해지면 별도 파일이 훨씬 관리하기 좋습니다.
+        # python -c "
+        # import requests
+        # import os
+        # import json # GITHUB_EVENT_PATH 파싱용
 
-url = os.getenv('WEBHOOK_URL')
-response = requests.post(url, json={'event': 'manifest_update'})
-print(response.status_code)
-print(response.text)
-        "
-""
+        # url = os.getenv('ELIAR_MAIN_GPU_ENDPOINT_URL')
+        # if not url:
+        #     print('Error: ELIAR_MAIN_GPU_ENDPOINT_URL secret is not set.')
+        #     exit(1)
+
+        # event_payload = {}
+        # event_path = os.getenv('GITHUB_EVENT_PATH')
+        # if event_path and os.path.exists(event_path):
+        #     with open(event_path, 'r') as f:
+        #         event_payload = json.load(f)
+        
+        # # 전달할 데이터 구성 (필요한 정보 선택)
+        # data_to_send = {
+        #     'event_source': 'github_action',
+        #     'event_name': os.getenv('GITHUB_EVENT_NAME'),
+        #     'repository': os.getenv('GITHUB_REPOSITORY'),
+        #     'ref': os.getenv('GITHUB_REF'),
+        #     'sha': os.getenv('GITHUB_SHA'),
+        #     'commit_message': event_payload.get('head_commit', {}).get('message') if event_payload.get('head_commit') else os.getenv('COMMIT_MESSAGE'),
+        #     'modified_files': event_payload.get('head_commit', {}).get('modified', []) if event_payload.get('head_commit') else [],
+        #     'added_files': event_payload.get('head_commit', {}).get('added', []) if event_payload.get('head_commit') else [],
+        #     'removed_files': event_payload.get('head_commit', {}).get('removed', []) if event_payload.get('head_commit') else [],
+        #     # 'full_event_payload': event_payload # 전체 페이로드는 매우 클 수 있으므로 주의
+        # }
+        
+        # print(f'Sending data to {url}: {json.dumps(data_to_send, indent=2)}') # 전송 데이터 로깅
+
+        # try:
+        #     response = requests.post(url, json=data_to_send, timeout=15) # timeout 설정
+        #     response.raise_for_status() # 2xx가 아니면 예외 발생
+        #     print(f'Response Status Code: {response.status_code}')
+        #     print(f'Response Text: {response.text}')
+        # except requests.exceptions.RequestException as e:
+        #     print(f'Error sending POST request: {e}')
+        #     exit(1)
+        # "
