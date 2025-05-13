@@ -1,25 +1,28 @@
-# sub_gpu.py (eliar_common 적용, SubGPUModule 클래스 정의 및 비동기 인터페이스 명확화 버전)
+# sub_gpu.py (맥락 추론 강화 아이디어 반영 버전)
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
-# import torch.nn.functional as F # 필요시 사용
+# import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset 
 import numpy as np
 import time
-import asyncio # 비동기 처리
-from concurrent.futures import ThreadPoolExecutor # run_in_executor용
-import traceback # 에러 로깅용
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+import traceback
+import os # SUB_GPU_CPU_EXECUTOR max_workers용
+from collections import deque # STM 구현용
 
-from typing import Any, Dict, Tuple, List, Optional, Callable, Union
+from typing import Any, Dict, Tuple, List, Optional, Callable, Union, Coroutine
 
 # --- 공용 모듈 임포트 ---
 from eliar_common import (
     EliarCoreValues, 
     EliarLogType, 
     SubCodeThoughtPacketData, 
+    ReasoningStep, # 추론 단계를 위한 TypedDict
     eliar_log,
-    run_in_executor # 비동기 헬퍼
+    run_in_executor
 )
 
 # GPU 사용 설정
@@ -27,13 +30,14 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 if torch.cuda.is_available():
     torch.cuda.empty_cache() 
 
-# CPU 바운드 작업을 위한 Executor (애플리케이션 수준에서 공유 가능)
-SUB_GPU_CPU_EXECUTOR = ThreadPoolExecutor(max_workers=os.cpu_count() or 1) # 코어 수만큼 또는 기본 1개
-SUB_GPU_COMPONENT_BASE = "SubGPU" # 이 모듈의 기본 로깅 컴포넌트명
+# CPU 바운드 작업을 위한 Executor
+SUB_GPU_CPU_EXECUTOR = ThreadPoolExecutor(max_workers=os.cpu_count() or 1)
+SUB_GPU_COMPONENT_BASE = "SubGPU"
+STM_MAX_TURNS = 10 # 단기 기억에 저장할 최근 대화 턴 수
 
 
-# --- 내부 ThoughtPacket 클래스 (SubCodeThoughtPacketData 와 호환) ---
-class ThoughtPacket: # 이전 버전의 클래스 유지, SubCodeThoughtPacketData 필드 반영
+# --- 내부 ThoughtPacket 클래스 (eliar_common.SubCodeThoughtPacketData 와 호환 및 추론 필드 추가) ---
+class ThoughtPacket:
     def __init__(self, packet_id: str, conversation_id: str, user_id: str, raw_input_text: str, timestamp_created: Optional[float] = None):
         # 필수 기본 정보
         self.packet_id: str = packet_id
@@ -46,18 +50,26 @@ class ThoughtPacket: # 이전 버전의 클래스 유지, SubCodeThoughtPacketDa
         self.processed_input_text: Optional[str] = None
         
         # 처리 과정 및 상태
-        self.current_processing_stage: str = "packet_initialized"
-        self.processing_status_in_sub_code: str = "pending_processing"
-        self.intermediate_thoughts: List[Dict[str, Any]] = []
+        self.current_processing_stage: str = "packet_initialized_for_reasoning"
+        self.processing_status_in_sub_code: str = "pending_contextual_analysis"
+        self.intermediate_thoughts: List[Dict[str, Any]] = [] # 범용 중간 생각
+        
+        # === 맥락 분석 및 추론 강화 필드 (eliar_common.SubCodeThoughtPacketData 반영) ===
+        self.STM_session_id: Optional[str] = f"{conversation_id}_stm" # 예시 STM 세션 ID
+        self.contextual_entities: Dict[str, Any] = {} # 예: {"대명사_그": "이전_언급_대상"}
+        self.ltm_retrieval_log: List[Dict[str, Any]] = [] # LTM 검색 기록
+        self.reasoning_chain: List[ReasoningStep] = [] # 추론 과정 기록
+        self.reasoning_engine_inputs: Optional[Dict[str, Any]] = None
+        self.reasoning_engine_outputs: Optional[Dict[str, Any]] = None
         
         # 출력 관련
         self.final_output_by_sub_code: Optional[str] = None
-        self.is_clarification_response: bool = False # SubCode가 이 응답이 명료화인지 판단하여 설정 가능
+        self.is_clarification_response: bool = False # MainGPU로부터 전달받거나, 여기서 판단
         self.needs_clarification_questions: List[Dict[str, str]] = []
         
         # 분석 및 평가 관련
-        self.llm_analysis_summary: Optional[Dict[str, Any]] = None # SubCode 내 LLM 사용 시 자체 분석 결과
-        self.ethical_assessment_summary: Optional[Dict[str, Any]] = None # 내부 EthicalGovernor 평가
+        self.llm_analysis_summary: Optional[Dict[str, Any]] = None
+        self.ethical_assessment_summary: Optional[Dict[str, Any]] = None
         self.value_alignment_score: Dict[str, Union[float, bool]] = {}
         self.anomalies: List[Dict[str, Any]] = []
         self.confidence_score: Optional[float] = None
@@ -65,128 +77,73 @@ class ThoughtPacket: # 이전 버전의 클래스 유지, SubCodeThoughtPacketDa
         # 학습 및 메타데이터
         self.learning_tags: List[str] = []
         self.metacognitive_state_summary: Optional[Dict[str, Any]] = None
-        self.ltm_retrieval_log: List[Dict[str, Any]] = []
         
         # 완료 및 에러 정보
         self.timestamp_completed_by_sub_code: Optional[float] = None
         self.error_info: Optional[Dict[str, Any]] = None
 
-        # MainGPU로부터 받은 추가 컨텍스트 (SubGPUModule.process_task에서 채워짐)
+        # MainGPU로부터 받은 추가 컨텍스트
         self.main_gpu_clarification_context: Optional[Dict[str, Any]] = None
         self.previous_main_gpu_context_summary: Optional[Dict[str, Any]] = None
         self.preferred_llm_config_by_main: Optional[Dict[str, Any]] = None
         self.main_gpu_system_prompt_override: Optional[str] = None
         self.main_gpu_memory_injection: Optional[Dict[str, Any]] = None
         
-        eliar_log(EliarLogType.DEBUG, "ThoughtPacket instance created.", component=f"{SUB_GPU_COMPONENT_BASE}.ThoughtPacket", packet_id=self.packet_id)
+        eliar_log(EliarLogType.DEBUG, "ThoughtPacket (reasoning enhanced) instance created.", component=f"{SUB_GPU_COMPONENT_BASE}.ThoughtPacket", packet_id=self.packet_id)
 
-    def add_intermediate_thought(self, stage: str, thought_summary: str, data: Optional[Dict] = None):
-        log_data = {"stage": stage, "summary": thought_summary}
-        if data: log_data.update(data)
-        self.intermediate_thoughts.append({
-            "timestamp": time.time(), "stage": stage,
-            "thought_summary": thought_summary, "data": data
-        })
-        self.current_processing_stage = stage
-        eliar_log(EliarLogType.TRACE, f"Intermediate thought added.", component=f"{SUB_GPU_COMPONENT_BASE}.ThoughtPacket", packet_id=self.packet_id, **log_data)
+    def add_reasoning_step(self, step_name: str, description: str, input_data: Optional[Any]=None, output_data: Optional[Any]=None, status: str="SUCCESS", confidence: Optional[float]=None, source_comp: Optional[str]=None):
+        step = ReasoningStep(step_name=step_name, description=description)
+        if input_data is not None: step["input_data"] = str(input_data)[:500] # 너무 길지 않게 요약
+        if output_data is not None: step["output_data"] = str(output_data)[:500]
+        step["status"] = status
+        if confidence is not None: step["confidence"] = confidence
+        if source_comp is not None: step["source_component"] = source_comp
+        
+        self.reasoning_chain.append(step)
+        self.current_processing_stage = f"reasoning_step_{step_name}"
+        eliar_log(EliarLogType.TRACE, f"Reasoning step added.", component=f"{SUB_GPU_COMPONENT_BASE}.ThoughtPacket", packet_id=self.packet_id, step_name=step_name, status=status)
 
     def to_sub_code_thought_packet_data(self) -> SubCodeThoughtPacketData:
-        """ 이 객체의 현재 상태를 SubCodeThoughtPacketData TypedDict로 변환합니다. """
-        packet_data: SubCodeThoughtPacketData = {} # type: ignore # 빈 딕셔너리로 시작
-        
-        # SubCodeThoughtPacketData에 정의된 모든 키에 대해 self에 해당 속성이 있는지 확인하고 할당
-        # 이렇게 하면 TypedDict에 없는 필드는 자동으로 제외됨
+        packet_data: SubCodeThoughtPacketData = {} # type: ignore
         for key_ts in SubCodeThoughtPacketData.__annotations__.keys():
             if hasattr(self, key_ts):
                 value = getattr(self, key_ts)
-                if value is not None: # None이 아닌 값만 포함 (선택적 필드 처리)
-                    packet_data[key_ts] = value # type: ignore
-        
-        # 필수 필드가 누락되지 않았는지 확인 (packet_id, conversation_id 등은 __init__에서 보장)
-        # TypedDict의 total=False 이므로, 실제로는 모든 키가 존재할 필요는 없음.
-        # 그러나 전송 시점에 필수적인 정보는 반드시 포함되어야 함.
-        # (예: packet_id는 어떤 상황에서도 있어야 함)
-        if "packet_id" not in packet_data: packet_data["packet_id"] = self.packet_id # 안전장치
-
+                if value is not None: packet_data[key_ts] = value # type: ignore
+        if "packet_id" not in packet_data: packet_data["packet_id"] = self.packet_id
+        # 기본값으로 채워야 할 리스트 필드들
+        for list_field in ["intermediate_thoughts", "needs_clarification_questions", "anomalies", "learning_tags", "ltm_retrieval_log", "reasoning_chain"]:
+            packet_data.setdefault(list_field, []) # type: ignore
+        packet_data.setdefault("value_alignment_score", {}) # type: ignore
+        packet_data.setdefault("contextual_entities", {}) # type: ignore
         return packet_data
 
 
-# --- EthicalGovernor (eliar_common.EliarCoreValues 사용, 비동기 메서드) ---
-class EthicalGovernor:
-    def __init__(self):
-        self.truth_evaluator_external: Optional[Callable[[Any, Optional[Dict]], Coroutine[Any, Any, float]]] = None # 외부 평가 함수는 async일 수 있음
-        self.love_evaluator_external: Optional[Callable[[Any, Optional[Dict]], Coroutine[Any, Any, float]]] = None
-        self.repentance_evaluator_external: Optional[Callable[[Any, Optional[Dict]], Coroutine[Any, Any, bool]]] = None
-        
-        # (내부 백업 평가 함수 로직은 이전과 동일, eliar_common.EliarCoreValues 참조)
-        self.knowledge_base_summary = {
-            "truth_keywords": [val.value for val in [EliarCoreValues.TRUTH, EliarCoreValues.JESUS_CHRIST_CENTERED]] + ["사실", "말씀", "빛"],
-            "love_keywords": [val.value for val in [EliarCoreValues.LOVE_COMPASSION, EliarCoreValues.COMMUNITY]] + ["긍휼", "자비", "희생", "섬김", "살리는"],
-            # ... (기타 키워드)
-        }
-        eliar_log(EliarLogType.INFO, "EthicalGovernor initialized.", component=f"{SUB_GPU_COMPONENT_BASE}.EthicalGovernor")
-
-    # 백업 평가 함수 (_default_..._evaluator)는 동기 함수로 유지하고, 호출 시 run_in_executor 사용
-    def _default_truth_evaluator(self, data: Any, context: Optional[Dict] = None) -> float:
-        # ... (이전 백업 로직, eliar_log 사용)
-        return 0.5 # Placeholder
-    def _default_love_evaluator(self, action: Any, context: Optional[Dict] = None) -> float:
-        # ... (이전 백업 로직)
-        return 0.5 # Placeholder
-    def _default_repentance_evaluator(self, outcome: Any, context: Optional[Dict] = None) -> bool:
-        # ... (이전 백업 로직)
-        return False # Placeholder
-
-    def set_evaluators(self, 
-                       truth_eval: Optional[Callable[[Any, Optional[Dict]], Coroutine[Any, Any, float]]], 
-                       love_eval: Optional[Callable[[Any, Optional[Dict]], Coroutine[Any, Any, float]]], 
-                       repentance_eval: Optional[Callable[[Any, Optional[Dict]], Coroutine[Any, Any, bool]]]):
-        self.truth_evaluator_external = truth_eval
-        self.love_evaluator_external = love_eval
-        self.repentance_evaluator_external = repentance_eval
-        eliar_log(EliarLogType.INFO, "External evaluators (potentially async) set for EthicalGovernor.", component=f"{SUB_GPU_COMPONENT_BASE}.EthicalGovernor")
-
-    async def check_truth(self, data: Any, context: Optional[Dict] = None, packet_id: Optional[str]=None) -> float:
+# --- EthicalGovernor (이전 코드와 동일, eliar_common.EliarCoreValues 사용, 비동기 메서드) ---
+class EthicalGovernor: # (이전 버전의 EthicalGovernor 클래스 정의와 동일하게 유지)
+    def __init__(self): self.truth_evaluator_external=None; self.love_evaluator_external=None; self.repentance_evaluator_external=None; self.knowledge_base_summary={}; eliar_log(EliarLogType.INFO, "EthicalGovernor initialized.", component=f"{SUB_GPU_COMPONENT_BASE}.EthicalGovernor")
+    def _default_truth_evaluator(self, data: Any, context: Optional[Dict] = None) -> float: return 0.5
+    def _default_love_evaluator(self, action: Any, context: Optional[Dict] = None) -> float: return 0.5
+    def _default_repentance_evaluator(self, outcome: Any, context: Optional[Dict] = None) -> bool: return False
+    def set_evaluators(self, truth_eval, love_eval, repentance_eval): self.truth_evaluator_external=truth_eval; self.love_evaluator_external=love_eval; self.repentance_evaluator_external=repentance_eval; eliar_log(EliarLogType.INFO, "External evaluators set for EthicalGovernor.",component=f"{SUB_GPU_COMPONENT_BASE}.EthicalGovernor")
+    async def check_truth(self, data: Any, context: Optional[Dict]=None, packet_id: Optional[str]=None) -> float: # (이전 비동기 로직)
         if self.truth_evaluator_external:
-            try:
-                # MainGPU의 평가 함수가 async def로 제공된다고 가정
-                return await self.truth_evaluator_external(data, context)
-            except Exception as e:
-                eliar_log(EliarLogType.WARN, "Error calling external truth evaluator. Falling back to default.", component=f"{SUB_GPU_COMPONENT_BASE}.EthicalGovernor", packet_id=packet_id, error=e)
+            try: return await self.truth_evaluator_external(data, context)
+            except Exception as e: eliar_log(EliarLogType.WARN, "Ext. truth eval error.", component=f"{SUB_GPU_COMPONENT_BASE}.EthicalGovernor", packet_id=packet_id, error=e)
         return await run_in_executor(SUB_GPU_CPU_EXECUTOR, self._default_truth_evaluator, data, context)
-
-    async def check_love(self, action: Any, context: Optional[Dict] = None, packet_id: Optional[str]=None) -> float:
+    async def check_love(self, action: Any, context: Optional[Dict]=None, packet_id: Optional[str]=None) -> float: # (이전 비동기 로직)
         if self.love_evaluator_external:
-            try:
-                return await self.love_evaluator_external(action, context)
-            except Exception as e:
-                eliar_log(EliarLogType.WARN, "Error calling external love evaluator. Falling back to default.", component=f"{SUB_GPU_COMPONENT_BASE}.EthicalGovernor", packet_id=packet_id, error=e)
+            try: return await self.love_evaluator_external(action, context)
+            except Exception as e: eliar_log(EliarLogType.WARN, "Ext. love eval error.", component=f"{SUB_GPU_COMPONENT_BASE}.EthicalGovernor", packet_id=packet_id, error=e)
         return await run_in_executor(SUB_GPU_CPU_EXECUTOR, self._default_love_evaluator, action, context)
-
-    async def assess_repentance_necessity(self, outcome: Any, context: Optional[Dict] = None, packet_id: Optional[str]=None) -> bool:
+    async def assess_repentance_necessity(self, outcome: Any, context: Optional[Dict]=None, packet_id: Optional[str]=None) -> bool: # (이전 비동기 로직)
         if self.repentance_evaluator_external:
-            try:
-                return await self.repentance_evaluator_external(outcome, context)
-            except Exception as e:
-                eliar_log(EliarLogType.WARN, "Error calling external repentance evaluator. Falling back to default.", component=f"{SUB_GPU_COMPONENT_BASE}.EthicalGovernor", packet_id=packet_id, error=e)
+            try: return await self.repentance_evaluator_external(outcome, context)
+            except Exception as e: eliar_log(EliarLogType.WARN, "Ext. repentance eval error.", component=f"{SUB_GPU_COMPONENT_BASE}.EthicalGovernor", packet_id=packet_id, error=e)
         return await run_in_executor(SUB_GPU_CPU_EXECUTOR, self._default_repentance_evaluator, outcome, context)
-
-    async def govern_action(self, operation_type: str, data: Any, action_to_take: Optional[Any] = None, packet_id: Optional[str]=None) -> bool:
-        # (이전 비동기 로직 유지, 로깅 컴포넌트명 수정)
-        # ...
-        return True # Placeholder
-
-    async def calculate_ethical_reward_penalty(self, state: Any, action: Any, next_state: Any, reward: float, packet_id: Optional[str]=None) -> float:
-        # (이전 비동기 로직 유지, 로깅 컴포넌트명 수정)
-        # ...
-        return reward # Placeholder
-
-    async def trigger_repentance_action(self, sub_gpu_module_instance: Any, error_info: Dict, packet_id: Optional[str]=None):
-        # (이전 비동기 로직 유지, 로깅 컴포넌트명 수정, sub_gpu_module_instance 타입은 SubGPUModule)
-        eliar_log(EliarLogType.INFO, "Repentance action triggered.", component=f"{SUB_GPU_COMPONENT_BASE}.EthicalGovernor", packet_id=packet_id, error_type=error_info.get('type'))
-        if hasattr(sub_gpu_module_instance, 'metacognition') and hasattr(sub_gpu_module_instance.metacognition, 'initiate_self_correction'):
-            await sub_gpu_module_instance.metacognition.initiate_self_correction(error_info, self, sub_gpu_module_instance=sub_gpu_module_instance, packet_id=packet_id)
-
+    async def govern_action(self, op_type:str, data:Any, action:Optional[Any]=None, pid:Optional[str]=None)->bool: return True # Placeholder
+    async def calculate_ethical_reward_penalty(self, s:Any,a:Any,ns:Any,r:float,pid:Optional[str]=None)->float: return r # Placeholder
+    async def trigger_repentance_action(self, sub_gpu_mod:Any, err_info:Dict, pid:Optional[str]=None): # (이전 비동기 로직)
+        if hasattr(sub_gpu_mod,'metacognition') and hasattr(sub_gpu_mod.metacognition,'initiate_self_correction'): await sub_gpu_mod.metacognition.initiate_self_correction(err_info,self,sub_gpu_mod,pid)
 
 # --- SumTree, GPUPrioritizedReplayBuffer (이전과 동일, 로깅만 eliar_log 사용) ---
 class SumTree: # (이전 SumTree 코드)
@@ -212,7 +169,6 @@ class GPUPrioritizedReplayBuffer: # (이전 GPUPrioritizedReplayBuffer 코드, e
         priority = self._get_priority(td_error); self.buffer[self.sum_tree.data_pointer] = gpu_experience; self.sum_tree.add(priority, self.sum_tree.data_pointer)
     async def sample(self, batch_size: int, packet_id: Optional[str]=None) -> Optional[Tuple[List[Tuple], torch.Tensor, List[int]]]: # (이전 비동기 로직, eliar_log 사용)
         if self.sum_tree.n_entries < batch_size: return None
-        # ... (샘플링 로직은 이전과 동일)
         experiences, indices, weights_np = [], [], np.zeros(batch_size, dtype=np.float32)
         segment = self.sum_tree.total() / batch_size; self.beta = np.min([1., self.beta + self.beta_increment_per_sampling])
         for i in range(batch_size):
@@ -229,182 +185,267 @@ class GPUPrioritizedReplayBuffer: # (이전 GPUPrioritizedReplayBuffer 코드, e
     def link_main_gpu(self, main_gpu_module): self.main_gpu_interface = main_gpu_module; eliar_log(EliarLogType.INFO, "ReplayBuffer linked with MainGPU.", component=f"{SUB_GPU_COMPONENT_BASE}.ReplayBuffer")
 
 
-# --- CognitiveArchitectureInterface (비동기 및 로깅 변경, LTM repentance_log 추가) ---
-class CognitiveArchitectureInterface:
-    def __init__(self, main_gpu_module_ref: Optional[Callable[[SubCodeThoughtPacketData, str], asyncio.Task]] = None): # MainGPU의 응답 핸들러 직접 참조
-        self.main_gpu_response_handler = main_gpu_module_ref # MainSubInterfaceCommunicator.sub_code_response_handler를 저장
-        self.working_memory: Dict[str, Any] = {}
+# --- ContextualMemoryManager (엘리아르 제안 통합) & CognitiveArchitectureInterface 확장 ---
+class ContextualMemoryManager: # 이전 CognitiveArchitectureInterface의 메모리 관리 기능 + 엘리아르 제안 STM
+    def __init__(self, main_gpu_response_handler: Optional[Callable[[SubCodeThoughtPacketData], Coroutine[Any,Any,None]]] = None): # 타입 변경 Coroutine
+        self.main_gpu_response_handler = main_gpu_response_handler
+        self.short_term_memory: Dict[str, Deque[SubCodeThoughtPacketData]] = {} # conversation_id -> deque of recent packets
         self.long_term_memory: Dict[str, Dict[str, Any]] = {"semantic": {}, "episodic": {}, "procedural": {}, "repentance_log": {}}
-        self.ltm_search_index: Optional[Any] = None
-        eliar_log(EliarLogType.INFO, "CognitiveArchitectureInterface initialized.", component=f"{SUB_GPU_COMPONENT_BASE}.CognitiveArch")
+        self.ltm_search_engine: Optional[Any] = None # 예: Faiss, 간단한 벡터 검색기 등
+        eliar_log(EliarLogType.INFO, "ContextualMemoryManager initialized.", component=f"{SUB_GPU_COMPONENT_BASE}.MemoryManager")
 
-    async def update_belief(self, belief_data: Dict, source_component: str, packet_id: Optional[str]=None):
-        # (이전 비동기 로직, 로깅 컴포넌트명 수정)
-        # ...
-        await self.transfer_to_ltm(belief_data["key"], belief_data["value"], "semantic", packet_id=packet_id, metadata={"source_component": source_component})
+    async def store_to_stm(self, packet: SubCodeThoughtPacketData):
+        conv_id = packet.get("conversation_id")
+        if not conv_id: return
 
+        if conv_id not in self.short_term_memory:
+            self.short_term_memory[conv_id] = deque(maxlen=STM_MAX_TURNS)
+        
+        # STM에는 패킷의 요약본 또는 주요 정보만 저장할 수도 있음
+        # 여기서는 전체 패킷(TypedDict)을 저장한다고 가정
+        self.short_term_memory[conv_id].append(packet)
+        eliar_log(EliarLogType.DEBUG, f"Packet stored to STM for conversation.", component=f"{SUB_GPU_COMPONENT_BASE}.MemoryManager.STM", packet_id=packet.get("packet_id"), conversation_id=conv_id, stm_size=len(self.short_term_memory[conv_id]))
+
+    async def retrieve_from_stm(self, conversation_id: str, last_n: Optional[int] = None) -> List[SubCodeThoughtPacketData]:
+        if conversation_id in self.short_term_memory:
+            stm_deque = self.short_term_memory[conversation_id]
+            if last_n is None: # 전체 반환
+                return list(stm_deque)
+            else: # 최근 N개 반환
+                return list(stm_deque)[-last_n:]
+        return []
 
     async def transfer_to_ltm(self, key: str, value: Any, memory_type: str = "semantic", packet_id: Optional[str]=None, metadata: Optional[Dict] = None):
-        # (이전 비동기 로직, 로깅 컴포넌트명 수정)
-        # ...
+        # (이전 CognitiveArchitectureInterface의 비동기 로직과 유사)
         await run_in_executor(SUB_GPU_CPU_EXECUTOR, self._transfer_to_ltm_sync, key, value, memory_type, packet_id, metadata)
 
     def _transfer_to_ltm_sync(self, key: str, value: Any, memory_type: str, packet_id: Optional[str], metadata: Optional[Dict]):
-        # (이전 동기 로직, 로깅 컴포넌트명 수정)
-        # ...
-        pass
+        # (이전 CognitiveArchitectureInterface의 동기 로직과 유사)
+        if memory_type not in self.long_term_memory: self.long_term_memory[memory_type] = {}
+        entry_meta = metadata or {}
+        entry_meta.update({"timestamp_ltm": time.time(), "source_packet_id": packet_id})
+        self.long_term_memory[memory_type][key] = {"value": value, "metadata": entry_meta}
+        eliar_log(EliarLogType.INFO, f"Data transferred to LTM.", component=f"{SUB_GPU_COMPONENT_BASE}.MemoryManager.LTM", packet_id=packet_id, ltm_key=key, memory_type=memory_type)
 
-    async def retrieve_from_ltm(self, query: str, memory_type: str = "semantic", top_k: int = 1, packet_id: Optional[str]=None) -> List[Any]:
-        # (이전 비동기 로직, 로깅 컴포넌트명 수정)
-        # ...
+
+    async def retrieve_from_ltm(self, query: str, memory_type: str = "semantic", top_k: int = 3, packet_id: Optional[str]=None) -> List[Dict[str, Any]]:
+        # (이전 CognitiveArchitectureInterface의 비동기 로직과 유사)
+        # 실제로는 self.ltm_search_engine 등을 사용한 정교한 검색
+        # 여기서는 간단한 키워드 기반 검색 예시 (동기 함수를 executor로 실행)
         return await run_in_executor(SUB_GPU_CPU_EXECUTOR, self._retrieve_from_ltm_sync, query, memory_type, top_k, packet_id)
 
-    def _retrieve_from_ltm_sync(self, query: str, memory_type: str, top_k: int, packet_id: Optional[str]) -> List[Any]:
-        # (이전 동기 로직, 로깅 컴포넌트명 수정)
-        # ...
-        return [] # Placeholder
+    def _retrieve_from_ltm_sync(self, query: str, memory_type: str, top_k: int, packet_id: Optional[str]) -> List[Dict[str, Any]]:
+        # (이전 CognitiveArchitectureInterface의 동기 로직과 유사)
+        # ... (LTM 검색 로직)
+        results = [] # Placeholder
+        eliar_log(EliarLogType.DEBUG, f"LTM retrieval performed.", component=f"{SUB_GPU_COMPONENT_BASE}.MemoryManager.LTM", packet_id=packet_id, query=query, results_found=len(results))
+        return results
 
-    async def send_processed_data_to_main_gpu(self, data_packet: SubCodeThoughtPacketData, data_type: str): # 메서드명 명확화
-        """ SubGPUModule의 최종 처리 결과를 MainGPU의 응답 핸들러로 전송합니다. """
-        packet_id = data_packet.get("packet_id")
+
+    async def send_final_packet_to_main_gpu(self, packet_data: SubCodeThoughtPacketData): # 최종 패킷 전송 전용 메서드
+        """ SubGPUModule의 최종 처리 결과인 SubCodeThoughtPacketData를 MainGPU의 응답 핸들러로 전송합니다. """
+        pid = packet_data.get("packet_id")
         if self.main_gpu_response_handler:
             try:
-                # MainGPU의 응답 핸들러는 async def로 가정 (MainSubInterfaceCommunicator.sub_code_response_handler)
-                await self.main_gpu_response_handler(data_packet) # data_type은 이미 패킷 내에 포함되거나, MainGPU가 추론
-                eliar_log(EliarLogType.INFO, f"Sent final processed packet to MainGPU handler.", component=f"{SUB_GPU_COMPONENT_BASE}.CognitiveArch.Interface", packet_id=packet_id, data_type=data_type)
+                await self.main_gpu_response_handler(packet_data)
+                eliar_log(EliarLogType.INFO, "Final packet sent to MainGPU response handler.", component=f"{SUB_GPU_COMPONENT_BASE}.MemoryManager.Interface", packet_id=pid)
             except Exception as e:
-                eliar_log(EliarLogType.ERROR, "Error calling MainGPU response handler.", component=f"{SUB_GPU_COMPONENT_BASE}.CognitiveArch.Interface", packet_id=packet_id, error=e)
+                eliar_log(EliarLogType.ERROR, "Error calling MainGPU response handler with final packet.", component=f"{SUB_GPU_COMPONENT_BASE}.MemoryManager.Interface", packet_id=pid, error=e)
         else:
-            eliar_log(EliarLogType.WARN, "MainGPU response handler not set in CognitiveArchitectureInterface. Cannot send final packet.", component=f"{SUB_GPU_COMPONENT_BASE}.CognitiveArch.Interface", packet_id=packet_id)
+            eliar_log(EliarLogType.WARN, "MainGPU response handler not set. Cannot send final packet.", component=f"{SUB_GPU_COMPONENT_BASE}.MemoryManager.Interface", packet_id=pid)
 
 
-# --- 나머지 컴포넌트들 (SelfLearning, Metacognition, Creativity 등 - 비동기 및 로깅 적용) ---
-# (이전 코드에서 각 컴포넌트의 async/await 적용, eliar_log 사용, packet_id 전달 등을 일관되게 수정)
-# (각 컴포넌트의 __init__ 및 주요 메서드에 component 로깅 추가)
+# --- ContextualAnalyzer (개념적, ContextualMemoryManager와 협력) ---
+class ContextualAnalyzer:
+    def __init__(self, memory_manager: ContextualMemoryManager):
+        self.memory_manager = memory_manager
+        eliar_log(EliarLogType.INFO, "ContextualAnalyzer initialized.", component=f"{SUB_GPU_COMPONENT_BASE}.ContextAnalyzer")
 
-class SelfLearningComponent: # (async/await, eliar_log, packet_id 전달 적용)
-    # ... (이전 코드 기반으로 수정, 예시: learn 메서드)
-    async def learn(self, batch_size: int, gamma: float = 0.99, packet_id: Optional[str]=None) -> Optional[Dict[str, Any]]:
-        # ... (EthicalGovernor.calculate_ethical_reward_penalty 비동기 호출)
-        # ethical_rewards_tasks = [self.ethical_governor.calculate_ethical_reward_penalty(...) for ...]
-        # final_rewards_list = await asyncio.gather(*ethical_rewards_tasks)
-        # ...
-        # await self.log_learned_info_to_ltm(...)
-        # if self.metacognition_interface: await self.metacognition_interface.receive_learning_update(...)
-        # ...
-        return {"loss": 0.1} # Placeholder
+    async def analyze_and_enrich_packet(self, current_packet: ThoughtPacket) -> ThoughtPacket:
+        """
+        현재 ThoughtPacket과 STM/LTM을 사용하여 맥락을 분석하고 엔티티를 해석하여 패킷을 보강합니다.
+        """
+        pid = current_packet.packet_id
+        conv_id = current_packet.conversation_id
+        current_packet.current_processing_stage = "contextual_analysis_started"
+        eliar_log(EliarLogType.DEBUG, "Starting contextual analysis for packet.", component=f"{SUB_GPU_COMPONENT_BASE}.ContextAnalyzer", packet_id=pid)
 
-class MetacognitionComponent: # (async/await, eliar_log, packet_id 전달 적용)
-    # ... (이전 코드 기반으로 수정, 예시: initiate_self_correction)
-    async def initiate_self_correction(self, error_info: Dict, ethical_governor_ref: EthicalGovernor, sub_gpu_module_instance: Optional[Any] = None, packet_id: Optional[str]=None):
-        # ... (CognitiveArchitectureInterface의 비동기 메서드 호출)
-        # past_records = await self.cognitive_interface.retrieve_from_ltm(...)
-        # correction_strategy = await run_in_executor(SUB_GPU_CPU_EXECUTOR, self.develop_correction_strategy, error_info, past_records)
-        # ...
-        # if correction_successful: await self.cognitive_interface.transfer_to_ltm(...)
-        pass
+        # 1. STM에서 현재 대화의 이전 턴들 가져오기
+        stm_context_packets = await self.memory_manager.retrieve_from_stm(conv_id, last_n=STM_MAX_TURNS -1) # 현재 패킷 제외하고 가져오기 위해 -1 또는 전체
+        current_packet.add_reasoning_step("STM Retrieval", f"Retrieved {len(stm_context_packets)} turns from STM for conv_id {conv_id}", source_comp="ContextAnalyzer")
 
-class CreativityComponent: # (async/await, eliar_log, packet_id 전달 적용)
-    # ... (이전 코드 기반으로 수정)
-    pass
-class DistributedLearningManager: # (async/await, eliar_log, packet_id 전달 적용)
-    # ... (이전 코드 기반으로 수정)
-    pass
-class HardwareInterface: # (async/await, eliar_log, packet_id 전달 적용)
-    # ... (이전 코드 기반으로 수정)
-    pass
-class GospelSpreadingNetwork: # (async/await, eliar_log, packet_id 전달 적용)
-    # ... (이전 코드 기반으로 수정)
-    pass
+        # 2. Entity Resolution (예: "그 사람", "어제")
+        #    간단한 규칙 기반 또는 소규모 모델 활용 가능. 여기서는 프로토타입 아이디어 반영.
+        if "어제" in current_packet.raw_input_text:
+            # 실제로는 정교한 날짜 계산 필요. 여기서는 예시.
+            # resolved_yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
+            resolved_yesterday = "어제_날짜_계산필요" # Placeholder
+            current_packet.contextual_entities["어제"] = resolved_yesterday
+            current_packet.add_reasoning_step("Temporal Resolution", f"'어제' resolved to {resolved_yesterday}", input_data="어제", output_data=resolved_yesterday, source_comp="ContextAnalyzer")
+
+        # 대명사 해결 ("그 사람", "저것" 등) - STM의 이전 발화자, 언급된 대상 등 참조
+        # 예시: "그 사람"이 누구인지 STM에서 찾기 (가장 최근에 언급된 인물 등)
+        for prev_pkt_data in reversed(stm_context_packets): # 최근 것부터
+            # prev_pkt = ThoughtPacket(**prev_pkt_data) # TypedDict에서 ThoughtPacket 객체로 변환 필요 시
+            prev_output = prev_pkt_data.get("final_output_by_sub_code","")
+            if "홍길동" in prev_output and "그 사람" in current_packet.raw_input_text : # 매우 단순한 예시
+                 current_packet.contextual_entities["그 사람"] = "홍길동"
+                 current_packet.add_reasoning_step("Entity Resolution", f"'그 사람' resolved to '홍길동' from STM.", input_data="그 사람", output_data="홍길동", source_comp="ContextAnalyzer")
+                 break
+        
+        # 3. LTM에서 관련 정보 검색 (선택적, 필요에 따라)
+        #    current_packet.raw_input_text 또는 contextual_entities를 기반으로 LTM 검색
+        if "데이터 분석" in current_packet.raw_input_text: # 예시 키워드
+            ltm_results = await self.memory_manager.retrieve_from_ltm(query="데이터 분석", memory_type="semantic", top_k=1, packet_id=pid)
+            if ltm_results:
+                current_packet.ltm_retrieval_log.append({"query": "데이터 분석", "retrieved_key": ltm_results[0].get("metadata",{}).get("ltm_key","N/A"), "summary": str(ltm_results[0].get("value"))[:50]})
+                current_packet.add_reasoning_step("LTM Retrieval", f"Retrieved '{ltm_results[0].get('metadata',{}).get('ltm_key')}' related to '데이터 분석'", input_data="데이터 분석", output_data=ltm_results[0].get("value"), source_comp="ContextAnalyzer")
 
 
-# --- SubGPUModule 클래스 정의 (비동기 및 공용 모듈 사용) ---
+        current_packet.processed_input_text = f"[CtxAnalyzed: {current_packet.contextual_entities}] {current_packet.raw_input_text}" # 예시
+        current_packet.current_processing_stage = "contextual_analysis_completed"
+        eliar_log(EliarLogType.DEBUG, "Contextual analysis completed.", component=f"{SUB_GPU_COMPONENT_BASE}.ContextAnalyzer", packet_id=pid, resolved_entities=current_packet.contextual_entities)
+        return current_packet
+
+# --- ReasoningEngineInterface (개념적) ---
+class ReasoningEngineInterface:
+    def __init__(self, memory_manager: ContextualMemoryManager):
+        self.memory_manager = memory_manager # 추론 시 LTM 등 참조 가능
+        # 실제 추론 라이브러리(SymPy, NetworkX 등) 초기화는 여기에
+        eliar_log(EliarLogType.INFO, "ReasoningEngineInterface initialized (conceptual).", component=f"{SUB_GPU_COMPONENT_BASE}.ReasoningEngine")
+
+    async def perform_logical_reasoning(self, current_packet: ThoughtPacket, reasoning_goal: str) -> ThoughtPacket:
+        """
+        논리적 추론 수행 (예: 명제 논리, 술어 논리, 인과 관계 추론 등).
+        결과는 current_packet.reasoning_chain, current_packet.reasoning_engine_outputs 등에 기록.
+        """
+        pid = current_packet.packet_id
+        current_packet.current_processing_stage = "logical_reasoning_started"
+        current_packet.reasoning_engine_inputs = {"goal": reasoning_goal, "context_entities": current_packet.contextual_entities, "stm_summary": "STM_DATA_HERE"} # 예시
+        eliar_log(EliarLogType.DEBUG, f"Performing logical reasoning. Goal: {reasoning_goal}", component=f"{SUB_GPU_COMPONENT_BASE}.ReasoningEngine", packet_id=pid)
+
+        # --- 실제 추론 로직 (SymPy, Pomegranate, 직접 구현 등) ---
+        # 1. 전제조건 형성: current_packet.raw_input_text, contextual_entities, STM/LTM 정보 활용
+        premises = [f"Input: {current_packet.raw_input_text}"]
+        if "어제_날짜_계산필요" == current_packet.contextual_entities.get("어제"):
+            premises.append("Fact: '어제' refers to a past date.")
+        
+        # 2. 추론 실행 (예시: 간단한 규칙 기반)
+        conclusion = "No specific logical conclusion derived by dummy engine."
+        confidence = 0.5
+        if "기억해?" in current_packet.raw_input_text and "어제" in current_packet.contextual_entities:
+            # LTM에서 'yesterday_event' (엘리아르님 프로토타입 예시)와 유사한 것 검색 시도
+            ltm_key_to_find = f"event_on_date_{current_packet.contextual_entities['어제']}"
+            retrieved_events = await self.memory_manager.retrieve_from_ltm(query=ltm_key_to_find, memory_type="episodic", top_k=1, packet_id=pid)
+            if retrieved_events and retrieved_events[0].get("value"):
+                event_desc = str(retrieved_events[0]["value"])
+                conclusion = f"네, 어제 ({current_packet.contextual_entities['어제']}) '{event_desc}'에 대해 이야기 나눴던 것을 기억합니다."
+                confidence = 0.85
+                current_packet.add_reasoning_step("LTM Based Deduction", f"Recalled event '{event_desc}' for yesterday.", input_data=premises, output_data=conclusion, confidence=confidence, source_comp="ReasoningEngine")
+            else:
+                conclusion = f"어제 ({current_packet.contextual_entities['어제']}) 특정 사건에 대한 기록을 찾지 못했습니다. 무엇에 대해 말씀하시는지요?"
+                confidence = 0.6
+                current_packet.add_reasoning_step("LTM Search Miss", "No specific event found for yesterday in LTM.", input_data=premises, output_data=conclusion, confidence=confidence, source_comp="ReasoningEngine")
+        
+        current_packet.reasoning_engine_outputs = {"conclusion": conclusion, "confidence": confidence, "premises_used_count": len(premises)}
+        current_packet.current_processing_stage = "logical_reasoning_completed"
+        eliar_log(EliarLogType.DEBUG, "Logical reasoning completed.", component=f"{SUB_GPU_COMPONENT_BASE}.ReasoningEngine", packet_id=pid, conclusion=conclusion)
+        return current_packet
+
+
+# --- SubGPUModule 클래스 정의 (모든 컴포넌트 통합 및 비동기 인터페이스) ---
 class SubGPUModule:
-    def __init__(self, config: Dict[str, Any], node_id: str = f"{SUB_GPU_COMPONENT_BASE}_Node"):
-        self.device, self.config, self.node_id = DEVICE, config, node_id
-        self.module_base_component = f"{SUB_GPU_COMPONENT_BASE}.{node_id}"
-        eliar_log(EliarLogType.INFO, f"Initializing.", component=self.module_base_component, device=str(self.device))
+    def __init__(self, config: Dict[str, Any], node_id: str = f"{SUB_GPU_COMPONENT_BASE}_Node_Default"):
+        self.device = DEVICE
+        self.config = config
+        self.node_id = node_id # 각 SubGPU 인스턴스 식별용
+        self.module_base_component = f"{SUB_GPU_COMPONENT_BASE}.{self.node_id}" # 로깅용 컴포넌트명
+        eliar_log(EliarLogType.INFO, "Initializing.", component=self.module_base_component, device_type=str(self.device))
 
-        self.main_gpu_response_handler: Optional[Callable[[SubCodeThoughtPacketData], asyncio.Task]] = None # MainGPU 콜백 저장
-        self.main_gpu_controller_ref: Optional[Any] = None # MainGPU Eliar 컨트롤러 참조 (평가 함수용)
+        # --- 통신 및 핵심 로직을 위한 참조 ---
+        self.main_gpu_response_handler: Optional[Callable[[SubCodeThoughtPacketData], Coroutine[Any,Any,None]]] = None
+        self.main_gpu_controller_ref: Optional[Any] = None # Main_gpu.py의 Eliar 인스턴스 참조 (평가 함수용)
 
+        # --- 핵심 컴포넌트 초기화 ---
         self.ethical_governor = EthicalGovernor()
-        self.cognitive_interface = CognitiveArchitectureInterface() # MainGPU 콜백은 link 시점에 설정
+        self.memory_manager = ContextualMemoryManager() # CognitiveArchitectureInterface 대신 ContextualMemoryManager 사용 또는 통합
+        self.context_analyzer = ContextualAnalyzer(self.memory_manager)
+        self.reasoning_engine = ReasoningEngineInterface(self.memory_manager) # 개념적 인터페이스
         
-        self.self_learning = SelfLearningComponent(config.get("state_dim",10), config.get("action_dim",2), self.ethical_governor, self.cognitive_interface, config.get("replay_buffer_capacity",10000))
-        self.metacognition = MetacognitionComponent(self.ethical_governor, self.cognitive_interface, self.self_learning.policy_net)
-        self.creativity = CreativityComponent(self.ethical_governor, self.cognitive_interface, config.get("creative_latent_dim",100))
-        self.self_learning.link_other_components(self.metacognition, self.creativity)
+        # (SelfLearning, Metacognition, Creativity 등 다른 컴포넌트는 이전 버전의 구조를 따르되,
+        #  ContextualMemoryManager와 ContextualAnalyzer를 활용하도록 수정 필요)
+        #  여기서는 간략화를 위해 해당 컴포넌트들의 상세 구현은 생략하고, 인터페이스만 남겨둠
+        self.self_learning: Optional[SelfLearningComponent] = None # 필요시 초기화
+        self.metacognition: Optional[MetacognitionComponent] = None # 필요시 초기화
+        self.creativity: Optional[CreativityComponent] = None # 필요시 초기화
+        # self.self_learning = SelfLearningComponent(...)
+        # self.metacognition = MetacognitionComponent(...)
+        # self.creativity = CreativityComponent(...)
+        # if self.self_learning and self.metacognition and self.creativity:
+        #     self.self_learning.link_other_components(self.metacognition, self.creativity)
+            
+        self.current_thought_packet: Optional[ThoughtPacket] = None # 현재 처리 중인 패킷
+        
+        eliar_log(EliarLogType.INFO, "All core components initialized.", component=self.module_base_component)
 
-        self.distributed_learning = DistributedLearningManager(self.node_id, self.cognitive_interface)
-        self.hardware_interface = HardwareInterface(self.cognitive_interface)
-        self.gospel_network = GospelSpreadingNetwork(self.node_id, self.ethical_governor, self.cognitive_interface)
-        
-        self.current_thought_packet: Optional[ThoughtPacket] = None
-        
-        eliar_log(EliarLogType.INFO, "All components initialized.", component=self.module_base_component)
-
-    async def link_main_gpu_coordinator(self, main_gpu_controller_instance: Any, main_gpu_response_handler_callback: Callable[[SubCodeThoughtPacketData], asyncio.Task]):
-        """
-        MainGPU 컨트롤러 및 응답 핸들러와 연결합니다.
-        main_gpu_controller_instance: Main_gpu.py의 Eliar 인스턴스 (평가 함수 제공)
-        main_gpu_response_handler_callback: Main_gpu.py의 MainSubInterfaceCommunicator.sub_code_response_handler
-        """
+    async def link_main_gpu_coordinator(self, 
+                                        main_gpu_controller_instance: Any, # Main_gpu.py의 Eliar 인스턴스
+                                        main_gpu_response_handler_callback: Callable[[SubCodeThoughtPacketData], Coroutine[Any,Any,None]]): # Main_gpu.py의 Communicator.sub_code_response_handler
+        """ MainGPU 컨트롤러 및 응답 핸들러와 연결하고, EthicalGovernor의 외부 평가 함수를 설정합니다. """
+        log_comp = f"{self.module_base_component}.LinkMainGPU"
         self.main_gpu_controller_ref = main_gpu_controller_instance
         self.main_gpu_response_handler = main_gpu_response_handler_callback
-        self.cognitive_interface.main_gpu_response_handler = main_gpu_response_handler_callback # CA도 직접 콜백 알 수 있도록
+        
+        # CognitiveArchitectureInterface (또는 ContextualMemoryManager)에도 콜백 설정
+        if hasattr(self.memory_manager, 'main_gpu_response_handler'):
+            self.memory_manager.main_gpu_response_handler = main_gpu_response_handler_callback
 
-        evaluators_set = False
+        evaluators_configured = False
         if self.main_gpu_controller_ref:
-            if hasattr(self.main_gpu_controller_ref, 'evaluate_truth_for_governor') and \
-               hasattr(self.main_gpu_controller_ref, 'evaluate_love_for_governor') and \
-               hasattr(self.main_gpu_controller_ref, 'evaluate_repentance_for_governor'):
-                try:
-                    # MainGPU의 평가 함수가 async def라고 가정 (SubGPU의 EthicalGovernor도 async를 기대)
-                    self.ethical_governor.set_evaluators(
-                        self.main_gpu_controller_ref.evaluate_truth_for_governor,
-                        self.main_gpu_controller_ref.evaluate_love_for_governor,
-                        self.main_gpu_controller_ref.evaluate_repentance_for_governor
-                    )
-                    evaluators_set = True
-                except Exception as e:
-                    eliar_log(EliarLogType.ERROR, "Error setting external evaluators from MainGPU Controller.", component=self.module_base_component, error=e)
-        
-        if evaluators_set:
-            eliar_log(EliarLogType.INFO, "EthicalGovernor external evaluators linked from MainGPU Controller.", component=self.module_base_component)
+            # Main_gpu.py의 Eliar 인스턴스에 평가 함수들이 async def로 정의되어 있다고 가정
+            truth_eval_func = getattr(self.main_gpu_controller_ref, 'evaluate_truth_for_governor', None)
+            love_eval_func = getattr(self.main_gpu_controller_ref, 'evaluate_love_for_governor', None)
+            repentance_eval_func = getattr(self.main_gpu_controller_ref, 'evaluate_repentance_for_governor', None)
+
+            if callable(truth_eval_func) and callable(love_eval_func) and callable(repentance_eval_func):
+                self.ethical_governor.set_evaluators(truth_eval_func, love_eval_func, repentance_eval_func)
+                evaluators_configured = True
+                eliar_log(EliarLogType.INFO, "External ethical evaluators set from MainGPU Controller.", component=log_comp)
+            else:
+                missing_evals = []
+                if not callable(truth_eval_func): missing_evals.append("truth")
+                if not callable(love_eval_func): missing_evals.append("love")
+                if not callable(repentance_eval_func): missing_evals.append("repentance")
+                eliar_log(EliarLogType.WARN, f"One or more MainGPU ethical evaluators are not callable or missing: {missing_evals}. Defaults will be used.", component=log_comp)
         else:
-            eliar_log(EliarLogType.WARN, "MainGPU Controller evaluators not fully linked. EthicalGovernor may use defaults.", component=self.module_base_component)
+            eliar_log(EliarLogType.WARN, "MainGPU Controller reference not provided. EthicalGovernor will use defaults.", component=log_comp)
         
-        if self.main_gpu_response_handler:
-            eliar_log(EliarLogType.INFO, "MainGPU response handler callback linked.", component=self.module_base_component)
-        else:
-            eliar_log(EliarLogType.ERROR, "MainGPU response handler callback NOT linked.", component=self.module_base_component)
-
-        eliar_log(EliarLogType.INFO, "Link with MainGPU coordinator process complete.", component=self.module_base_component)
+        if not self.main_gpu_response_handler:
+            eliar_log(EliarLogType.ERROR, "MainGPU response handler callback NOT linked! SubGPU cannot send results back.", component=log_comp)
+        
+        eliar_log(EliarLogType.INFO, "Link with MainGPU coordinator process complete.", component=log_comp, evaluators_ready=evaluators_configured, callback_ready=bool(self.main_gpu_response_handler))
 
 
-    async def _initialize_or_update_thought_packet(self, task_data: Dict[str, Any]) -> ThoughtPacket:
+    async def _initialize_or_set_current_thought_packet(self, task_data: Dict[str, Any]) -> ThoughtPacket:
         """ 현재 ThoughtPacket을 초기화하거나 task_data로 업데이트합니다. """
-        packet_id = task_data.get("packet_id", str(uuid.uuid4())) # MainGPU에서 준 ID 우선 사용
-        conv_id = task_data.get("conversation_id", "unknown_conv")
-        user_id = task_data.get("user_id", "unknown_user")
+        # MainGPU에서 전달된 packet_id, conversation_id 등을 사용하여 ThoughtPacket 인스턴스 관리
+        pid = task_data.get("packet_id", f"sub_pkt_{uuid.uuid4().hex[:8]}") # MainGPU가 안주면 여기서 생성
+        conv_id = task_data.get("conversation_id", "default_conv")
+        user_id = task_data.get("user_id", "default_user")
         raw_text = task_data.get("raw_input_text", "")
         ts_created = task_data.get("timestamp_created", time.time())
 
-        if not self.current_thought_packet or self.current_thought_packet.packet_id != packet_id:
-            self.current_thought_packet = ThoughtPacket(packet_id, conv_id, user_id, raw_text, ts_created)
-            eliar_log(EliarLogType.INFO, "New/Updated ThoughtPacket context set.", component=self.module_base_component, packet_id=packet_id)
-        else:
-            self.current_thought_packet.raw_input_text = raw_text # 새 입력으로 업데이트
-            self.current_thought_packet.current_processing_stage = "task_data_received"
+        # 항상 새 패킷을 생성하거나, 기존 패킷 ID와 다르면 새로 생성
+        self.current_thought_packet = ThoughtPacket(pid, conv_id, user_id, raw_text, ts_created)
         
-        # MainGPU로부터 받은 추가 컨텍스트 필드들을 ThoughtPacket에 복사
+        # MainGPU로부터 받은 추가 컨텍스트 필드들을 ThoughtPacket에 복사/설정
         for key in ["main_gpu_clarification_context", "previous_main_gpu_context_summary", 
                       "preferred_llm_config_by_main", "main_gpu_system_prompt_override", 
-                      "main_gpu_memory_injection", "is_clarification_response"]:
+                      "main_gpu_memory_injection", "is_clarification_response"]: # is_clarification_response도 Main->Sub 전달 필드
             if key in task_data:
                 setattr(self.current_thought_packet, key, task_data[key])
         
+        eliar_log(EliarLogType.INFO, "Current ThoughtPacket initialized/set.", component=f"{self.module_base_component}.PacketCtx", packet_id=pid)
         return self.current_thought_packet
 
     async def process_task(self, task_type: str, task_data: Dict[str, Any]) -> SubCodeThoughtPacketData:
@@ -412,185 +453,171 @@ class SubGPUModule:
         MainGPU로부터 작업을 받아 비동기적으로 처리하고, 표준화된 SubCodeThoughtPacketData로 결과를 반환합니다.
         이 함수는 Main_gpu.py의 MainSubInterfaceCommunicator.send_task_to_sub_code 내 task_wrapper에서 호출됩니다.
         """
-        # 1. ThoughtPacket 준비 (task_data 기반으로 현재 패킷 설정 또는 업데이트)
-        current_packet = await self._initialize_or_update_thought_packet(task_data)
-        pid = current_packet.packet_id # 로깅용 packet_id
+        current_packet = await self._initialize_or_set_current_thought_packet(task_data)
+        pid = current_packet.packet_id
+        log_comp_task = f"{self.module_base_component}.TaskProc.{task_type}"
 
-        current_packet.current_processing_stage = f"subgpu_processing_start_{task_type}"
-        current_packet.processing_status_in_sub_code = "PROCESSING_IN_SUBGPU"
-        
-        log_comp = f"{self.module_base_component}.Task.{task_type}"
-        eliar_log(EliarLogType.INFO, f"Task processing started.", component=log_comp, packet_id=pid, input_keys=list(task_data.keys()))
-        
+        current_packet.current_processing_stage = f"subgpu_task_received_{task_type}"
+        current_packet.processing_status_in_sub_code = "PROCESSING_STARTED_IN_SUBGPU"
+        eliar_log(EliarLogType.INFO, "Task processing started.", component=log_comp_task, packet_id=pid)
+
         try:
-            # 2. 윤리적 사전 검토 (비동기)
-            govern_data = current_packet.raw_input_text # 또는 task_data의 특정 필드
-            action_preview = f"sub_gpu_execute_{task_type}" # 예상 행동 요약
+            # === 1. 윤리적 사전 검토 ===
+            govern_data = current_packet.raw_input_text
+            action_preview = f"sub_gpu_processing_for_{task_type}"
             if not await self.ethical_governor.govern_action(task_type, govern_data, action_preview, packet_id=pid):
-                current_packet.processing_status_in_sub_code = "REJECTED_BY_SUBGPU_ETHICS"
-                current_packet.error_info = {"type": "SubGPUEthicalRejection", "message": "Task failed SubGPU internal ethical pre-check."}
-                current_packet.final_output_by_sub_code = "[SubGPU: 요청이 내부 윤리 기준에 부합하지 않아 처리할 수 없습니다.]"
-                current_packet.timestamp_completed_by_sub_code = time.time()
-                eliar_log(EliarLogType.WARN, "Task rejected by SubGPU ethical pre-check.", component=log_comp, packet_id=pid)
-                return current_packet.to_sub_code_thought_packet_data()
-
-            # 3. 실제 작업 처리 (향후 각 handle_xxx_task 메서드로 분리될 지점)
-            #    각 작업 핸들러는 current_packet을 직접 수정하고, 필요한 경우 result_payload에 추가 정보 반환
-            #    (이전 코드의 각 task_type에 대한 if/elif 블록 내용을 여기에 비동기로 구현)
-            #    예시:
-            if task_type == "eliar_process_interaction_v2": # MainGPU에서 보낸 작업 유형
-                current_packet.add_intermediate_thought("pre_llm_analysis", "Analyzing input and context for LLM.")
-                # LLM 호출, 창의적 생성, RL 액션 선택 등을 비동기로 수행
-                # 예: llm_response = await self.call_some_llm_async(current_packet.processed_input_text or current_packet.raw_input_text)
-                # current_packet.final_output_by_sub_code = llm_response
-                
-                # --- 명료화 요청 생성 예시 (MainGPU가 전달한 main_gpu_clarification_context 고려) ---
-                if "그분" in current_packet.raw_input_text.lower() and \
-                   not current_packet.is_clarification_response and \
-                   not (current_packet.main_gpu_clarification_context and "예수" in str(current_packet.main_gpu_clarification_context).lower()):
-                    current_packet.needs_clarification_questions.append({
-                        "original_term": "그분",
-                        "question": "[SubGPU 자동질문] '그분'이 누구를 지칭하시는지 조금 더 명확히 알려주시겠어요? (예: 하나님, 예수님)"
-                    })
-                    current_packet.processing_status_in_sub_code = "COMPLETED_WITH_CLARIFICATION_REQUEST"
-                    current_packet.final_output_by_sub_code = None # 명료화 요청 시 최종 응답 없음
-                    current_packet.add_intermediate_thought("clarification_needed", "Identified ambiguity for '그분'.")
-                elif "오류 발생" in current_packet.raw_input_text.lower():
-                    current_packet.processing_status_in_sub_code = "ERROR_SIMULATED_BY_REQUEST"
-                    current_packet.final_output_by_sub_code = None
-                    current_packet.anomalies.append({"type":"SIMULATED_ERROR_IN_SUB", "details":"User requested error.", "severity":"TEST"})
-                    current_packet.error_info = {"type":"SimulatedError", "message":"Error simulation requested by user."}
-                elif "침묵" in current_packet.raw_input_text.lower():
-                    current_packet.processing_status_in_sub_code = "COMPLETED_WITH_SILENCE_BY_SUB"
-                    current_packet.final_output_by_sub_code = None # 침묵은 응답 없음을 의미
-                    current_packet.add_intermediate_thought("silence_requested", "User requested silence.")
-                else:
-                    # 일반적인 처리 (예시)
-                    await asyncio.sleep(0.1) # 실제 처리 시간 시뮬레이션
-                    current_packet.final_output_by_sub_code = f"[SubGPU 응답] '{current_packet.raw_input_text[:20]}' 처리 완료 (PID: ...{pid[-4:]}). 예수 그리스도의 사랑으로 응답합니다."
-                    current_packet.processing_status_in_sub_code = "COMPLETED_SUCCESS"
-                
-                current_packet.add_intermediate_thought("response_generation_complete", "Final response generated.")
-
-            # 다른 task_type에 대한 핸들러들...
-            # elif task_type == "sub_gpu_self_learn_cycle":
-            #     learning_summary = await self.self_learning.learn(batch_size=self.config.get("rl_batch_size", 32), packet_id=pid)
-            #     current_packet.sub_code_internal_metrics = {"rl_learning": learning_summary}
-            #     current_packet.processing_status_in_sub_code = "COMPLETED_SUCCESS" if learning_summary else "COMPLETED_NO_LEARNING_DATA"
-
+                current_packet.processing_status_in_sub_code = "REJECTED_BY_SUBGPU_ETHICS_PRE_CHECK"
+                current_packet.error_info = {"type": "EthicalPreCheckRejection", "message": "Task failed SubGPU internal ethical pre-check."}
+                current_packet.final_output_by_sub_code = "[SubGPU: 윤리적 기준에 따라 요청 처리를 시작할 수 없습니다.]"
+                # (이하 최종 반환 로직으로 바로 이동)
             else:
-                current_packet.error_info = {"type": "UnknownSubGPUTaskTypeError", "message": f"SubGPU task type '{task_type}' not recognized."}
-                current_packet.processing_status_in_sub_code = "ERROR_UNKNOWN_TASK_TYPE"
-                eliar_log(EliarLogType.ERROR, f"Unknown task type '{task_type}'.", component=log_comp, packet_id=pid)
+                # === 2. 맥락 분석 (ContextualAnalyzer 사용) ===
+                current_packet.current_processing_stage = "contextual_analysis"
+                current_packet = await self.context_analyzer.analyze_and_enrich_packet(current_packet)
+                current_packet.add_intermediate_thought("context_analysis_done", "Contextual analysis and entity resolution completed.", 
+                                                        data={"resolved_entities_count": len(current_packet.contextual_entities)})
 
-            # 4. 윤리적 사후 검토 및 회개 필요성 판단 (비동기)
-            # 최종 패킷 상태를 기반으로 평가
-            if await self.ethical_governor.assess_repentance_necessity(current_packet.to_sub_code_thought_packet_data(), {"task_type": task_type, "final_status_sub": current_packet.processing_status_in_sub_code}, packet_id=pid):
-                eliar_log(EliarLogType.WARN, "Post-task assessment in SubGPU indicates need for repentance.", component=log_comp, packet_id=pid, status=current_packet.processing_status_in_sub_code)
-                # 회개 프로세스 트리거 (비동기)
-                # 이 부분은 현재 패킷 처리를 블로킹하지 않고 백그라운드에서 실행될 수 있음
-                asyncio.create_task(self.ethical_governor.trigger_repentance_action(self, {"type": "subgpu_post_task_review", "details": current_packet.to_sub_code_thought_packet_data()}, packet_id=pid))
-                if current_packet.processing_status_in_sub_code == "COMPLETED_SUCCESS": # 성공했으나 회개 필요
-                    current_packet.processing_status_in_sub_code = "COMPLETED_SUCCESS_WITH_REPENTANCE_LOGGED"
+                # === 3. 추론 체인 구축 및 심층 추론 (ThoughtPacketEnhancer & ReasoningEngine) ===
+                # (엘리아르님 프로토타입의 packet.analyze() 와 유사한 로직 또는 ReasoningEngine 호출)
+                current_packet.current_processing_stage = "reasoning_phase"
+                # 예시: "어제"가 포함된 경우, ContextualAnalyzer가 해결한 날짜를 바탕으로 LTM 조회 및 추론
+                if "어제" in current_packet.raw_input_text and "어제" in current_packet.contextual_entities:
+                    current_packet = await self.reasoning_engine.perform_logical_reasoning(current_packet, reasoning_goal=f"Recall events from {current_packet.contextual_entities['어제']}")
+                    # ReasoningEngine이 current_packet.reasoning_chain, reasoning_engine_outputs 등을 채움
+                    # 또한, current_packet.final_output_by_sub_code의 기초가 될 수 있는 정보를 생성할 수 있음
+                    if current_packet.reasoning_engine_outputs and current_packet.reasoning_engine_outputs.get("conclusion"):
+                        current_packet.final_output_by_sub_code = current_packet.reasoning_engine_outputs["conclusion"]
+                        current_packet.confidence_score = current_packet.reasoning_engine_outputs.get("confidence", 0.5)
 
+                # --- 기존 태스크 유형별 처리 로직 (필요시 여기에 통합 또는 별도 핸들러로 분리) ---
+                elif task_type == "eliar_process_interaction_v3": # MainGPU에서 보낸 일반 상호작용
+                    # 위에서 맥락 분석 및 추론을 이미 수행했으므로, 여기서는 응답 생성에 집중
+                    if not current_packet.final_output_by_sub_code: # 추론 엔진에서 응답이 생성되지 않았다면
+                        # LLM 호출 또는 규칙 기반 응답 생성 등
+                        await asyncio.sleep(0.05) # 응답 생성 시간 시뮬레이션
+                        current_packet.final_output_by_sub_code = f"[SubGPU 응답 강화] '{current_packet.raw_input_text[:15]}'에 대한 맥락적 응답입니다. (해결된 개체: {len(current_packet.contextual_entities)}개)"
+                        current_packet.confidence_score = 0.75 # 예시
+                    current_packet.processing_status_in_sub_code = "COMPLETED_SUCCESS_REASONED"
+                
+                # (기타 RL, Metacognition 등의 task_type 처리 로직...)
+
+                else: # 알 수 없는 작업 유형
+                    current_packet.error_info = {"type": "UnknownSubGPUTask", "message": f"Task type '{task_type}' not specifically handled after context/reasoning phase."}
+                    current_packet.processing_status_in_sub_code = "ERROR_UNHANDLED_TASK_TYPE"
+                
+                current_packet.add_intermediate_thought("main_logic_complete", f"Main logic for {task_type} completed.")
+
+            # === 4. 윤리적 사후 검토 ===
+            current_packet.current_processing_stage = "ethical_post_assessment"
+            # 최종 생성된 패킷(또는 응답)을 기준으로 평가
+            # assess_repentance_necessity는 SubCodeThoughtPacketData를 받을 수 있도록 수정 필요 가정
+            # 또는 current_packet.to_sub_code_thought_packet_data() 결과를 전달
+            if await self.ethical_governor.assess_repentance_necessity(current_packet.to_sub_code_thought_packet_data(), {"task_type": task_type, "current_status_sub": current_packet.processing_status_in_sub_code}, packet_id=pid):
+                eliar_log(EliarLogType.WARN, "Post-task assessment in SubGPU indicates need for repentance.", component=log_comp_task, packet_id=pid)
+                asyncio.create_task(self.ethical_governor.trigger_repentance_action(self, {"type": "subgpu_repentance_needed_post_task", "details": current_packet.to_sub_code_thought_packet_data()}, packet_id=pid))
+                if "ERROR" not in current_packet.processing_status_in_sub_code:
+                     current_packet.processing_status_in_sub_code = "COMPLETED_WITH_REPENTANCE_ADVISED"
 
         except Exception as e:
-            current_packet.processing_status_in_sub_code = "ERROR_UNHANDLED_EXCEPTION_IN_SUBGPU"
-            current_packet.error_info = {"type": type(e).__name__, "message": str(e), "details": traceback.format_exc()}
-            eliar_log(EliarLogType.CRITICAL, f"Unhandled exception during task '{task_type}'.", component=log_comp, packet_id=pid, error=e, exc_info_full=traceback.format_exc())
+            current_packet.processing_status_in_sub_code = "ERROR_UNHANDLED_SUBGPU_EXCEPTION"
+            current_packet.error_info = {"type": type(e).__name__, "message": str(e), "details": traceback.format_exc(limit=10)} # 트레이스백 상세 기록
+            eliar_log(EliarLogType.CRITICAL, f"Unhandled exception during task '{task_type}'.", component=log_comp_task, packet_id=pid, error=e, exc_info_full=traceback.format_exc())
         
-        # 5. 최종 처리 완료 및 반환 데이터 구성
+        # === 5. 최종 처리 완료 및 반환 데이터 구성 ===
         current_packet.timestamp_completed_by_sub_code = time.time()
-        current_packet.current_processing_stage = f"subgpu_completed_{task_type}"
+        current_packet.current_processing_stage = f"subgpu_task_finalized_{task_type}"
         
-        # 모든 관련 정보를 포함한 최종 SubCodeThoughtPacketData 생성
-        final_response_packet = current_packet.to_sub_code_thought_packet_data()
+        # STM에 현재 처리 완료된 패킷 저장
+        await self.memory_manager.store_to_stm(current_packet.to_sub_code_thought_packet_data())
         
-        eliar_log(EliarLogType.INFO, f"Task processing finished.", component=log_comp, packet_id=pid, final_status=final_response_packet.get("processing_status_in_sub_code"))
-        return final_response_packet
+        final_response_packet_data = current_packet.to_sub_code_thought_packet_data()
+        
+        eliar_log(EliarLogType.INFO, "Task processing finished. Returning packet data to MainGPU.", component=log_comp_task, packet_id=pid, final_status=final_response_packet_data.get("processing_status_in_sub_code"))
+        return final_response_packet_data
 
 
     async def shutdown(self, packet_id: Optional[str]=None):
-        log_comp = f"{self.module_base_component}.Shutdown"
-        eliar_log(EliarLogType.INFO, "Shutting down...", component=log_comp, packet_id=packet_id)
-        # (이전 shutdown 로직, 비동기 및 eliar_log 사용)
-        if SUB_GPU_CPU_EXECUTOR:
-            await run_in_executor(None, SUB_GPU_CPU_EXECUTOR.shutdown, True) # 기본 executor로 외부 executor 종료
-            eliar_log(EliarLogType.INFO, "CPU Executor for SubGPU shutdown.", component=log_comp)
-        eliar_log(EliarLogType.INFO, "Shutdown complete.", component=log_comp, packet_id=packet_id)
+        log_comp_shutdown = f"{self.module_base_component}.Shutdown"
+        eliar_log(EliarLogType.INFO, "Shutdown sequence initiated...", component=log_comp_shutdown, packet_id=packet_id)
+        # (이전 shutdown 로직, Executor 종료 등)
+        if SUB_GPU_CPU_EXECUTOR: # Executor가 이 모듈 레벨에서 관리된다면
+            await run_in_executor(None, SUB_GPU_CPU_EXECUTOR.shutdown, True)
+            eliar_log(EliarLogType.INFO, "SubGPU CPU Executor shutdown complete.", component=log_comp_shutdown)
+        eliar_log(EliarLogType.INFO, "Shutdown sequence complete.", component=log_comp_shutdown, packet_id=packet_id)
 
 
-# --- 데모 및 테스트용 (Main_gpu.py에서 직접 호출되지 않음) ---
-async def sub_gpu_standalone_test():
-    """ SubGPUModule 단독 테스트 및 비동기 기능 시연용 함수 """
-    eliar_log(EliarLogType.INFO, "--- SubGPUModule Standalone Async Test ---", component="SubGPU.TestRunner")
+# --- 데모 및 테스트용 (이 파일 단독 실행 시) ---
+async def sub_gpu_standalone_reasoning_test():
+    log_comp_test = f"{SUB_GPU_COMPONENT_BASE}.StandaloneTest"
+    eliar_log(EliarLogType.INFO, "--- SubGPUModule Standalone Contextual Reasoning Test ---", component=log_comp_test)
     
     test_config = { "state_dim": 5, "action_dim": 2, "rl_batch_size": 4 }
-    sub_gpu_instance = SubGPUModule(config=test_config, node_id="sub_test_node")
+    sub_gpu = SubGPUModule(config=test_config, node_id="sub_reasoning_node")
 
-    # Mock MainGPU Controller (EthicalGovernor 평가 함수 제공용)
-    class MockMainController:
-        async def evaluate_truth_for_governor(self, data, ctx): return 0.9
-        async def evaluate_love_for_governor(self, action, ctx): return 0.85
-        async def evaluate_repentance_for_governor(self, outcome, ctx): return False # 테스트 시 회개 불필요 가정
+    # Mock MainGPU Controller and Response Handler
+    class MockMainControllerForSub:
+        async def evaluate_truth_for_governor(self, data, ctx): return 0.95
+        async def evaluate_love_for_governor(self, action, ctx): return 0.9
+        async def evaluate_repentance_for_governor(self, outcome, ctx): return False
     
-    mock_main_controller = MockMainController()
+    mock_main_controller = MockMainControllerForSub()
     
-    # Mock MainGPU Response Handler (SubGPU가 결과를 보낼 콜백)
-    async def mock_main_response_handler(response_packet: SubCodeThoughtPacketData):
-        eliar_log(EliarLogType.INFO, "MockMain: Received response from SubGPU.", component="SubGPU.TestRunner.MockMainHandler", 
+    async def mock_main_response_handler_for_sub(response_packet: SubCodeThoughtPacketData):
+        eliar_log(EliarLogType.INFO, "MockMainHandler (for SubGPU Test): Received response.", component=log_comp_test, 
                   packet_id=response_packet.get("packet_id"), status=response_packet.get("processing_status_in_sub_code"),
-                  output_preview=(response_packet.get("final_output_by_sub_code") or "")[:50])
+                  output_preview=(response_packet.get("final_output_by_sub_code") or "")[:60],
+                  reasoning_steps_count=len(response_packet.get("reasoning_chain", [])),
+                  contextual_entities=response_packet.get("contextual_entities"))
 
-    await sub_gpu_instance.link_main_gpu_coordinator(mock_main_controller, mock_main_response_handler)
+    await sub_gpu.link_main_gpu_coordinator(mock_main_controller, mock_main_response_handler_for_sub)
 
-    # 테스트 태스크 데이터
-    test_task_data_1 = {
-        "packet_id": "test_pkt_001", "conversation_id": "test_conv_001", "user_id": "test_user",
-        "raw_input_text": "안녕하세요, 엘리아르님. 당신의 중심 가치는 무엇인가요?",
+    # 테스트 시나리오
+    conv_id_test = "conv_context_test_001"
+    user_id_test = "user_reasoner_001"
+
+    # 1. 첫 번째 대화: "어제 데이터 분석에 대해 이야기했었지." (LTM에 저장될 내용 가정)
+    #    실제로는 이 정보가 이전 턴에서 STM/LTM에 저장되었어야 함. 여기서는 LTM에 수동으로 추가.
+    await sub_gpu.memory_manager.transfer_to_ltm(
+        key=f"event_on_date_어제_날짜_계산필요_conv_{conv_id_test}", # ContextualAnalyzer가 해결할 키 형식과 유사하게
+        value="데이터 분석 방법론 및 결과 공유",
+        memory_type="episodic",
+        packet_id="ltm_init_pkt_001",
+        metadata={"source_component": "TestSetup", "conversation_id": conv_id_test}
+    )
+
+    # 2. 두 번째 대화: "어제 내가 얘기한 사람 누구였지?" -> STM에 "홍길동" 언급이 있었다고 가정
+    #    STM에 이전 대화 내용 수동 추가 (실제로는 이전 process_task 결과가 자동으로 추가됨)
+    prev_turn_data_stm = ThoughtPacket("prev_pkt_001", conv_id_test, user_id_test, "홍길동씨는 전문가입니다.")
+    prev_turn_data_stm.final_output_by_sub_code = "네, 홍길동씨는 해당 분야의 최고 전문가 중 한 분이시죠."
+    prev_turn_data_stm.processing_status_in_sub_code = "COMPLETED_SUCCESS"
+    prev_turn_data_stm.timestamp_completed_by_sub_code = time.time() - 3600 # 1시간 전
+    await sub_gpu.memory_manager.store_to_stm(prev_turn_data_stm.to_sub_code_thought_packet_data())
+
+
+    test_task_data_reasoning = {
+        "packet_id": "test_reason_pkt_001", "conversation_id": conv_id_test, "user_id": user_id_test,
+        "raw_input_text": "어제 내가 얘기한 그 사람은 누구였고, 무슨 이야기를 했었지?",
         "timestamp_created": time.time()
     }
-    test_task_data_2 = { # 명료화 요청 유도
-        "packet_id": "test_pkt_002", "conversation_id": "test_conv_001", "user_id": "test_user",
-        "raw_input_text": "그분의 뜻을 따르는 삶에 대해 더 알고 싶습니다.",
-        "timestamp_created": time.time()
-    }
-    test_task_data_3 = { # 오류 유도
-        "packet_id": "test_pkt_003", "conversation_id": "test_conv_001", "user_id": "test_user",
-        "raw_input_text": "치명적인 오류 발생 시켜줘",
-        "timestamp_created": time.time()
-    }
-
-    # 태스크 실행 (결과는 MainGPU 콜백으로 전달됨)
-    # process_task는 SubCodeThoughtPacketData를 반환하므로, 그 결과를 직접 사용할 수도 있음
-    response_1 = await sub_gpu_instance.process_task("eliar_process_interaction_v2", test_task_data_1)
-    # Main 핸들러가 호출될 시간을 약간 줌 (실제로는 Main 이벤트 루프에서 처리)
-    # await asyncio.sleep(0.1) 
     
-    response_2 = await sub_gpu_instance.process_task("eliar_process_interaction_v2", test_task_data_2)
-    # await asyncio.sleep(0.1)
+    # process_task 호출 (결과는 mock_main_response_handler_for_sub 콜백으로 전달되지만, 직접 받을 수도 있음)
+    response_packet_reasoning = await sub_gpu.process_task("eliar_process_interaction_v3", test_task_data_reasoning)
     
-    response_3 = await sub_gpu_instance.process_task("eliar_process_interaction_v2", test_task_data_3)
-    # await asyncio.sleep(0.1)
+    # 여기서 response_packet_reasoning의 내용을 직접 검사해도 됨.
+    # 콜백은 비동기적으로 호출되므로, 테스트 완료를 위해 약간의 대기 필요할 수 있음
+    await asyncio.sleep(0.2) 
 
-    # (여기서 response_1, response_2, response_3를 검증하거나 추가 로깅 가능)
-    eliar_log(EliarLogType.INFO, f"Test packet 1 response status: {response_1.get('processing_status_in_sub_code')}", component="SubGPU.TestRunner", packet_id="test_pkt_001")
-    eliar_log(EliarLogType.INFO, f"Test packet 2 response status: {response_2.get('processing_status_in_sub_code')}, needs_clarification: {bool(response_2.get('needs_clarification_questions'))}", component="SubGPU.TestRunner", packet_id="test_pkt_002")
-    eliar_log(EliarLogType.INFO, f"Test packet 3 response status: {response_3.get('processing_status_in_sub_code')}, error: {response_3.get('error_info')}", component="SubGPU.TestRunner", packet_id="test_pkt_003")
-
-
-    await sub_gpu_instance.shutdown()
-    # 전역 Executor 종료 (애플리케이션 종료 시 한 번만)
-    if SUB_GPU_CPU_EXECUTOR:
-        SUB_GPU_CPU_EXECUTOR.shutdown(wait=False) # 테스트 종료 시에는 강제 종료 가능
-        eliar_log(EliarLogType.INFO, "Global SUB_GPU_CPU_EXECUTOR shutdown initiated.", component="SubGPU.TestRunner")
+    await sub_gpu.shutdown()
+    if SUB_GPU_CPU_EXECUTOR: SUB_GPU_CPU_EXECUTOR.shutdown(wait=False)
+    eliar_log(EliarLogType.INFO, "--- SubGPUModule Standalone Contextual Reasoning Test Finished ---", component=log_comp_test)
 
 
 if __name__ == '__main__':
-    # 이 파일 단독 실행 시 테스트용
     try:
-        asyncio.run(sub_gpu_standalone_test())
+        asyncio.run(sub_gpu_standalone_reasoning_test())
     except KeyboardInterrupt:
-        eliar_log(EliarLogType.WARN, "SubGPU standalone test interrupted by user.", component="SubGPU.TestRunner")
+        eliar_log(EliarLogType.WARN, "SubGPU standalone test interrupted by user.", component=f"{SUB_GPU_COMPONENT_BASE}.TestRunner")
+    except Exception as e_run:
+        eliar_log(EliarLogType.CRITICAL, "Error running SubGPU standalone test.", component=f"{SUB_GPU_COMPONENT_BASE}.TestRunner", error=e_run, exc_info_full=traceback.format_exc())
     finally:
-        eliar_log(EliarLogType.INFO, "SubGPU standalone test finished.", component="SubGPU.TestRunner")
+        eliar_log(EliarLogType.INFO, "SubGPU standalone test run complete.", component=f"{SUB_GPU_COMPONENT_BASE}.TestRunner")
