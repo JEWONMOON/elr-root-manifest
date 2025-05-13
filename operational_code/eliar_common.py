@@ -184,7 +184,7 @@ def webhook_handler():
     return jsonify({"status": "webhook_event_received_and_logged", "event_type": github_event}), 200
 
 # Flask 앱 실행 함수 (스레드에서 호출됨)
-def _run_flask_webhook_listener(host='0.0.0.0', port=8080, debug=False):
+def _run_flask_webhook_listener(host='0.0.0.0', port=5000, debug=False):
     try:
         eliar_log(EliarLogType.INFO, f"Attempting to start Flask webhook listener on http://{host}:{port}", component=COMPONENT_WEBHOOK)
         # 프로덕션 환경에서는 waitress, gunicorn 등 사용 권장
@@ -197,7 +197,7 @@ def _run_flask_webhook_listener(host='0.0.0.0', port=8080, debug=False):
 # Webhook 리스너 스레드 관리
 _webhook_listener_thread_instance: Optional[threading.Thread] = None
 
-def start_webhook_listener_thread(host: str = '0.0.0.0', port: int = 8080, flask_debug: bool = False):
+def start_webhook_listener_thread(host: str = '0.0.0.0', port: int = 5000, flask_debug: bool = False):
     """ Webhook 리스너를 별도의 데몬 스레드에서 시작합니다. (이미 실행 중이면 다시 시작하지 않음) """
     global _webhook_listener_thread_instance
     if _webhook_listener_thread_instance and _webhook_listener_thread_instance.is_alive():
@@ -218,7 +218,7 @@ def start_webhook_listener_thread(host: str = '0.0.0.0', port: int = 8080, flask
 # ELIAR_ENABLE_WEBHOOK_LISTENER 환경 변수가 "true" (대소문자 무관)일 때만 시작합니다.
 # 기본적으로는 Main_gpu.py 등에서 명시적으로 start_webhook_listener_thread()를 호출하는 것을 권장합니다.
 if os.getenv("ELIAR_ENABLE_WEBHOOK_LISTENER", "false").lower() == "true":
-    WEBHOOK_PORT = int(os.getenv("ELIAR_WEBHOOK_PORT", "8080"))
+    WEBHOOK_PORT = int(os.getenv("ELIAR_WEBHOOK_PORT", "5000"))
     WEBHOOK_HOST = os.getenv("ELIAR_WEBHOOK_HOST", "0.0.0.0")
     FLASK_DEBUG_MODE = os.getenv("ELIAR_FLASK_DEBUG", "false").lower() == "true"
     start_webhook_listener_thread(host=WEBHOOK_HOST, port=WEBHOOK_PORT, flask_debug=FLASK_DEBUG_MODE)
