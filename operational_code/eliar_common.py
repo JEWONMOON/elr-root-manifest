@@ -64,7 +64,7 @@ class SubCodeThoughtPacketData(TypedDict, total=False): # (이전 최종 버전�
     needs_clarification_questions: List[Dict[str, str]]
     llm_analysis_summary: Optional[Dict[str, Any]]; ethical_assessment_summary: Optional[Dict[str, Any]]
     value_alignment_score: Dict[str, Union[float, bool]]; anomalies: List[Dict[str, Any]]
-    confidence_score: Optional[float]; learning_tags: List[str]]
+    confidence_score: Optional[float]; learning_tags: List[str]
     metacognitive_state_summary: Optional[Dict[str, Any]]
     timestamp_completed_by_sub_code: Optional[float]; error_info: Optional[Dict[str, Any]]
     main_gpu_clarification_context: Optional[Dict[str, Any]]; previous_main_gpu_context_summary: Optional[Dict[str, Any]]
