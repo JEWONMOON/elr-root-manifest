@@ -27,10 +27,10 @@ logging.basicConfig(
 # -------------------------------------------------
 #  Paths & storage setup
 # -------------------------------------------------
-DATA_DIR = os.getenv("ELR_DATA_DIR", "/mnt/data/elr_storage")
+DATA_DIR = os.getenv("ELR_DATA_DIR", "/opt/render/project/.data")
 DB_PATH = os.path.join(DATA_DIR, "elr_manifest.db")
-
 os.makedirs(DATA_DIR, exist_ok=True)
+
 
 # -------------------------------------------------
 #  Allowed tables  (extend here when you add tables)
