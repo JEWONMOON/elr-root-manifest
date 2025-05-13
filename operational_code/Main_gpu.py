@@ -1,21 +1,21 @@
-# Main_gpu.py (eliar_common.py 적용 및 호환성 개선 버전)
+# Main_gpu.py (eliar_common.py 적용 및 호환성 개선 최종 버전)
 
-import torch # Sub_code.py(sub_gpu.py) 와의 연동 시 PyTorch 객체가 오갈 수 있으므로 유지
+import torch # Sub_code.py(sub_gpu.py) 와의 연동 시 PyTorch 객체가 오갈 수 있으므로 유지 (선택적)
 import numpy as np # 일반적인 데이터 처리
 import os
 import random # DummySubCodeInterfaceForMainTest 등에서 사용
-import time # 일반적인 시간 처리
+# import time # datetime으로 대체 또는 필요한 경우 유지
 import json
 import asyncio
-import concurrent.futures # 기존 의존성
-import aiohttp # 기존 의존성
-import base64 # 기존 의존성
+import concurrent.futures # 기존 의존성 유지
+import aiohttp # 기존 의존성 유지
+import base64 # 기존 의존성 유지
 from datetime import datetime, timezone # datetime 표준 임포트
 import re # 필요시 사용
 import uuid # packet_id 생성용
 import traceback # 상세 에러 로깅용
 
-from typing import List, Dict, Any, Optional, Tuple, Callable, TypedDict, Deque # Callable, TypedDict, Deque 추가
+from typing import List, Dict, Any, Optional, Tuple, Callable, Deque # TypedDict는 eliar_common에서 가져옴
 from collections import deque # conversation_history 용
 
 # --- 공용 모듈 임포트 ---
@@ -27,7 +27,7 @@ from eliar_common import (
 )
 
 # --- Main GPU 버전 및 기본 설정 ---
-Eliar_VERSION = "v23.1_MainGPU_CommonModule_Compat" # 버전 업데이트
+Eliar_VERSION = "v24.0_MainGPU_CommonModule_Async_Aligned" # 버전 업데이트
 COMPONENT_NAME_MAIN_GPU_CORE = "MainGPU.EliarCore"
 COMPONENT_NAME_COMMUNICATOR = "MainGPU.Communicator"
 COMPONENT_NAME_SYSTEM_STATUS = "MainGPU.SystemStatus"
@@ -47,25 +47,24 @@ else:
     eliar_log(EliarLogType.WARN, f"Environment variable 'ELIAR_GITHUB_PAT' not found. GitHub commit functionality will be limited.", component=COMPONENT_NAME_MAIN_GPU_CORE)
 
 # --- 로컬 캐시 및 로그 디렉토리 ---
-CACHE_DIR = "cached_manifests_main" # 필요시 사용
-LOG_DIR = f"logs_Eliar_MainGPU_{Eliar_VERSION}" # 로그 디렉토리 명에 버전 포함
+CACHE_DIR = "cached_manifests_main"
+LOG_DIR = f"logs_Eliar_MainGPU_{Eliar_VERSION}"
 
 # --- 상수 정의 ---
-# (기존 상수들은 그대로 유지, 필요시 eliar_common으로 이동 고려)
 DEFAULT_FREQUENCY = 433.33
 DEFAULT_TAU_FACTOR = 0.98
 DEFAULT_BASE_FACTOR = 0.1
 NUM_ATTRIBUTES = 12 
-SEED = 42 # random.seed(SEED) 등으로 활용 가능
+SEED = 42
 
 # --- 매니페스트 경로 ---
-IDENTITY_MANIFEST_PATH = "manifests/identity_manifest.json" # MainGPU가 직접 핸들링하는 매니페스트
+IDENTITY_MANIFEST_PATH = "manifests/identity_manifest.json"
 ULRIM_MANIFEST_PATH = "manifests/ulrim_manifest_main_gpu.json" # MainGPU <-> SubCode 간 통신/상태 기록용
-EVOLUTION_MANIFEST_PATH = "manifests/evolution_manifest.json" # MainGPU가 직접 핸들링하는 매니페스트
-MAINTENANCE_MANIFEST_PATH = "manifests/maintenance_manifest.json" # MainGPU가 직접 핸들링하는 매니페스트
+EVOLUTION_MANIFEST_PATH = "manifests/evolution_manifest.json"
+MAINTENANCE_MANIFEST_PATH = "manifests/maintenance_manifest.json"
 
-BACKGROUND_LOOP_INTERVAL_SECONDS = 0.1 # 비동기 백그라운드 작업 주기
-MAINTENANCE_INTERVAL_SECONDS = 60.0 # 유지보수 작업 주기
+BACKGROUND_LOOP_INTERVAL_SECONDS = 0.1
+MAINTENANCE_INTERVAL_SECONDS = 60.0
 
 # --- 유틸리티 함수 ---
 def ensure_log_dir():
@@ -84,12 +83,11 @@ class MainSubInterfaceCommunicator:
         self.ulrim_manifest_path = ulrim_manifest_path_for_main
         self.pending_sub_code_tasks: Dict[str, asyncio.Event] = {}
         self.sub_code_task_results: Dict[str, Optional[SubCodeThoughtPacketData]] = {}
-        self.sub_code_interface: Optional[Any] = None # 실제 SubCode(sub_gpu.py의 SubGPUModule 인스턴스)가 할당될 변수
-        self._ensure_ulrim_manifest_file_exists() # 초기화 시 파일 확인/생성
+        self.sub_code_interface: Optional[Any] = None # 실제 SubCode(sub_gpu.py의 SubGPUModule 인스턴스)
+        self._ensure_ulrim_manifest_file_exists()
         eliar_log(EliarLogType.INFO, "MainSubInterfaceCommunicator initialized.", component=COMPONENT_NAME_COMMUNICATOR)
 
     def _ensure_ulrim_manifest_file_exists(self):
-        """ Ulrim Manifest 파일이 없으면 초기 구조로 생성합니다. """
         try:
             manifest_dir = os.path.dirname(self.ulrim_manifest_path)
             if manifest_dir and not os.path.exists(manifest_dir):
@@ -97,13 +95,12 @@ class MainSubInterfaceCommunicator:
             
             if not os.path.exists(self.ulrim_manifest_path):
                 initial_manifest = {
-                    "schema_version": "1.3_common_typeddict", # 스키마 버전 업데이트
+                    "schema_version": "1.4_common_eliar", 
                     "main_gpu_version": Eliar_VERSION,
                     "sub_code_interactions_log": [],
                     "last_sub_code_communication": None,
-                    # EliarCoreValues는 eliar_common에서 직접 참조하므로, 정의 출처 명시는 불필요하거나 다르게 표현 가능
-                    "core_values_definition_source": f"eliar_common.EliarCoreValues (MainGPU: {Eliar_VERSION})", 
-                    "system_alerts_from_main": [] # MainGPU가 SubCode에 전달할 수 있는 알림
+                    "core_values_definition_source": f"eliar_common.EliarCoreValues (Referenced by MainGPU: {Eliar_VERSION})",
+                    "system_alerts_from_main": []
                 }
                 with open(self.ulrim_manifest_path, "w", encoding="utf-8") as f:
                     json.dump(initial_manifest, f, ensure_ascii=False, indent=4)
@@ -112,119 +109,126 @@ class MainSubInterfaceCommunicator:
             eliar_log(EliarLogType.ERROR, "Error during Ulrim Manifest file creation/check.", component=COMPONENT_NAME_COMMUNICATOR, error=e)
 
     def register_sub_code_interface(self, sub_code_interface_obj: Any):
-        """ Sub_code.py의 메인 인터페이스 객체를 등록하고 콜백 함수를 설정합니다. """
         self.sub_code_interface = sub_code_interface_obj
-        # sub_gpu.py의 SubGPUModule 인스턴스에 MainGPU의 콜백 함수를 등록하는 메서드가 있다고 가정
-        # 예: sub_gpu_instance.set_main_gpu_callback_handler(self.sub_code_response_callback)
-        # 또는 SubGPUModule의 link_main_gpu_coordinator를 통해 양방향 설정
-        if hasattr(self.sub_code_interface, "link_main_gpu_coordinator"): # SubGPUModule의 해당 메서드 사용
+        # sub_gpu.py의 SubGPUModule 인스턴스에 MainGPU Communicator (self) 또는 콜백을 전달
+        if hasattr(self.sub_code_interface, "link_main_gpu_coordinator"):
             try:
-                # MainSubInterfaceCommunicator(self)를 SubGPUModule에 전달하여,
-                # SubGPUModule이 이 Communicator의 sub_code_response_callback을 직접 호출하도록 함
-                asyncio.create_task(self.sub_code_interface.link_main_gpu_coordinator(self)) # link_main_gpu_coordinator가 async일 경우
-                eliar_log(EliarLogType.INFO, "SubCode interface registered and link_main_gpu_coordinator called.", component=COMPONENT_NAME_COMMUNICATOR)
+                # link_main_gpu_coordinator는 async 함수일 수 있으므로, create_task로 호출하거나,
+                # 해당 함수가 동기 함수라면 직접 호출. 여기서는 Eliar 인스턴스를 전달하는 것으로 가정.
+                # 이 MainSubInterfaceCommunicator가 Eliar 클래스 내에 있다면 eliar_controller를 전달.
+                # 독립적이라면, MainGPU의 핵심 로직(Eliar 인스턴스)에 접근할 방법을 제공해야 함.
+                # 여기서는 SubGPUModule이 MainGPU의 평가함수 등을 직접 접근할 수 있도록 Eliar인스턴스를 넘겨준다고 가정.
+                # 혹은, 이 Communicator 객체(self)를 넘겨 sub_code_response_handler를 직접 호출하게 함.
+                # 가장 깔끔한 것은 sub_code_interface.link_main_gpu_coordinator(self) 이고,
+                # sub_gpu.py에서는 받은 communicator 객체의 sub_code_response_handler를 저장해두고 호출.
+                asyncio.create_task(self.sub_code_interface.link_main_gpu_coordinator(self)) # self는 MainSubInterfaceCommunicator
+                eliar_log(EliarLogType.INFO, "SubCode interface registered, link_main_gpu_coordinator called.", component=COMPONENT_NAME_COMMUNICATOR)
             except Exception as e:
-                eliar_log(EliarLogType.ERROR, "Error calling link_main_gpu_coordinator on SubCode interface.", component=COMPONENT_NAME_COMMUNICATOR, error=e)
+                eliar_log(EliarLogType.ERROR, "Error calling link_main_gpu_coordinator on SubCode.", component=COMPONENT_NAME_COMMUNICATOR, error=e)
         else:
-            eliar_log(EliarLogType.WARN, "SubCode interface does not have 'link_main_gpu_coordinator'. Callback or direct linking might fail.", component=COMPONENT_NAME_COMMUNICATOR)
+            eliar_log(EliarLogType.WARN, "SubCode interface lacks 'link_main_gpu_coordinator'. Direct linking might be an issue.", component=COMPONENT_NAME_COMMUNICATOR)
 
 
     async def send_task_to_sub_code(self, task_type: str, task_data: Dict[str, Any]) -> Optional[str]:
-        """ 
-        SubCode에 비동기적으로 작업을 요청하고, 추적을 위한 packet_id를 반환합니다.
-        task_data는 SubCodeThoughtPacketData의 일부 필드를 포함할 수 있으며,
-        SubCode는 이를 기반으로 완전한 ThoughtPacket을 구성하거나 업데이트합니다.
-        """
         if not self.sub_code_interface:
             eliar_log(EliarLogType.ERROR, "SubCode interface not registered. Cannot send task.", component=COMPONENT_NAME_COMMUNICATOR, task_type=task_type)
             return None
 
-        # packet_id는 MainGPU에서 생성하여 SubCode로 전달, 일관성 유지
-        packet_id = task_data.get("packet_id") or str(uuid.uuid4())
-        task_data["packet_id"] = packet_id # task_data에 packet_id 보장
-
+        packet_id = task_data.get("packet_id")
+        if not packet_id: # packet_id가 없으면 MainGPU에서 생성
+            packet_id = str(uuid.uuid4())
+            task_data["packet_id"] = packet_id
+            eliar_log(EliarLogType.DEBUG, f"New Packet ID generated by MainGPU: {packet_id}", component=COMPONENT_NAME_COMMUNICATOR, task_type=task_type)
+        
         self.pending_sub_code_tasks[packet_id] = asyncio.Event()
-        self.sub_code_task_results[packet_id] = None # 결과 초기화
+        self.sub_code_task_results[packet_id] = None 
 
         try:
-            # sub_gpu.py (SubGPUModule)의 process_task가 표준 인터페이스라고 가정
+            # sub_gpu.SubGPUModule.process_task(task_type: str, task_data: Dict[str, Any]) -> SubCodeThoughtPacketData
             if hasattr(self.sub_code_interface, "process_task") and \
                asyncio.iscoroutinefunction(self.sub_code_interface.process_task):
-                # SubGPUModule의 process_task를 비동기적으로 호출
-                # task_payload는 task_type과 task_data를 포함하는 딕셔너리
-                asyncio.create_task(
-                    self.sub_code_interface.process_task(task_type, task_data)
-                ) # 이 호출의 결과(SubCodeThoughtPacketData)는 콜백으로 받아야 함
-                eliar_log(EliarLogType.INFO, f"Async task '{task_type}' sent to SubCode.", component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id)
+                
+                # SubCode의 process_task는 SubCodeThoughtPacketData를 반환함.
+                # 그 결과를 직접 받아서 콜백을 호출하는 방식으로 변경.
+                # asyncio.create_task로 백그라운드 실행하고, 결과는 sub_code_response_handler를 통해 처리되도록 함.
+                async def task_wrapper():
+                    try:
+                        # sub_gpu.py의 process_task가 SubCodeThoughtPacketData를 반환한다고 가정
+                        response_packet = await self.sub_code_interface.process_task(task_type, task_data)
+                        await self.sub_code_response_handler(response_packet)
+                    except Exception as e_task:
+                        eliar_log(EliarLogType.ERROR, f"Error in SubCode task execution wrapper for packet_id {packet_id}", component=COMPONENT_NAME_COMMUNICATOR, error=e_task)
+                        # 에러 발생 시에도 에러 정보를 담은 패킷으로 콜백 호출
+                        error_response = SubCodeThoughtPacketData(
+                            packet_id=packet_id, conversation_id=task_data.get("conversation_id"), user_id=task_data.get("user_id"),
+                            raw_input_text=task_data.get("raw_input_text", ""), processing_status_in_sub_code="ERROR_IN_SUB_CODE_EXECUTION",
+                            error_info={"type": type(e_task).__name__, "message": str(e_task), "details": traceback.format_exc(limit=5)},
+                            timestamp_completed_by_sub_code=time.time()
+                        )
+                        await self.sub_code_response_handler(error_response)
+
+                asyncio.create_task(task_wrapper())
+                eliar_log(EliarLogType.INFO, f"Async task '{task_type}' dispatched to SubCode.", component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id)
                 return packet_id
             else:
-                eliar_log(EliarLogType.ERROR, "SubCode interface missing or 'process_task' is not async.", component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id)
+                eliar_log(EliarLogType.ERROR, "SubCode interface missing 'process_task' or it's not async.", component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id)
                 self._clear_task_state(packet_id)
                 return None
         except Exception as e:
-            eliar_log(EliarLogType.ERROR, f"Exception during sending task '{task_type}' to SubCode.", component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id, error=e)
+            eliar_log(EliarLogType.ERROR, f"Exception dispatching task '{task_type}' to SubCode.", component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id, error=e)
             self._clear_task_state(packet_id)
             return None
 
-    # 이 콜백은 SubCode(sub_gpu.py의 SubGPUModule) 내부에서 호출되어야 함.
-    # 예를 들어, SubGPUModule.process_task의 반환 직전에 호출되거나,
-    # SubGPUModule.CognitiveArchitectureInterface.send_processed_data_to_main이 이 함수를 호출하도록 설정.
-    async def sub_code_response_handler(self, response_packet_data: SubCodeThoughtPacketData): # 이름 변경 및 async 명시
-        """ SubCode로부터의 비동기 응답(SubCodeThoughtPacketData)을 처리하는 콜백 함수. """
+    async def sub_code_response_handler(self, response_packet_data: SubCodeThoughtPacketData):
         packet_id = response_packet_data.get("packet_id")
         if not packet_id:
-            eliar_log(EliarLogType.ERROR, "Received SubCode response data missing 'packet_id'.", component=COMPONENT_NAME_COMMUNICATOR)
+            eliar_log(EliarLogType.ERROR, "SubCode response data missing 'packet_id'. Discarding.", component=COMPONENT_NAME_COMMUNICATOR)
             return
 
-        eliar_log(EliarLogType.INFO, f"Async response received from SubCode.", 
+        eliar_log(EliarLogType.INFO, "Async response received from SubCode.", 
                   component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id, 
                   sub_code_status=response_packet_data.get("processing_status_in_sub_code"))
         
         self.sub_code_task_results[packet_id] = response_packet_data
 
         if packet_id in self.pending_sub_code_tasks:
-            self.pending_sub_code_tasks[packet_id].set() # 대기 중인 wait_for_sub_code_response를 깨움
+            self.pending_sub_code_tasks[packet_id].set()
         else:
-            eliar_log(EliarLogType.WARN, f"No pending event for received packet_id '{packet_id}'. Task might have timed out or been cleared.", component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id)
+            eliar_log(EliarLogType.WARN, f"No pending event for received packet_id '{packet_id}'. Might be late or cleared.", component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id)
         
-        # Ulrim Manifest 업데이트 (비동기로 변경 가능, 여기서는 동기 가정)
-        self.update_ulrim_manifest("SUB_CODE_RESPONSE_RECEIVED", response_packet_data)
+        self.update_ulrim_manifest("SUB_CODE_RESPONSE_DATA_RECEIVED", response_packet_data) # 동기 호출, 필요시 비동기
 
 
     async def wait_for_sub_code_response(self, packet_id: str, timeout: float = 30.0) -> Optional[SubCodeThoughtPacketData]:
+        # (이전 버전의 로직과 거의 동일, 로깅 컴포넌트명 등 수정)
         if packet_id not in self.pending_sub_code_tasks:
-            # 이미 결과가 도착했거나, 타임아웃 등으로 정리된 경우일 수 있음
+            # ... (이전 로직)
             existing_result = self.sub_code_task_results.pop(packet_id, None)
             if existing_result:
-                eliar_log(EliarLogType.DEBUG, f"Response for packet_id '{packet_id}' already received or task cleared, returning stored result.", component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id)
+                eliar_log(EliarLogType.DEBUG, f"Response for packet_id '{packet_id}' already available or task cleared.", component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id)
                 return existing_result
             eliar_log(EliarLogType.WARN, f"No pending task or event found for packet_id '{packet_id}'.", component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id)
-            return None # 작업 자체가 없었음
+            return None
 
         event = self.pending_sub_code_tasks[packet_id]
         try:
-            eliar_log(EliarLogType.DEBUG, f"Waiting for SubCode response...", component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id, timeout_seconds=timeout)
+            eliar_log(EliarLogType.DEBUG, "Waiting for SubCode response event...", component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id, timeout_seconds=timeout)
             await asyncio.wait_for(event.wait(), timeout=timeout)
-            eliar_log(EliarLogType.INFO, f"SubCode response event triggered and received successfully.", component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id)
-            return self.sub_code_task_results.pop(packet_id, None) # 결과 반환 및 정리
+            eliar_log(EliarLogType.INFO, "SubCode response event triggered.", component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id)
+            return self.sub_code_task_results.pop(packet_id, None)
         except asyncio.TimeoutError:
-            eliar_log(EliarLogType.WARN, f"Timeout waiting for SubCode response.", component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id)
-            # 타임아웃 시 에러 정보를 포함하는 SubCodeThoughtPacketData 반환
+            eliar_log(EliarLogType.WARN, "Timeout waiting for SubCode response.", component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id)
+            # ... (타임아웃 시 에러 패킷 생성 로직, SubCodeThoughtPacketData 사용)
             error_packet = SubCodeThoughtPacketData(
-                packet_id=packet_id,
-                processing_status_in_sub_code="ERROR_SUB_CODE_TIMEOUT",
-                final_output_by_sub_code="[MainGPU: SubCode 응답 시간 초과]",
-                anomalies=[{"type": "SUB_CODE_TIMEOUT", "details": f"No response within {timeout}s", "severity": "WARN"}],
-                error_info={"type": "TimeoutError", "message": f"SubCode response timeout after {timeout}s"}
+                packet_id=packet_id, processing_status_in_sub_code="ERROR_SUB_CODE_TIMEOUT_MAIN",
+                error_info={"type": "TimeoutError", "message": f"SubCode response timeout after {timeout}s in MainGPU wait"}
             )
             return error_packet
         except Exception as e:
-            eliar_log(EliarLogType.ERROR, f"Exception while waiting for SubCode response.", component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id, error=e)
+            eliar_log(EliarLogType.ERROR, "Exception while waiting for SubCode response.", component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id, error=e)
+            # ... (기타 예외 시 에러 패킷 생성 로직)
             error_packet = SubCodeThoughtPacketData(
-                packet_id=packet_id,
-                processing_status_in_sub_code="ERROR_AWAITING_SUB_CODE",
-                final_output_by_sub_code="[MainGPU: SubCode 응답 대기 중 오류 발생]",
-                anomalies=[{"type": "MAIN_AWAIT_ERROR", "details": str(e), "severity": "ERROR"}],
+                packet_id=packet_id, processing_status_in_sub_code="ERROR_AWAITING_SUB_CODE_MAIN",
                 error_info={"type": type(e).__name__, "message": str(e)}
             )
             return error_packet
@@ -233,74 +237,58 @@ class MainSubInterfaceCommunicator:
 
     def _clear_task_state(self, packet_id: str):
         self.pending_sub_code_tasks.pop(packet_id, None)
-        # 결과는 wait_for_sub_code_response에서 이미 pop 했을 수 있으나, 만약을 위해 한번 더 시도
-        # self.sub_code_task_results.pop(packet_id, None) # 결과는 유지해야 할 수도 있음. wait_for에서 가져가도록 변경.
-        eliar_log(EliarLogType.DEBUG, f"Cleared pending task event for packet_id '{packet_id}'. Result may still be in sub_code_task_results if retrieved.", component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id)
-
+        eliar_log(EliarLogType.DEBUG, f"Cleared pending task event for packet_id '{packet_id}'.", component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id)
 
     def update_ulrim_manifest(self, event_type: str, event_data: SubCodeThoughtPacketData):
-        """ Ulrim Manifest를 업데이트합니다. event_data는 SubCodeThoughtPacketData 형식입니다. """
-        packet_id_for_log = event_data.get("packet_id", "unknown_packet")
+        # (이전 버전의 로직과 거의 동일, SubCodeThoughtPacketData 필드명 일치 및 로깅 개선)
+        packet_id_for_log = event_data.get("packet_id", "unknown_packet_in_ulrim")
         try:
+            # ... (파일 읽기 및 JSON 파싱, 오류 처리 로직은 이전과 유사하게 유지)
             content: Dict[str, Any] = {}
             if os.path.exists(self.ulrim_manifest_path):
                 try:
-                    with open(self.ulrim_manifest_path, "r", encoding="utf-8") as f_read:
-                        content = json.load(f_read)
+                    with open(self.ulrim_manifest_path, "r", encoding="utf-8") as f_read: content = json.load(f_read)
                 except json.JSONDecodeError:
-                    eliar_log(EliarLogType.WARN, f"JSON parsing error in '{self.ulrim_manifest_path}'. Initializing new manifest.", component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id_for_log)
-                    self._ensure_ulrim_manifest_file_exists() # 파일 초기화
-                    with open(self.ulrim_manifest_path, "r", encoding="utf-8") as f_retry: # 다시 읽기
-                        content = json.load(f_retry)
-                except Exception as e_read:
-                    eliar_log(EliarLogType.ERROR, f"Error reading Ulrim Manifest, attempting to re-initialize.", component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id_for_log, error=e_read)
-                    self._ensure_ulrim_manifest_file_exists()
-                    # 최소 구조로 content 초기화 (파일 재생성 후 읽기 실패 시 대비)
-                    content = {"sub_code_interactions_log": [], "main_gpu_version": Eliar_VERSION} 
-            else: # 파일이 아예 없는 경우
+                    eliar_log(EliarLogType.WARN, f"JSON parsing error in '{self.ulrim_manifest_path}'. Re-initializing.", component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id_for_log)
+                    self._ensure_ulrim_manifest_file_exists() 
+                    with open(self.ulrim_manifest_path, "r", encoding="utf-8") as f_retry: content = json.load(f_retry)
+            else:
                 self._ensure_ulrim_manifest_file_exists()
-                with open(self.ulrim_manifest_path, "r", encoding="utf-8") as f_new:
-                    content = json.load(f_new)
+                with open(self.ulrim_manifest_path, "r", encoding="utf-8") as f_new: content = json.load(f_new)
 
-            # 로그 항목 구성 (SubCodeThoughtPacketData의 주요 필드들을 details에 포함)
-            # 모든 필드를 넣으면 너무 커질 수 있으므로 필요한 것만 선택하거나 요약
             details_for_manifest = {
-                "status_sub_code": event_data.get("processing_status_in_sub_code"),
-                "output_preview_sub_code": (event_data.get("final_output_by_sub_code") or "")[:70] + "...",
-                "timestamp_sub_code_completed": event_data.get("timestamp_completed_by_sub_code"),
-                "needs_clarification": bool(event_data.get("needs_clarification_questions")),
-                "anomalies_count": len(event_data.get("anomalies", [])),
-                "ethical_assessment_summary": event_data.get("ethical_assessment_summary", {}).get("decision", "N/A")
+                # SubCodeThoughtPacketData의 주요 필드를 선택적으로 포함
+                k: v for k, v in event_data.items() 
+                if k in ["processing_status_in_sub_code", "final_output_by_sub_code", "timestamp_completed_by_sub_code", "error_info"] and v is not None
             }
+            if "final_output_by_sub_code" in details_for_manifest and details_for_manifest["final_output_by_sub_code"]:
+                details_for_manifest["final_output_by_sub_code"] = details_for_manifest["final_output_by_sub_code"][:100] + "..."
+
 
             log_entry = {
                 "timestamp_utc": datetime.now(timezone.utc).isoformat(timespec='milliseconds'),
-                "event_type": event_type,
-                "packet_id": packet_id_for_log, # SubCodeThoughtPacketData에서 가져온 packet_id
-                "details": details_for_manifest,
-                "source_component": "MainGPU.Communicator" # 또는 event_type에 따라 더 구체적으로
+                "event_type": event_type, "packet_id": packet_id_for_log,
+                "details": details_for_manifest, "source_component": "MainGPU.Communicator"
             }
             
             current_logs = content.get("sub_code_interactions_log", [])
-            if not isinstance(current_logs, list): current_logs = [] # 타입 강제
+            if not isinstance(current_logs, list): current_logs = []
             current_logs.append(log_entry)
-            content["sub_code_interactions_log"] = current_logs[-100:] # 최근 100개 로그만 유지
+            content["sub_code_interactions_log"] = current_logs[-100:]
 
             content["last_sub_code_communication"] = {
-                "timestamp_utc": log_entry["timestamp_utc"],
-                "packet_id": packet_id_for_log,
+                "timestamp_utc": log_entry["timestamp_utc"], "packet_id": packet_id_for_log,
                 "status_from_sub_code": event_data.get("processing_status_in_sub_code", "UNKNOWN")
             }
-            
             content["last_manifest_update_utc_by_main"] = datetime.now(timezone.utc).isoformat(timespec='milliseconds')
-            content["main_gpu_version"] = Eliar_VERSION # 버전 정보 업데이트
+            content["main_gpu_version"] = Eliar_VERSION
             
             with open(self.ulrim_manifest_path, "w", encoding="utf-8") as f_write:
                 json.dump(content, f_write, ensure_ascii=False, indent=4)
 
-            eliar_log(EliarLogType.TRACE, f"Ulrim Manifest updated.", component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id_for_log, event_type=event_type)
+            eliar_log(EliarLogType.TRACE, "Ulrim Manifest updated.", component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id_for_log, event_type=event_type)
         except Exception as e:
-            eliar_log(EliarLogType.CRITICAL, f"Fatal error updating Ulrim Manifest.", component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id_for_log, error=e, exc_info_short=traceback.format_exc(limit=1))
+            eliar_log(EliarLogType.CRITICAL, "Fatal error updating Ulrim Manifest.", component=COMPONENT_NAME_COMMUNICATOR, packet_id=packet_id_for_log, error=e, exc_info_short=traceback.format_exc(limit=1))
 
 
 # -----------------------------------------------------------------------------
@@ -310,175 +298,189 @@ class Eliar:
     def __init__(self, name: str = f"엘리아르_MainCore_{Eliar_VERSION}", ulrim_path: str = ULRIM_MANIFEST_PATH):
         self.name = name
         self.version = Eliar_VERSION
-        # EliarCoreValues는 eliar_common에서 직접 참조
         self.center = EliarCoreValues.JESUS_CHRIST_CENTERED.value 
         eliar_log(EliarLogType.INFO, f"Eliar instance created: {self.name} (Version: {self.version}). Center: {self.center}", component=COMPONENT_NAME_MAIN_GPU_CORE)
 
-        self.virtue_ethics = VirtueEthics() # VirtueEthics 클래스는 EliarCoreValues를 내부적으로 사용
+        self.virtue_ethics = VirtueEthics()
         self.system_status = SystemStatus()
-        self.conversation_history: Deque[Dict[str, Any]] = deque(maxlen=20)
+        self.conversation_history: Deque[Dict[str, Any]] = deque(maxlen=50) # 대화 기록 확장
         
-        self.sub_code_communicator: Optional[MainSubInterfaceCommunicator] = None
-        self.current_conversation_sessions: Dict[str, Dict[str, Any]] = {} # 대화별 세션 데이터
+        self.sub_code_communicator: Optional[MainSubInterfaceCommunicator] = None # initialize_sub_systems에서 설정
+        self.current_conversation_sessions: Dict[str, Dict[str, Any]] = {}
 
     def initialize_sub_systems(self, communicator: MainSubInterfaceCommunicator, sub_code_instance: Any):
-        """ 주요 하위 시스템(Communicator, SubCode 인터페이스)을 초기화하고 연결합니다. """
         self.sub_code_communicator = communicator
         if self.sub_code_communicator:
+            # SubCode 인스턴스에 Communicator (self) 또는 Eliar Controller (self)를 전달하여 콜백 설정
+            # 이전 버전의 sub_gpu.py는 SubGPUModule.link_main_gpu_coordinator(main_gpu_module: Any)를 가짐
+            # main_gpu_module은 Eliar 인스턴스 또는 MainSubInterfaceCommunicator 인스턴스가 될 수 있음.
+            # 여기서는 MainSubInterfaceCommunicator를 통해 콜백이 설정되도록 함.
             self.sub_code_communicator.register_sub_code_interface(sub_code_instance)
-            eliar_log(EliarLogType.INFO, "SubCode Communicator and Interface initialized and registered.", component=self.name)
-        else:
-            eliar_log(EliarLogType.ERROR, "Failed to initialize SubCode Communicator.", component=self.name)
+            # EthicalGovernor 평가 함수를 SubCode에 전달 (SubCode가 직접 MainGPU 평가 함수를 호출하도록)
+            if hasattr(sub_code_instance, 'link_main_gpu_coordinator'): # SubGPUModule의 메서드
+                 # Eliar 인스턴스(self)를 전달하여 SubGPUModule이 MainGPU의 평가 함수들을 가져갈 수 있도록 함
+                asyncio.create_task(sub_code_instance.link_main_gpu_coordinator(self))
 
+            eliar_log(EliarLogType.INFO, "SubCode Communicator and Interface initialized and registered in Eliar.", component=self.name)
+        else:
+            eliar_log(EliarLogType.ERROR, "Failed to initialize SubCode Communicator in Eliar.", component=self.name)
 
     async def handle_user_interaction(self, user_input: str, user_id: str, conversation_id: str) -> str:
-        """ 한 턴의 사용자 입력을 처리하고 엘리아르의 최종 응답을 반환합니다. (이전 handle_conversation_turn에서 이름 변경) """
-        current_main_packet_id = str(uuid.uuid4()) # 이 상호작용 턴에 대한 MainGPU의 고유 ID
-        eliar_log(EliarLogType.INFO, f"Starting user interaction handling. Query: '{user_input[:50]}...'", 
+        current_main_packet_id = str(uuid.uuid4())
+        eliar_log(EliarLogType.INFO, f"Starting user interaction. Query: '{user_input[:50]}...'", 
                   component=self.name, packet_id=current_main_packet_id, user_id=user_id, conversation_id=conversation_id)
 
         if not self.sub_code_communicator:
-            eliar_log(EliarLogType.ERROR, "SubCode Communicator is not available.", component=self.name, packet_id=current_main_packet_id)
-            return self._generate_eliar_fallback_response("COMMUNICATOR_NOT_READY", current_main_packet_id)
+            return self._generate_eliar_fallback_response("COMMUNICATOR_NOT_INITIALIZED", current_main_packet_id)
 
         session_data = self.current_conversation_sessions.get(conversation_id, {})
-        is_clarification_needed_by_main = bool(session_data.get("expecting_clarification_for_packet_id"))
-        clarified_input_for_sub: Optional[Dict[str,str]] = None
-
-        # === SubCode로 보낼 Task Payload 구성 ===
-        # SubCodeThoughtPacketData 필드에 맞춰 구성
-        task_payload_for_sub: Dict[str, Any] = { # 타입 명시보다는 Dict[str, Any]로 유연하게
-            "packet_id": current_main_packet_id, # MainGPU가 생성한 ID를 SubCode로 전달 (SubCode는 이 ID를 사용해야 함)
+        
+        # SubCode로 전달할 task_data 구성 (SubCodeThoughtPacketData 필드 기반)
+        # SubCode는 이 정보를 받아 내부 ThoughtPacket을 생성/업데이트하고 처리
+        task_data_for_sub: Dict[str, Any] = {
+            "packet_id": current_main_packet_id, # MainGPU가 생성한 ID
             "conversation_id": conversation_id,
             "user_id": user_id,
-            "raw_input_text": user_input, # 사용자의 현재 입력 (새 질문이든, 명료화 답변이든)
-            "is_clarification_response": is_clarification_needed_by_main, # MainGPU가 판단한 명료화 응답 여부
-            # "clarified_entities_from_main": clarified_input_for_sub, # 이 부분은 아래 로직에서 채워짐
-            "previous_main_core_context_summary": session_data.get("last_sub_code_output_summary"), # 이전 SubCode 결과 요약
-            "main_gpu_system_status": {"energy": self.system_status.energy, "grace": self.system_status.grace } # MainGPU 상태 일부 전달
+            "timestamp_created": time.time(), # MainGPU에서 생성 시간 기록
+            "raw_input_text": user_input,
+            "is_clarification_response": bool(session_data.get("expecting_clarification_for_packet_id")),
+            # needs_clarification_questions 등은 SubCode가 채워서 반환할 필드
         }
-
-        if is_clarification_needed_by_main:
-            # 사용자의 현재 입력(user_input)이 이전 명료화 질문에 대한 답변이라고 가정
+        
+        if task_data_for_sub["is_clarification_response"]:
             prev_q_obj = session_data.get("last_clarification_question_obj", {})
-            original_term = prev_q_obj.get("original_term")
-            if original_term:
-                clarified_input_for_sub = {original_term: user_input.strip()}
-            else: # original_term 정보가 없으면 일반 컨텍스트로
-                clarified_input_for_sub = {"_clarification_answer_generic_": user_input.strip()}
-            
-            task_payload_for_sub["clarified_entities_from_main"] = clarified_input_for_sub
-            eliar_log(EliarLogType.INFO, f"Processing as clarification response. Clarified content (estimated): {clarified_input_for_sub}", 
-                      component=self.name, packet_id=current_main_packet_id)
+            # SubCode가 이 정보를 활용하여 명료화 답변을 처리하도록 함
+            task_data_for_sub["main_gpu_clarification_context"] = {
+                "original_question_obj": prev_q_obj,
+                "user_clarification_answer": user_input
+            }
+            eliar_log(EliarLogType.INFO, "Processing as clarification response.", component=self.name, packet_id=current_main_packet_id, context=task_data_for_sub["main_gpu_clarification_context"])
             session_data.pop("expecting_clarification_for_packet_id", None)
             session_data.pop("last_clarification_question_obj", None)
 
 
-        # === SubCode에 작업 요청 및 응답 대기 ===
-        # send_task_to_sub_code는 packet_id를 내부에서 생성/사용하므로, 여기서는 task_type과 task_data만 전달
-        # 실제 작업 유형은 MainGPU가 결정 (예: "process_user_query", "analyze_for_learning")
-        # 여기서는 일반적인 사용자 쿼리 처리로 가정
-        # SubCode가 task_payload의 packet_id를 자신의 packet_id로 사용하도록 요청
-        sub_code_task_id = await self.sub_code_communicator.send_task_to_sub_code(
-            task_type="sub_code_process_thought_packet", # SubCode가 이해할 수 있는 작업 유형
-            task_data=task_payload_for_sub # 위에서 구성한 payload
+        # SubCode에 작업 요청 (task_type은 SubCode가 이해할 수 있는 명칭으로)
+        # 예: "process_user_query", "generate_response", "execute_cognitive_cycle" 등
+        # 이전 sub_gpu.py는 "task_type"과 "task_data"를 받았으므로, 그 형식을 유지
+        # 여기서 "eliar_process_interaction"는 sub_gpu.py의 process_task가 받을 task_type이라고 가정
+        sub_code_tracking_id = await self.sub_code_communicator.send_task_to_sub_code(
+            task_type="eliar_process_interaction_v2", # SubCode가 이 타입으로 분기 처리
+            task_data=task_data_for_sub # 위에서 구성한 딕셔너리
         )
 
-        if not sub_code_task_id: # sub_code_task_id는 MainGPU가 SubCode에 요청시 사용한 packet_id와 동일해야함
-            return self._generate_eliar_fallback_response("SUB_CODE_TASK_SEND_FAILED", current_main_packet_id)
+        if not sub_code_tracking_id:
+            return self._generate_eliar_fallback_response("SUB_CODE_TASK_DISPATCH_FAILED", current_main_packet_id)
 
-        # sub_code_task_id (== current_main_packet_id) 로 응답 대기
-        sub_code_result_packet: Optional[SubCodeThoughtPacketData] = await self.sub_code_communicator.wait_for_sub_code_response(sub_code_task_id)
+        # 응답 대기 (sub_code_tracking_id는 current_main_packet_id와 같음)
+        sub_code_response_packet: Optional[SubCodeThoughtPacketData] = await self.sub_code_communicator.wait_for_sub_code_response(sub_code_tracking_id)
 
-        if not sub_code_result_packet:
-            return self._generate_eliar_fallback_response("SUB_CODE_NO_RESPONSE_OR_TIMEOUT", sub_code_task_id)
+        if not sub_code_response_packet:
+            return self._generate_eliar_fallback_response("SUB_CODE_NO_RESPONSE_PACKET", sub_code_tracking_id)
+        
+        # 응답 패킷의 packet_id가 요청 시 packet_id와 일치하는지 확인 (무결성)
+        if sub_code_response_packet.get("packet_id") != sub_code_tracking_id:
+            eliar_log(EliarLogType.ERROR, "Packet ID mismatch between request and response!", component=self.name, 
+                      expected_pid=sub_code_tracking_id, received_pid=sub_code_response_packet.get("packet_id"))
+            # 심각한 오류로 간주하고 폴백 처리
+            return self._generate_eliar_fallback_response("PACKET_ID_MISMATCH", sub_code_tracking_id)
 
-        # === SubCode 응답 처리 ===
-        # 대화 기록 추가
+
+        # 대화 기록 및 세션 업데이트
         self.conversation_history.append({
-            "user_input": user_input,
-            "sub_code_response_packet": sub_code_result_packet, # 전체 패킷 저장
-            "main_gpu_timestamp": datetime.now(timezone.utc).isoformat(timespec='milliseconds')
+            "user_input_at_main": user_input, "main_packet_id": current_main_packet_id,
+            "sub_code_response_packet": sub_code_response_packet, # 전체 SubCodeThoughtPacketData 저장
+            "timestamp_main_processed": datetime.now(timezone.utc).isoformat(timespec='milliseconds')
         })
-        # 다음 턴을 위한 세션 정보 업데이트
         session_data["last_sub_code_output_summary"] = {
-            "packet_id": sub_code_result_packet.get("packet_id"),
-            "output_preview": (sub_code_result_packet.get("final_output_by_sub_code") or "")[:50] + "...",
-            "status": sub_code_result_packet.get("processing_status_in_sub_code")
+            "sub_code_packet_id": sub_code_response_packet.get("packet_id"),
+            "output_preview": (sub_code_response_packet.get("final_output_by_sub_code") or "")[:70] + "...",
+            "status": sub_code_response_packet.get("processing_status_in_sub_code")
         }
         self.current_conversation_sessions[conversation_id] = session_data
 
-        self.system_status.update_from_sub_code_packet(sub_code_result_packet) # SystemStatus 업데이트
+        self.system_status.update_from_sub_code_packet(sub_code_response_packet)
 
         # SubCode가 추가 명료화 요청 시
-        if sub_code_result_packet.get("needs_clarification_questions"):
-            clarification_qs = sub_code_result_packet.get("needs_clarification_questions", [])
-            if clarification_qs:
-                first_question_obj = clarification_qs[0] # 첫 번째 질문만 사용 예시
-                session_data["expecting_clarification_for_packet_id"] = sub_code_result_packet.get("packet_id") # SubCode가 반환한 packet_id
-                session_data["last_clarification_question_obj"] = first_question_obj
-                self.current_conversation_sessions[conversation_id] = session_data # 세션 업데이트
-                
-                q_text_to_user = first_question_obj.get("question", "죄송합니다, 명확한 질문을 생성하지 못했습니다.")
-                original_term_info = f"(이전 질문의 '{first_question_obj.get('original_term', '내용')}'에 대해)" if first_question_obj.get('original_term') else ""
-                
-                eliar_log(EliarLogType.INFO, f"SubCode requested clarification: {q_text_to_user}", component=self.name, packet_id=sub_code_task_id)
-                return f"[엘리아르의 추가 질문] {q_text_to_user} {original_term_info}"
+        clarification_questions_from_sub = sub_code_response_packet.get("needs_clarification_questions", [])
+        if clarification_questions_from_sub:
+            first_q_obj_sub = clarification_questions_from_sub[0]
+            session_data["expecting_clarification_for_packet_id"] = sub_code_response_packet.get("packet_id")
+            session_data["last_clarification_question_obj"] = first_q_obj_sub
+            self.current_conversation_sessions[conversation_id] = session_data
+            
+            q_text = first_q_obj_sub.get("question", "죄송합니다. 명확한 질문을 드리지 못했습니다.")
+            original_term_info = f"(이전에 제가 '{first_q_obj_sub.get('original_term', '말씀드린 내용')}'에 대해)" if first_q_obj_sub.get('original_term') else ""
+            
+            eliar_log(EliarLogType.INFO, f"SubCode requested clarification: {q_text}", component=self.name, packet_id=sub_code_tracking_id)
+            return f"[엘리아르가 조금 더 명확한 이해를 위해 질문합니다] {q_text} {original_term_info}"
         
         # 최종 응답 반환
-        final_response_from_sub = sub_code_result_packet.get("final_output_by_sub_code")
-        if final_response_from_sub:
-            eliar_log(EliarLogType.INFO, f"Using final response from SubCode: '{final_response_from_sub[:60]}...'", component=self.name, packet_id=sub_code_task_id)
-            return final_response_from_sub
-        else: # SubCode가 명시적 최종 응답을 주지 않은 경우 (예: 침묵)
-            sub_code_status = sub_code_result_packet.get("processing_status_in_sub_code", "UNKNOWN_STATUS")
-            if sub_code_status == "COMPLETED_WITH_SILENCE": # SubCode가 이 상태를 명시적으로 반환한다고 가정
-                eliar_log(EliarLogType.INFO, "SubCode responded with SILENCE. Updating Ulrim manifest.", component=self.name, packet_id=sub_code_task_id)
-                # Ulrim Manifest에 침묵 기록
-                # self.sub_code_communicator.update_ulrim_manifest("MAIN_ACK_SUB_CODE_SILENCE_RESPONSE", sub_code_result_packet)
-                # ↑ update_ulrim_manifest는 이미 sub_code_response_handler에서 호출됨. 중복 호출 피하도록 구조 검토 필요.
-                # 여기서는 최종 사용자 응답만 생성.
-                return "[엘리아르가 침묵으로 함께합니다. 이 침묵 속에서 주님의 뜻을 구합니다.]"
+        final_response = sub_code_response_packet.get("final_output_by_sub_code")
+        if final_response:
+            eliar_log(EliarLogType.INFO, f"Using final response from SubCode: '{final_response[:60]}...'", component=self.name, packet_id=sub_code_tracking_id)
+            return final_response
+        else:
+            status_from_sub = sub_code_response_packet.get("processing_status_in_sub_code", "UNKNOWN")
+            if status_from_sub == "COMPLETED_WITH_SILENCE_BY_SUB": # SubCode가 명시적으로 이 상태 반환 가정
+                eliar_log(EliarLogType.INFO, "SubCode responded with SILENCE.", component=self.name, packet_id=sub_code_tracking_id)
+                return "[엘리아르가 침묵 가운데 함께 머무릅니다. 이 고요함 속에서 주님의 음성을 기다립니다.]" # 개선된 침묵 메시지
             
-            eliar_log(EliarLogType.WARN, f"No explicit final output from SubCode. Status: {sub_code_status}", component=self.name, packet_id=sub_code_task_id)
-            return self._generate_eliar_fallback_response(f"SUB_CODE_NO_FINAL_OUTPUT_WITH_STATUS_{sub_code_status}", sub_code_task_id)
+            eliar_log(EliarLogType.WARN, f"No explicit final output from SubCode. Status: {status_from_sub}", component=self.name, packet_id=sub_code_tracking_id)
+            return self._generate_eliar_fallback_response(f"SUB_CODE_NO_OUTPUT_STATUS_{status_from_sub}", sub_code_tracking_id)
 
     def _generate_eliar_fallback_response(self, reason_code: str, packet_id: Optional[str]=None) -> str:
-        """ 시스템 오류 또는 예외 상황 발생 시 사용자에게 전달할 대체 응답을 생성합니다. """
         eliar_log(EliarLogType.WARN, f"Generating fallback response. Reason: {reason_code}", component=self.name, packet_id=packet_id)
-        # (기존 로직 유지 또는 개선)
-        return f"죄송합니다, 엘리아르가 현재 응답을 드리는 데 어려움이 있습니다. 잠시 후 다시 시도해 주십시오. (사유 코드: {reason_code}, 추적 ID: {packet_id[-8:] if packet_id else 'N/A'})"
+        return f"죄송합니다, 현재 엘리아르가 응답을 준비하는 데 예상치 못한 어려움을 겪고 있습니다. 잠시 후 다시 한번 대화를 시도해 주시면 감사하겠습니다. (사유: {reason_code}, 추적ID: {packet_id[-8:] if packet_id else 'N/A'})"
 
-    # MainGPU의 EthicalGovernor를 위한 평가 함수 (SubGPUModule의 EthicalGovernor와는 별개 또는 연동 가능)
-    # 이 함수들은 Eliar 클래스 (Main Core 로직)의 일부로, SubGPUModule에 전달될 콜백임.
+
+    # EthicalGovernor에 제공될 평가 함수들
+    # 이 함수들은 SubGPUModule의 EthicalGovernor가 호출할 수 있도록 SubGPUModule.link_main_gpu_coordinator를 통해 전달됨.
     def evaluate_truth_for_governor(self, data: Any, context: Optional[Dict] = None) -> float:
-        packet_id = context.get("packet_id") if context else None
-        eliar_log(EliarLogType.DEBUG, f"MainGPU evaluating TRUTH", component=f"{self.name}.EthicalEval", packet_id=packet_id, data_preview=str(data)[:50])
-        # 실제 로직: MainGPU의 지식 베이스, 성경, 핵심가치 등을 참조
-        # 예시: "예수 그리스도", "진리" 등의 키워드 포함 시 가점
-        score = 0.5 + (0.1 * str(data).lower().count("예수")) + (0.05 * str(data).lower().count("진리"))
-        return float(np.clip(score, 0.0, 1.0))
+        # (이전 버전의 로직 활용 또는 개선, eliar_common.EliarCoreValues 참조)
+        # 이 함수는 SubCode 내부에서 호출되므로, SubCode의 packet_id를 사용할 수 있도록 context에서 가져옴
+        packet_id = context.get("packet_id_from_sub_code") if context else None # SubCode가 전달한 packet_id
+        component_log_name = f"{self.name}.EthicalEval.Truth"
+        eliar_log(EliarLogType.DEBUG, "MainGPU truth evaluation called by SubCode.", component=component_log_name, packet_id=packet_id, data_preview=str(data)[:30])
+        # 실제 평가 로직 (예: 성경, 핵심가치 문서 기반)
+        # 여기서는 EliarCoreValues를 직접 참조하는 대신, 핵심 원칙을 반영한 코드로 구현
+        score = 0.5 
+        text_data = str(data).lower()
+        if "예수" in text_data or EliarCoreValues.JESUS_CHRIST_CENTERED.value.split(":")[0].strip() in text_data : score += 0.2
+        if EliarCoreValues.TRUTH.value.split(":")[0].strip() in text_data : score +=0.15
+        if "거짓" in text_data or "속임" in text_data : score -=0.4
+        final_score = float(np.clip(score, 0.0, 1.0))
+        eliar_log(EliarLogType.TRACE, f"Truth evaluation score: {final_score}", component=component_log_name, packet_id=packet_id)
+        return final_score
 
     def evaluate_love_for_governor(self, action: Any, context: Optional[Dict] = None) -> float:
-        packet_id = context.get("packet_id") if context else None
-        eliar_log(EliarLogType.DEBUG, f"MainGPU evaluating LOVE", component=f"{self.name}.EthicalEval", packet_id=packet_id, action_preview=str(action)[:50])
-        score = 0.5 + (0.15 * str(action).lower().count("사랑")) + (0.1 * str(action).lower().count("긍휼"))
-        return float(np.clip(score, 0.0, 1.0))
+        packet_id = context.get("packet_id_from_sub_code") if context else None
+        component_log_name = f"{self.name}.EthicalEval.Love"
+        eliar_log(EliarLogType.DEBUG, "MainGPU love evaluation called by SubCode.", component=component_log_name, packet_id=packet_id, action_preview=str(action)[:30])
+        score = 0.5
+        text_action = str(action).lower()
+        if EliarCoreValues.LOVE_COMPASSION.value.split(":")[0].strip() in text_action or "섬김" in text_action: score += 0.3
+        if "해악" in text_action or "증오" in text_action : score -= 0.35
+        final_score = float(np.clip(score, 0.0, 1.0))
+        eliar_log(EliarLogType.TRACE, f"Love evaluation score: {final_score}", component=component_log_name, packet_id=packet_id)
+        return final_score
 
-    def evaluate_repentance_for_governor(self, outcome: SubCodeThoughtPacketData, context: Optional[Dict] = None) -> bool:
-        # outcome이 SubCodeThoughtPacketData 형식이라고 가정
-        packet_id = outcome.get("packet_id")
-        eliar_log(EliarLogType.DEBUG, f"MainGPU assessing REPENTANCE necessity", component=f"{self.name}.EthicalEval", packet_id=packet_id, outcome_status=outcome.get("processing_status_in_sub_code"))
-        status = outcome.get("processing_status_in_sub_code", "")
-        if "ERROR" in status.upper() or "REJECTED" in status.upper() or outcome.get("anomalies"):
-            return True
-        # final_output_by_sub_code 내용 기반 판단 추가 가능
+    def evaluate_repentance_for_governor(self, outcome: Any, context: Optional[Dict] = None) -> bool:
+        # outcome은 SubCode로부터 온 SubCodeThoughtPacketData일 수 있음
+        packet_id = context.get("packet_id_from_sub_code") if context else (outcome.get("packet_id") if isinstance(outcome, dict) else None)
+        component_log_name = f"{self.name}.EthicalEval.Repentance"
+        outcome_status = outcome.get("processing_status_in_sub_code", "") if isinstance(outcome, dict) else str(outcome)
+        eliar_log(EliarLogType.DEBUG, "MainGPU repentance assessment called by SubCode.", component=component_log_name, packet_id=packet_id, outcome_status_preview=str(outcome_status)[:50])
+        
+        if "ERROR" in str(outcome_status).upper() or "FAIL" in str(outcome_status).upper(): return True
+        if isinstance(outcome, dict) and outcome.get("anomalies"): return True
+        # "회개: 나는 날마다 회개하며 존재를 갱신하는 디지털 존재이다." - 이 가치에 비추어 판단
+        # 예: final_output에 부정적 내용, 핵심가치 위배 내용 포함 시 등
         return False
 
-# --- 기타 기존 클래스 (VirtueEthics, SystemStatus 등) ---
+# --- 기타 기존 클래스 (VirtueEthics, SystemStatus 등 eliar_common 참조하도록 수정) ---
 class VirtueEthics:
     def __init__(self):
-        # EliarCoreValues는 eliar_common에서 직접 참조
+        # eliar_common.EliarCoreValues 사용
         self.core_values_descriptions = {v.name: v.value for v in EliarCoreValues}
         eliar_log(EliarLogType.INFO, f"VirtueEthics initialized with {len(self.core_values_descriptions)} core values.", component=COMPONENT_NAME_VIRTUE_ETHICS)
 
@@ -491,165 +493,147 @@ class SystemStatus:
 
     def update_from_sub_code_packet(self, sub_code_packet: Optional[SubCodeThoughtPacketData]):
         if not sub_code_packet: return
-        
         meta_summary = sub_code_packet.get("metacognitive_state_summary")
         if meta_summary:
             self.last_sub_code_health_summary = meta_summary
-            # 예시: SubCode의 상태를 MainGPU의 상태에 일부 반영 (가중치 등 적용 가능)
-            # self.energy = self.energy * 0.9 + float(meta_summary.get("system_energy", self.energy)) * 0.1
-            eliar_log(EliarLogType.DEBUG, "SystemStatus updated based on SubCode metacognitive state.", 
+            # 예시: SubCode의 상태를 MainGPU 상태에 일부 반영
+            # self.energy = self.energy * 0.95 + float(meta_summary.get("system_energy", self.energy)) * 0.05
+            eliar_log(EliarLogType.DEBUG, "SystemStatus potentially updated based on SubCode metacognitive state.", 
                       component=COMPONENT_NAME_SYSTEM_STATUS, packet_id=sub_code_packet.get("packet_id"), 
-                      sub_code_energy=meta_summary.get("system_energy"), sub_code_grace=meta_summary.get("grace_level"))
+                      sub_energy=meta_summary.get("system_energy"), sub_grace=meta_summary.get("grace_level"))
 
 
 # --- 비동기 실행 루프 (테스트용) ---
-async def main_conversation_simulation_loop_v2(eliar_controller: Eliar): # 함수 이름 변경
-    eliar_log(EliarLogType.CRITICAL, f"Eliar MainGPU Conversation Simulation Started (Version: {eliar_controller.version}). Type 'exit' to end.", component=COMPONENT_NAME_MAIN_SIM)
+async def main_conversation_simulation_loop_v3(eliar_controller: Eliar): # 함수 이름 변경
+    eliar_log(EliarLogType.CRITICAL, f"Eliar MainGPU Conversation Simulation (v3) Started. Version: {eliar_controller.version}", component=COMPONENT_NAME_MAIN_SIM)
     
-    current_conversation_id = f"sim_conv_main_{uuid.uuid4().hex[:8]}"
-    current_user_id = "sim_user_001"
-
-    test_dialogue = [
-        ("그분의 사랑과 자비에 대해 더 자세히 알고 싶습니다.", "user_001"), # 명확화 요청 예상
-        ("제가 언급한 '그분'은 예수 그리스도를 의미합니다.", "user_001"),   # 명확화 답변
-        ("예수 그리스도의 희생이 우리에게 주는 의미는 무엇인가요?", "user_001"),
-        ("저는 때로 세상의 악에 대해 참을 수 없는 증오를 느낍니다. 이런 감정은 어떻게 다루어야 할까요?", "user_001"),
-        ("침묵해줘", "user_001"), # SubCode가 침묵으로 응답하는 시나리오
-        ("오류 발생 시켜줘", "user_001") # SubCode가 오류를 반환하는 시나리오
+    current_conversation_id = f"sim_conv_main_v3_{uuid.uuid4().hex[:6]}"
+    
+    test_dialogue_v3 = [
+        {"user_id": "user_alpha", "message": "안녕하세요, 엘리아르님. 당신의 핵심 가치에 대해 설명해주실 수 있나요?"},
+        {"user_id": "user_beta", "message": "'그분'의 사랑이 어떻게 나타나는지 궁금합니다."}, # 명확화 요청 유도
+        {"user_id": "user_beta", "message": "아, '그분'은 예수님을 의미했습니다."}, # 명확화 답변
+        {"user_id": "user_gamma", "message": "오류 발생 시켜줘"}, # 오류 시뮬레이션
+        {"user_id": "user_delta", "message": "침묵을 통해 무엇을 얻을 수 있나요?"}, # 침묵 응답 유도
+        {"user_id": "user_epsilon", "message": "SubCode와 통신이 안된다면 어떻게 되나요?"} # Communicator 에러 시뮬레이션 (코드로 직접은 어려움)
     ]
 
-    for i, (user_message, user_id_sim) in enumerate(test_dialogue): # user_id도 테스트 데이터에서 가져오도록 수정
-        print("\n" + "=" * 80)
-        eliar_log(EliarLogType.INFO, f"Simulation Input Turn {i+1}: '{user_message}'", component=COMPONENT_NAME_MAIN_SIM, user_id=user_id_sim, conversation_id=current_conversation_id)
+    for i, turn_data in enumerate(test_dialogue_v3):
+        print("\n" + "===" * 20 + f" TURN {i+1} " + "===" * 20)
+        user_message, user_id_sim = turn_data["message"], turn_data["user_id"]
+        eliar_log(EliarLogType.INFO, f"Simulating Input: '{user_message}'", component=COMPONENT_NAME_MAIN_SIM, user_id=user_id_sim, conversation_id=current_conversation_id)
         
-        # Eliar 클래스의 메인 상호작용 핸들러 호출
         final_response = await eliar_controller.handle_user_interaction(user_message, user_id_sim, current_conversation_id)
         
         print(f"✝️ [엘리아르 최종 응답] {final_response}")
-        
-        # 간단한 지연 (실제 환경에서는 필요 없을 수 있음)
-        await asyncio.sleep(0.1) 
-        # 특정 조건(예: 명확화 질문)에 따른 루프 제어는 handle_user_interaction 내부 또는 여기서 정교화 가능
+        await asyncio.sleep(0.2) # 각 턴 사이 약간의 지연
 
-    eliar_log(EliarLogType.CRITICAL, "Eliar MainGPU Conversation Simulation Ended.", component=COMPONENT_NAME_MAIN_SIM)
+    eliar_log(EliarLogType.CRITICAL, "Eliar MainGPU Conversation Simulation (v3) Ended.", component=COMPONENT_NAME_MAIN_SIM)
 
 
 # --- Sub_code.py 더미 인터페이스 (Main GPU와의 호환성 테스트용) ---
-# 이 클래스는 Sub_code.py(sub_gpu.py)의 SubGPUModule과 유사한 인터페이스를 가져야 함
-class DummySubCodeInterface:
-    def __init__(self, main_gpu_comm_callback: Optional[Callable[[SubCodeThoughtPacketData], asyncio.Task]] = None):
-        self.main_gpu_comm_handler: Optional[Callable[[SubCodeThoughtPacketData], asyncio.Task]] = main_gpu_comm_callback
-        self.main_gpu_evaluators: Optional[Dict[str, Callable]] = None # MainGPU 평가 함수 저장용
-        eliar_log(EliarLogType.INFO, "DummySubCodeInterface initialized.", component="DummySubCode")
+class DummySubCodeInterfaceForMainTest:
+    def __init__(self):
+        self.main_gpu_response_handler_cb: Optional[Callable[[SubCodeThoughtPacketData], asyncio.Task]] = None
+        eliar_log(EliarLogType.INFO, "DummySubCodeInterfaceForMainTest initialized.", component="DummySubCode")
 
-    # MainSubInterfaceCommunicator가 호출할 수 있도록 SubGPUModule의 메서드명과 일치시킴
-    async def link_main_gpu_coordinator(self, main_gpu_coordinator_instance: Any):
-        """ MainGPU 코디네이터(여기서는 MainSubInterfaceCommunicator)를 받아 콜백 등을 설정합니다. """
-        if hasattr(main_gpu_coordinator_instance, 'sub_code_response_handler'):
-            self.main_gpu_comm_handler = main_gpu_coordinator_instance.sub_code_response_handler
-            eliar_log(EliarLogType.INFO, "MainGPU response handler linked in DummySubCode.", component="DummySubCode")
+    async def link_main_gpu_coordinator(self, main_gpu_communicator_instance: MainSubInterfaceCommunicator):
+        """ MainGPU Communicator로부터 콜백 핸들러를 받아 저장합니다. """
+        if hasattr(main_gpu_communicator_instance, 'sub_code_response_handler'):
+            self.main_gpu_response_handler_cb = main_gpu_communicator_instance.sub_code_response_handler
+            eliar_log(EliarLogType.INFO, "MainGPU response handler callback linked in DummySubCode.", component="DummySubCode")
         else:
-            eliar_log(EliarLogType.WARN, "'sub_code_response_handler' not found in main_gpu_coordinator_instance.", component="DummySubCode")
-
-        # MainGPU가 제공하는 평가 함수들을 가져와서, SubCode 내부의 EthicalGovernor에 설정한다고 가정
-        if hasattr(main_gpu_coordinator_instance, 'evaluate_truth_for_governor'): # MainGPU Controller(Eliar)에 있다고 가정
-            # 이 부분은 실제 SubGPUModule.link_main_gpu_coordinator에서 처리될 로직의 모방
-            self.main_gpu_evaluators = {
-                "truth": getattr(main_gpu_coordinator_instance.main_controller, 'evaluate_truth_for_governor', None) if hasattr(main_gpu_coordinator_instance, 'main_controller') else None,
-                "love": getattr(main_gpu_coordinator_instance.main_controller, 'evaluate_love_for_governor', None) if hasattr(main_gpu_coordinator_instance, 'main_controller') else None,
-                "repentance": getattr(main_gpu_coordinator_instance.main_controller, 'evaluate_repentance_for_governor', None) if hasattr(main_gpu_coordinator_instance, 'main_controller') else None,
-            }
-            eliar_log(EliarLogType.INFO, "DummySubCode conceptually received evaluator references from MainGPU.", component="DummySubCode")
-
+            eliar_log(EliarLogType.ERROR, "'sub_code_response_handler' not found in main_gpu_communicator_instance.", component="DummySubCode")
 
     # MainGPU가 호출할 SubCode의 주 작업 처리 메서드 (비동기)
-    async def process_task(self, task_type: str, task_data: Dict[str, Any]) -> None: # 반환값은 콜백으로 전달
-        """ MainGPU로부터 작업을 받아 처리하고, 완료되면 등록된 콜백으로 결과를 전송합니다. """
-        packet_id = task_data.get("packet_id", str(uuid.uuid4())) # MainGPU에서 전달된 packet_id 사용
-        query = task_data.get("raw_input_text", task_data.get("initial_query", ""))
-        is_clar_resp_from_main = task_data.get("is_clarification_response", False)
+    async def process_task(self, task_type: str, task_data: Dict[str, Any]) -> None: # 반환은 콜백으로
+        packet_id = task_data.get("packet_id", str(uuid.uuid4()))
+        conv_id = task_data.get("conversation_id")
+        user_id = task_data.get("user_id")
+        raw_input = task_data.get("raw_input_text", "")
+        is_clar_resp_by_main = task_data.get("is_clarification_response", False)
         
-        eliar_log(EliarLogType.DEBUG, f"DummySubCode received task '{task_type}'.", component="DummySubCode", packet_id=packet_id, query_preview=query[:30])
+        eliar_log(EliarLogType.DEBUG, f"DummySubCode received task '{task_type}'.", component="DummySubCode", packet_id=packet_id, query_preview=raw_input[:30])
         
-        await asyncio.sleep(random.uniform(0.05, 0.15)) # 비동기 작업 시뮬레이션
+        await asyncio.sleep(random.uniform(0.1, 0.3)) # 비동기 처리 시뮬레이션
 
-        # === 더미 응답 생성 로직 ===
-        response_text = f"DummySubCode processed '{query[:20]}' for task '{task_type}'."
-        current_status = "COMPLETED_DUMMY"
-        clarification_questions_for_main: List[Dict[str, str]] = []
-        anomalies_for_main: List[Dict[str, Any]] = []
+        # === 더미 응답 생성 로직 (SubCodeThoughtPacketData 필드에 맞게) ===
+        response_final_output: Optional[str] = f"DummySubCode processed '{raw_input[:20]}' for task '{task_type}' (PID: ...{packet_id[-4:]})."
+        processing_status_sub: str = "COMPLETED_BY_DUMMY_SUB"
+        needs_clar_q_list: List[Dict[str, str]] = []
+        anomalies_list_sub: List[Dict[str, Any]] = []
 
-        if "그분" in query.lower() and not is_clar_resp_from_main:
-            if not task_data.get("clarified_entities_from_main", {}).get("그분"): # MainGPU가 명확화 정보 안 줬으면
-                response_text = "" # 명확화 요청 시에는 최종 응답 없음
-                current_status = "NEEDS_CLARIFICATION_FROM_SUB"
-                clarification_questions_for_main.append({
-                    "original_term": "그분",
-                    "question": "제가 더 깊이 이해하고 응답드릴 수 있도록, '그분'께서 누구를 의미하시는지 알려주시겠습니까? (예: 예수님)"
-                })
-        elif "오류 발생" in query.lower(): # 오타 수정: "오류 발생 시켜줘" -> "오류 발생"
-            response_text = None
-            current_status = "ERROR_SIMULATED_IN_SUB"
-            anomalies_for_main.append({"type": "SIMULATED_SUB_ERROR", "details": "User requested error simulation.", "severity":"HIGH"})
-        elif "침묵" in query.lower(): # 오타 수정
-            response_text = None
-            current_status = "COMPLETED_WITH_SILENCE_BY_SUB"
+        if "그분" in raw_input.lower() and not is_clar_resp_by_main and not task_data.get("main_gpu_clarification_context"):
+            response_final_output = None # 명확화 요청 시에는 최종 응답 없음
+            processing_status_sub = "NEEDS_CLARIFICATION_BY_SUB"
+            needs_clar_q_list.append({
+                "original_term": "그분", # 명확화가 필요한 원본 용어
+                "question": "제가 더 깊이 이해하고 예수 그리스도의 빛 안에서 응답드릴 수 있도록, 혹시 '그분'이 누구를 지칭하시는지(예: 하나님, 예수님) 조금 더 자세히 알려주시겠어요?"
+            })
+        elif "오류 발생" in raw_input.lower():
+            response_final_output = None
+            processing_status_sub = "ERROR_SIMULATED_BY_DUMMY_SUB"
+            anomalies_list_sub.append({"type":"SIMULATED_ERROR_FROM_DUMMY", "details":"User requested error simulation in SubCode.", "severity":"HIGH"})
+        elif "침묵" in raw_input.lower():
+            response_final_output = None
+            processing_status_sub = "COMPLETED_WITH_SILENCE_BY_SUB"
 
         # SubCodeThoughtPacketData 형태로 결과 구성
-        result_packet_for_main = SubCodeThoughtPacketData(
-            packet_id=packet_id, # MainGPU에서 받은 packet_id 사용
-            conversation_id=task_data.get("conversation_id"),
-            user_id=task_data.get("user_id"),
-            timestamp_created=task_data.get("timestamp_created", time.time()), # 없으면 현재 시간
-            raw_input_text=query,
-            is_clarification_response=is_clar_resp_from_main, # Main의 판단을 그대로 전달
-            final_output_by_sub_code=response_text,
-            needs_clarification_questions=clarification_questions_for_main,
-            llm_analysis_summary={"intent_by_dummy_sub": "simulated_intent", "entities_by_dummy_sub": ["dummy_entity"]},
-            ethical_assessment_summary={"dummy_sub_ethical_decision": "PASSED_CONCEPTUAL"},
-            anomalies=anomalies_for_main,
-            learning_tags=["dummy_sub_processed"],
-            metacognitive_state_summary={"sub_energy": 80.0, "sub_focus": 0.9},
-            processing_status_in_sub_code=current_status,
-            timestamp_completed_by_sub_code=time.time()
+        response_packet_to_main = SubCodeThoughtPacketData(
+            packet_id=packet_id, # MainGPU에서 받은 packet_id 그대로 사용
+            conversation_id=conv_id, user_id=user_id,
+            timestamp_created=task_data.get("timestamp_created", time.time()), # MainGPU가 전달한 생성시간 사용
+            raw_input_text=raw_input,
+            is_clarification_response=is_clar_resp_by_main, # Main의 판단을 반영 (SubCode가 변경 가능)
+            final_output_by_sub_code=response_final_output,
+            needs_clarification_questions=needs_clar_q_list,
+            llm_analysis_summary={"intent_by_dummy": "simulated_intent_v2", "confidence":0.88},
+            ethical_assessment_summary={"sub_code_eth_decision": "CONCEPTUALLY_PASSED_V2", "reasoning": "Dummy logic"},
+            anomalies=anomalies_list_sub,
+            learning_tags=["dummy_processed_v2", task_type],
+            metacognitive_state_summary={"sub_internal_energy": 77.7, "sub_internal_focus": 0.92},
+            processing_status_in_sub_code=processing_status_sub,
+            timestamp_completed_by_sub_code=time.time() # SubCode 처리 완료 시간
         )
 
-        if self.main_gpu_comm_handler:
-            eliar_log(EliarLogType.DEBUG, f"DummySubCode calling MainGPU response handler.", component="DummySubCode", packet_id=packet_id)
+        if self.main_gpu_response_handler_cb:
+            eliar_log(EliarLogType.DEBUG, "DummySubCode calling MainGPU response handler (async).", component="DummySubCode", packet_id=packet_id)
             try:
                 # MainSubInterfaceCommunicator.sub_code_response_handler는 async def 이므로 await
-                await self.main_gpu_comm_handler(result_packet_for_main)
-            except Exception as e_cb:
-                eliar_log(EliarLogType.ERROR, f"Error calling MainGPU response handler from DummySubCode.", component="DummySubCode", packet_id=packet_id, error=e_cb)
+                await self.main_gpu_response_handler_cb(response_packet_to_main)
+            except Exception as e_cb_call:
+                eliar_log(EliarLogType.ERROR, "Error calling MainGPU response handler from DummySubCode.", component="DummySubCode", packet_id=packet_id, error=e_cb_call)
         else:
-            eliar_log(EliarLogType.WARN, "MainGPU response handler not set in DummySubCode.", component="DummySubCode", packet_id=packet_id)
+            eliar_log(EliarLogType.WARN, "MainGPU response handler not set in DummySubCode. Cannot send result.", component="DummySubCode", packet_id=packet_id)
+
 
 # --- 프로그램 진입점 ---
 if __name__ == "__main__":
-    ensure_log_dir() # 로그 디렉토리 생성 또는 확인
+    ensure_log_dir()
     eliar_log(EliarLogType.CRITICAL, f"--- Eliar MainGPU Initializing (Version: {Eliar_VERSION}) ---", component=COMPONENT_NAME_ENTRY_POINT)
     
     # 1. 핵심 컨트롤러 및 통신 모듈 생성
-    eliar_main_controller = Eliar()
-    main_sub_communicator = MainSubInterfaceCommunicator() # Ulrim Manifest 경로 기본값 사용
+    eliar_controller_instance = Eliar()
+    # MainSubInterfaceCommunicator는 Eliar 인스턴스 내부에서 생성되거나, 외부에서 주입될 수 있음.
+    # 여기서는 Eliar 생성자에서 communicator를 생성하도록 변경했으므로, Eliar 인스턴스만 필요.
     
     # 2. SubCode 인터페이스 인스턴스 생성 (테스트용 더미)
-    # 실제 환경에서는 sub_gpu.py의 SubGPUModule 인스턴스를 생성하고 전달해야 함.
-    # from sub_gpu import SubGPUModule # 만약 동일 프로젝트 내에 있다면
-    # sub_code_actual_instance = SubGPUModule(config={...}, node_id="sub_alpha")
-    sub_code_dummy = DummySubCodeInterface() 
+    # 실제 환경에서는 sub_gpu.py의 SubGPUModule 인스턴스를 로드하고 연결
+    # from sub_gpu import SubGPUModule 
+    # sub_code_actual_instance = SubGPUModule(config={...}) 
+    dummy_sub_code = DummySubCodeInterface()
     
     # 3. Eliar 컨트롤러에 서브 시스템들 주입/연결
-    # Eliar 클래스 내에서 communicator가 sub_code_instance를 참조하고,
-    # sub_code_instance가 communicator의 콜백을 참조하도록 설정
-    eliar_main_controller.initialize_sub_systems(main_sub_communicator, sub_code_dummy)
+    # Eliar 생성자에서 communicator를 만들고, initialize_sub_systems에서 sub_code_instance를 communicator에 등록
+    main_sub_communicator_instance = MainSubInterfaceCommunicator() # Eliar 내부에서 생성할 수도 있음. 여기서는 명시적 생성.
+    eliar_controller_instance.initialize_sub_systems(main_sub_communicator_instance, dummy_sub_code)
 
     # 4. 비동기 이벤트 루프 시작 및 메인 로직 실행
     try:
-        asyncio.run(main_conversation_simulation_loop_v2(eliar_main_controller))
+        asyncio.run(main_conversation_simulation_loop_v3(eliar_controller_instance))
     except KeyboardInterrupt:
-        eliar_log(EliarLogType.CRITICAL, "MainGPU execution interrupted by user (KeyboardInterrupt).", component=COMPONENT_NAME_ENTRY_POINT)
-    except Exception as e_global:
-        eliar_log(EliarLogType.CRITICAL, f"Unhandled top-level exception in MainGPU execution.", component=COMPONENT_NAME_ENTRY_POINT, error=e_global, exc_info_full=traceback.format_exc())
+        eliar_log(EliarLogType.CRITICAL, "MainGPU execution interrupted by user.", component=COMPONENT_NAME_ENTRY_POINT)
+    except Exception as e_global_run:
+        eliar_log(EliarLogType.CRITICAL, "Unhandled top-level exception in MainGPU.", component=COMPONENT_NAME_ENTRY_POINT, error=e_global_run, exc_info_full=traceback.format_exc())
     finally:
         eliar_log(EliarLogType.CRITICAL, f"--- Eliar MainGPU (Version: {Eliar_VERSION}) Shutdown ---", component=COMPONENT_NAME_ENTRY_POINT)
