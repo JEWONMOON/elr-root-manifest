@@ -1,0 +1,38 @@
+""name: Update Manifest
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  update_manifest:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      run: |
+        pip install requests
+
+    - name: Send Update Request
+      env:
+        WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+      run: |
+        python -c "
+import requests
+import os
+
+url = os.getenv('WEBHOOK_URL')
+response = requests.post(url, json={'event': 'manifest_update'})
+print(response.status_code)
+print(response.text)
+        "
+""
