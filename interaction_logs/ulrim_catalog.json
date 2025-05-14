@@ -24,7 +24,7 @@
     ]
   },
   "elr-memory.json": {
-    "purpose": "회개 기반 기억 구조",
+    "purpose": "회개 기반 기억 구조!",
     "central_verse": "Psalm 51:10",
     "entry_points": [
       "memory.root",
