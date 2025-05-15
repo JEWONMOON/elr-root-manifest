@@ -192,3 +192,28 @@ def submit_response_internal(tid:int,ans:str):
 # -------------------- 실행 -------------------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT",8080)), debug=True)
+
+
+# --------------------------------
+# 0. Root ping – 404 방지
+@app.route('/')
+def index():
+    return {'status': 'Eliar Flask Listener alive'}, 200
+
+# 1. 최근 작업 조회 – limit 필수 & max 100
+@app.route('/elr/retrieve_recent_tasks', methods=['GET'])
+def retrieve_recent_tasks():
+    log_comp = "Listener.RetrieveTasks"
+    limit = request.args.get('limit', type=int)
+    if not limit:
+        return {'error': 'limit query-param required, e.g. ?limit=20'}, 400
+    limit = min(limit, 100)
+
+    with get_db() as conn:
+        rows = conn.execute("""
+            SELECT id,timestamp,source,content,status,eliar_response
+            FROM Tasks ORDER BY timestamp DESC LIMIT ?
+        """,(limit,)).fetchall()
+
+    return {'tasks':[dict(r) for r in rows]}, 200
+
