@@ -71,16 +71,23 @@ def init_db():
 
 init_db()
 
-# ────────────────────────────────  캐시  ─────────────────────────────────────
+# ───────── 캐시 (단순) ─────────
 _cache: Dict[str, Any] = {}
 _cache_lock = Lock()
-def cache_get(k):  with _cache_lock: return _cache.get(k)
-def cache_set(k,v): with _cache_lock: _cache[k]=v
-def cache_clear_prefix(p):
-    with _cache_lock:
-        for k in list(_cache):
-            if k.startswith(p): del _cache[k]
 
+def cache_get(k):
+    with _cache_lock:
+        return _cache.get(k)
+
+def cache_set(k, v):
+    with _cache_lock:
+        _cache[k] = v
+
+def cache_clear_prefix(pref):
+    with _cache_lock:
+        for key in list(_cache):
+            if key.startswith(pref):
+                del _cache[key]
 # ────────────────────────────────  Alert 🛎️  ───────────────────────────────
 def produce_alert():
     if not (cli and ALERT_ASSISTANT_ID and USER_THREAD_ID):
