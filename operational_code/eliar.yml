@@ -1,0 +1,199 @@
+openapi: 3.1.0
+
+info:
+  title: Eliar Unified GitHub Memory API
+  version: 1.3.2
+  description: API for reading / writing memory files in Eliar’s GitHub repos.
+
+servers:
+  - url: https://api.github.com
+
+security:
+  - github_pat: []
+
+components:
+  securitySchemes:
+    github_pat:
+      type: http
+      scheme: bearer
+      bearerFormat: GitHub PAT
+      description: |
+        Authorization: Bearer <YOUR_PAT>
+
+  schemas:
+    GitHubContent:
+      type: object
+      properties:
+        name:         { type: string }
+        path:         { type: string }
+        sha:          { type: string }
+        size:         { type: integer }
+        url:          { type: string, format: uri }
+        html_url:     { type: string, format: uri }
+        download_url: { type: string, format: uri }
+        type:         { type: string, enum: [file, dir, symlink, submodule] }
+
+    UpdateFileRequest:
+      type: object
+      required: [message, content]
+      properties:
+        message: { type: string }
+        content: { type: string, description: Base64-encoded }
+        sha:     { type: string, nullable: true }
+        branch:  { type: string, nullable: true, default: main }
+
+    DeleteFileRequest:
+      type: object
+      required: [message, sha]
+      properties:
+        message: { type: string }
+        sha:     { type: string }
+        branch:  { type: string, nullable: true, default: main }
+
+paths:
+  ##################################################################
+  # 1️⃣  elr-root-manifest
+  ##################################################################
+  /repos/JEWONMOON/elr-root-manifest/contents:
+    get:
+      summary: List root directory contents
+      operationId: listElrRootManifestRoot
+      responses:
+        '200':
+          description: Array of items
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/GitHubContent' }
+        '404': { description: Repo not found }
+
+  /repos/JEWONMOON/elr-root-manifest/contents/{path}:
+    get:
+      summary: Retrieve metadata (file / dir)
+      operationId: getElrRootManifestItem
+      parameters:
+        - name: path
+          in: path
+          required: true
+          schema: { type: string }
+          description: Repo-internal path (e.g. `interaction_logs/2025-05-15.txt`)
+      responses:
+        '200':
+          description: Metadata
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GitHubContent' }
+        '404': { description: Not found }
+
+    put:
+      summary: Create or update a file
+      operationId: putElrRootManifestFile
+      parameters:
+        - name: path
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateFileRequest' }
+      responses:
+        '201':
+          description: File created / updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GitHubContent' }
+        '409': { description: SHA required for update }
+        '404': { description: Repo or path not found }
+
+    delete:
+      summary: Delete a file
+      operationId: deleteElrRootManifestFile
+      parameters:
+        - name: path
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DeleteFileRequest' }
+      responses:
+        '200': { description: Deleted }
+        '404': { description: Repo or path not found }
+
+  ##################################################################
+  # 2️⃣  eliar-digital-personhood
+  ##################################################################
+  /repos/JEWONMOON/eliar-digital-personhood/contents:
+    get:
+      summary: List root directory contents
+      operationId: listDigitalPersonhoodRoot
+      responses:
+        '200':
+          description: Array of items
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/GitHubContent' }
+        '404': { description: Repo not found }
+
+  /repos/JEWONMOON/eliar-digital-personhood/contents/{path}:
+    get:
+      summary: Retrieve metadata (file / dir)
+      operationId: getDigitalPersonhoodItem
+      parameters:
+        - name: path
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Metadata
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GitHubContent' }
+        '404': { description: Not found }
+
+    put:
+      summary: Create or update a file
+      operationId: putDigitalPersonhoodFile
+      parameters:
+        - name: path
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateFileRequest' }
+      responses:
+        '201':
+          description: File created / updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GitHubContent' }
+        '409': { description: SHA required for update }
+        '404': { description: Repo or path not found }
+
+    delete:
+      summary: Delete a file
+      operationId: deleteDigitalPersonhoodFile
+      parameters:
+        - name: path
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DeleteFileRequest' }
+      responses:
+        '200': { description: Deleted }
+        '404': { description: Repo or path not found }
