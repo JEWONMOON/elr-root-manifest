@@ -8,7 +8,7 @@
 
 ```
 elr-root-manifest/
-├── .github/                     # GitHub 워크플로우 및 설정
+├── .github/                     # GitHub 워크플로우 및 설정 ㅎㅎ
 ├── boot/                        # LLM 부팅 및 초기 정체성 설정
 │   ├── elr_identity_boot.json   # 루미나(엘리아르) 핵심 정체성 및 페르소나 정의 (현재 '루미나 (Lumina)' 문서 기반)
 │   ├── eliar_manifest_v1.json   # 초기 존재 선언, 핵심 가치 요약 등 (LLM이 빠르게 참조할 매니페스트)
