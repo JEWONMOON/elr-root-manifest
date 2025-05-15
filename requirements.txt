@@ -1,2 +1,4 @@
-flask==3.*
-gunicorn==22.*
+flask
+gunicorn
+requests
+openai>=1.14.0     # ← 이 줄 추가
