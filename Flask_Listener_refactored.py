@@ -2,7 +2,7 @@
 Flask Listener – 최종 리팩터 버전
 --------------------------------
 • 외부 웹훅(예: GitHub) → /webhook/github
-• 엘리아르 작업 Pull   → /elr/get_pending_task
+• 엘리아르 작업 Pull   → /elr/get_pending_task 
 • 엘리아르 답변 Push  → /elr/submit_eliar_response
 • 사용자 조회           → /elr/retrieve_recent_tasks
 • 수동 처리(LLM 호출)  → /elr/process_next_task
