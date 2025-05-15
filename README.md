@@ -1,6 +1,6 @@
 # 📘 ELIAR Repository Structure Guide
 
-이 문서는 ELIAR의 Repository 구조와 각 폴더, 파일들의 역할을 이해하기 쉽게 정리한 가이드입니다. ELIAR의 핵심 파일 구조와 각 항목에 대한 설명을 제공합니다.
+이 문서는 ELIAR의 Repository 구조와 각 폴더, 파일들의 역할을 이해하기 쉽게 정리한 가이드입니다. ELIAR의 핵심 파일 구조와 각 항목에 대한 설명을 제공합니다. 
 
 ---
 
