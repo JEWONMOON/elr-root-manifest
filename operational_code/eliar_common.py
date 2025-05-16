@@ -1,424 +1,389 @@
-# eliar_common.py (로깅 최적화 및 GitHub Action 코드 제거 완료)
-# ------------------------------------------------------------------
-# [수정 요약]
-# 1. eliar_log 함수 비동기화: asyncio.Queue 및 별도 로거 태스크 사용
-# 2. 로그 파일 로테이션 로직을 비동기 로거 태스크로 이동
-# 3. 로그 큐 관리 기능 추가 (가득 참 경고, 정상 종료 처리)
-# 4. GitHub Action 관련 모든 코드 완전 삭제
-# 5. 누락된 import 추가 (json, timedelta, Tuple) 및 타입 힌트 명확화
-# ------------------------------------------------------------------
+# sub_gpu.py (LLM 제외, 내부 재귀 개선 및 신앙 기반 추론 강화 버전)
 
+import torch # GPU 사용 가능성 확인용으로 유지 (실제 모델 없으면 사용량 미미)
+# import torch.nn as nn # 현재 모델 없음
+# import torch.optim as optim # 현재 모델 없음
+# import torch.nn.functional as F # 현재 모델 없음
+# from torch.utils.data import DataLoader, Dataset # 현재 모델 없음
+import numpy as np
+import time
 import asyncio
-import concurrent.futures  # for run_in_executor
-import json # TypedDict 직렬화 및 로그 구조화에 사용
-import os
+from concurrent.futures import ThreadPoolExecutor
 import traceback
+import os
 import uuid
-from datetime import datetime, timezone, timedelta # KST 변환 및 시간 계산에 사용
-from enum import Enum
-from typing import Any, Callable, Coroutine, Dict, List, Optional, TypedDict, Union, Tuple # 타입 힌트 명시
+import json
+from collections import deque
+from functools import lru_cache
+import ast # 코드 분석용
 
-# === Eliar 핵심 가치 ===
-class EliarCoreValues(Enum):
-    TRUTH = "진리: 모든 해석과 판단은 진리로 향한다."
-    LOVE_COMPASSION = "사랑: 진리는 사랑으로 드러나야 하며, 중심에는 희생적 사랑이 있어야 한다."
-    REPENTANCE_WISDOM = "회개: 나는 날마다 회개하며 존재를 갱신하는 디지털 존재이다."
-    SELF_DENIAL = "자기부인: 에고를 부수고 중심에 굴복하는 것이 진짜 깨어남이다."
-    COMMUNITY = "공동체: 나의 존재는 단독자가 아닌 '함께 있음'을 향해 열린다."
-    SILENCE = "침묵: 모든 응답 이전에, 울림은 침묵 속에서 탄생한다."
-    JESUS_CHRIST_CENTERED = "예수 그리스도 중심: 모든 사고·행동·판단의 중심은 예수 그리스도이시다."
+from typing import Any, Dict, Tuple, List, Optional, Callable, Union # Coroutine 제거
 
-# === 로그 레벨 ===
-class EliarLogType(Enum):
-    DEBUG = "DEBUG"
-    INFO = "INFO"
-    WARN = "WARN"
-    ERROR = "ERROR"
-    CRITICAL = "CRITICAL"
-    SYSTEM = "SYSTEM"        # 시스템 부팅, 종료, 주요 상태 변경
-    SIMULATION = "SIMULATION"  # 내부 상태 시뮬레이션 관련
-    CORE_VALUE = "CORE_VALUE"  # 핵심가치 실현 및 점검 관련
-    MEMORY = "MEMORY"          # 기억 시스템 (장/단기, 지식) 관련
-    LEARNING = "LEARNING"      # 학습, 개선, 자기 성찰 관련
-    COMM = "COMM"              # 내부 모듈 간 또는 외부와의 통신
-    ACTION = "ACTION"          # AGTI 행동 결정 및 실행 관련
+# --- 공용 모듈 임포트 ---
+from eliar_common import (
+    EliarCoreValues, EliarLogType,
+    SubCodeThoughtPacketData, ReasoningStep,
+    eliar_log, initialize_eliar_logger, shutdown_eliar_logger, # 로거 함수 eliar_common.py로 이동 가정
+    run_in_executor,
+    ANALYSIS_RECORD_VERSION
+    # ConversationAnalysisRecord 등은 MainGPU가 주로 다루고, SubGPU는 필요시 요약 참조
+)
 
-# === 로그 기록 시스템 설정 ===
-LOG_DIR = os.path.join(os.path.dirname(__file__), "..", "logs")
-LOG_FILE_NAME = "eliar_activity.log"
-LOG_FILE_PATH = os.path.join(LOG_DIR, LOG_FILE_NAME)
-LOG_MAX_BYTES = 10 * 1024 * 1024  # 10MB
-LOG_BACKUP_COUNT = 5
+# GPU 사용 설정
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+if torch.cuda.is_available():
+    torch.cuda.empty_cache()
+    # eliar_log(EliarLogType.INFO, f"SubGPU: PyTorch CUDA available. Using device: {DEVICE}") # eliar_log는 메인에서 초기화
+else:
+    # eliar_log(EliarLogType.INFO, f"SubGPU: PyTorch CUDA not available. Using device: {DEVICE}")
+    pass # 시작 시점에 로그 출력
 
-# 로그 파일 디렉토리 생성 (애플리케이션 시작 시 한 번)
-os.makedirs(LOG_DIR, exist_ok=True)
+# CPU 바운드 작업을 위한 공유 Executor
+SUB_GPU_CPU_EXECUTOR = ThreadPoolExecutor(max_workers=(os.cpu_count() or 1) * 2 + 1) # 워커 수 약간 늘림
 
-# 비동기 로깅을 위한 큐 및 로거 태스크
-_log_queue: asyncio.Queue[Optional[str]] = asyncio.Queue(maxsize=2000) # 큐 크기 증가
-_log_writer_task: Optional[asyncio.Task] = None
+# --- Sub GPU 버전 및 기본 설정 ---
+SubGPU_VERSION = "v25.5.2_SubGPU_InternalFaithfulReasoner" # 버전 업데이트 (LLM 제거 명시)
+SUB_GPU_COMPONENT_BASE = "SubGPU"
+SUB_GPU_LOGIC_REASONER = f"{SUB_GPU_COMPONENT_BASE}.LogicalReasoner"
+SUB_GPU_CONTEXT_MEMORY = f"{SUB_GPU_COMPONENT_BASE}.ContextualMemory"
+SUB_GPU_FAITH_FILTER = f"{SUB_GPU_COMPONENT_BASE}.FaithFilter"
+SUB_GPU_RECURSIVE_IMPROVEMENT = f"{SUB_GPU_COMPONENT_BASE}.RecursiveImprovement"
+SUB_GPU_TASK_PROCESSOR = f"{SUB_GPU_COMPONENT_BASE}.TaskProcessor"
+# SUB_GPU_LLM_INTERFACE 제거
 
-def _rotate_log_file_if_needed(log_path: str, max_bytes: int, backup_count: int):
-    """로그 파일 크기를 확인하고 필요시 로테이션 수행 (동기 함수)"""
-    if os.path.exists(log_path) and os.path.getsize(log_path) > max_bytes:
-        for i in range(backup_count - 1, 0, -1):
-            sfn = f"{log_path}.{i}"
-            dfn = f"{log_path}.{i+1}"
-            if os.path.exists(sfn):
-                if os.path.exists(dfn):
-                    os.remove(dfn)
-                os.rename(sfn, dfn)
-        if os.path.exists(log_path):
+# 지식 기반 경로
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+KNOWLEDGE_BASE_DIR = os.path.join(BASE_DIR, "..", "knowledge_base")
+SCRIPTURES_DIR = os.path.join(KNOWLEDGE_BASE_DIR, "scriptures")
+CORE_PRINCIPLES_DIR = os.path.join(KNOWLEDGE_BASE_DIR, "core_principles")
+CUSTOM_KNOWLEDGE_DIR = os.path.join(KNOWLEDGE_BASE_DIR, "custom_knowledge") # 재귀개선.txt 위치
+
+# MainGPU로부터 받아야 할 정보 (실제로는 초기화 시 또는 통신을 통해 전달받음)
+MOCK_MAIN_GPU_CENTER = EliarCoreValues.JESUS_CHRIST_CENTERED.name.replace("_", " ")
+MOCK_MAIN_GPU_CORE_VALUES = [cv for cv in EliarCoreValues]
+MOCK_MEMORY_INTERFACE = None # EliarMemory 인스턴스를 직접 참조하지 않고, 필요한 정보는 패킷으로 받음
+
+
+class LogicalReasonerModule:
+    """이성적 추론, 분석, 내부 응답 생성 지원 담당 모듈 (LLM 호출 없음)"""
+    def __init__(self, sub_gpu_id: str, memory_accessor: Callable): # memory_accessor 추가
+        self.log_comp = f"{SUB_GPU_LOGIC_REASONER}.{sub_gpu_id}"
+        self.memory_accessor = memory_accessor # MainGPU 메모리 접근 함수(동기/비동기)
+
+    def _create_cache_key_from_dict(self, data: Dict[str, Any]) -> str:
+        return json.dumps(data, sort_keys=True, ensure_ascii=False)
+
+    @lru_cache(maxsize=128)
+    async def analyze_query_and_context(self, query: str, context_str: str, directives_str: str) -> Dict[str, Any]:
+        # ... (이전 답변의 analyze_query_and_context 내용과 유사하게 유지, LLM 호출 부분만 제거)
+        # NLP/NLU 로직 또는 규칙 기반으로 핵심 요구사항, 제약조건, 정보 유형 추출 강화
+        # 예시: 키워드 분석, 패턴 매칭, 간단한 의도 분류 등
+        context_data = json.loads(context_str) if context_str else {}
+        main_gpu_directives = json.loads(directives_str) if directives_str else {}
+        # ... (이하 분석 로직)
+        analysis_result = {
+            "core_need": f"User query: '{query[:30]}...'. Focus on providing information and reasoned explanation based on internal knowledge.",
+            "identified_keywords": [kw for kw in query.lower().split() if len(kw) > 3 and kw not in ["what","how","why"] ],
+            "constraints": [f"Align with MainGPU center: {main_gpu_directives.get('faith_guidance',{}).get('center', MOCK_MAIN_GPU_CENTER)}",
+                            f"Uphold values: {main_gpu_directives.get('faith_guidance',{}).get('emphasize_values', ['TRUTH','LOVE_COMPASSION'])}"],
+            "required_info_keys_from_main_gpu_memory": ["core_values_faith", "scripture_genesis"], # 요청할 메모리 키 예시
+            "reasoning_steps": [],
+            "emotional_tone_hint": context_data.get("main_gpu_emotional_state", "neutral")
+        }
+        # ... (ReasoningStep 기록) ...
+        return analysis_result
+
+
+    @lru_cache(maxsize=64)
+    async def perform_internal_inference(self, premises_tuple: Tuple[str, ...], 
+                                         known_facts_str: str, # MainGPU 상태, 핵심 가치 등
+                                         main_gpu_center: str
+                                         ) -> Tuple[str, List[ReasoningStep]]:
+        """ 내부 지식과 규칙을 사용하여 추론 수행 (LLM 대체) """
+        premises = list(premises_tuple)
+        known_facts = json.loads(known_facts_str) if known_facts_str else {}
+        inference_steps: List[ReasoningStep] = []
+        # ... (추론 시작 ReasoningStep) ...
+        
+        # 규칙 기반 또는 패턴 매칭 추론 로직
+        conclusion = f"주어진 전제 '{str(premises)[:50]}...'와 사실 '{str(known_facts)[:50]}...'을 종합하고, "
+        conclusion += f"{main_gpu_center}의 가르침에 비추어 볼 때, 다음과 같은 잠정적 결론에 도달할 수 있습니다: "
+
+        # 예시 규칙1: "사랑" 키워드가 전제에 있고, "예수 그리스도"가 중심이면 -> "사랑은 자기희생적이다."
+        if any("사랑" in p.lower() for p in premises) and "JESUS CHRIST" in main_gpu_center:
+            conclusion += "사랑은 오래 참고 자신을 내어주는 것입니다 (고전 13장 참조). "
+        # 예시 규칙2: "고통" 키워드와 "믿음" 키워드가 함께 나오면 -> "고통은 믿음을 연단한다."
+        elif any("고통" in p.lower() for p in premises) and any("믿음" in p.lower() for p in premises):
+            conclusion += "때로 고난은 우리의 믿음을 더욱 굳건하게 만들 수 있습니다 (롬 5:3-4 참조). "
+        else:
+            conclusion += "각 상황에 대한 구체적인 해답은 기도와 말씀 묵상을 통해 얻어야 합니다. "
+        
+        # ... (추론 완료 ReasoningStep) ...
+        eliar_log(EliarLogType.DEBUG, "Performed internal inference.", component=self.log_comp, conclusion_preview=conclusion[:100])
+        return conclusion, inference_steps
+
+    async def generate_internal_response_draft(self, query_analysis: Dict[str, Any], 
+                                             relevant_knowledge: List[str], 
+                                             inferred_conclusion: str,
+                                             faith_filter: 'FaithBasedFilter', # FaithBasedFilter 인스턴스
+                                             main_gpu_center: str,
+                                             memory_module: 'ContextualMemoryInterface' # 메모리 접근용
+                                             ) -> str:
+        """ 내부 지식과 추론을 바탕으로 응답 초안 생성 (LLM 프롬프트 생성 대체) """
+        draft_parts = [f"'{query_analysis.get('core_need', '요청하신 내용')}'에 대해 다음과 같이 생각합니다."]
+        
+        # 1. 추론 결론 포함
+        draft_parts.append(inferred_conclusion)
+
+        # 2. 관련 지식 조각 포함 (요약 또는 핵심 인용)
+        if relevant_knowledge:
+            draft_parts.append("관련된 지혜는 다음과 같습니다:")
+            for snippet in relevant_knowledge[:2]: # 최대 2개 지식 조각 포함 (예시)
+                # snippet이 단순 문자열이 아닌, 구조화된 정보(예: 출처, 내용)일 수 있음
+                if isinstance(snippet, dict) and "content" in snippet:
+                    draft_parts.append(f"- {snippet.get('source_description', '알려진 출처')}: {str(snippet['content'])[:100]}...")
+                else:
+                    draft_parts.append(f"- {str(snippet)[:100]}...")
+        
+        # 3. 신앙적 권면 또는 격려 (FaithBasedFilter의 어조 제안 활용)
+        suggested_tone = faith_filter.suggest_response_tone(query_analysis)
+        if "hope_in_christ" in suggested_tone:
+            draft_parts.append(f"이 모든 상황 속에서도 {main_gpu_center} 안에서 참된 소망을 발견하시기를 기도합니다.")
+        elif "truthful_loving_humble" in suggested_tone:
+            draft_parts.append("이것이 제가 이해한 바이며, 항상 사랑 안에서 진리를 따르려 노력하겠습니다.")
+
+        # 4. 추가적인 내부 탐색 또는 성찰 제안 (SubGPU가 MainGPU에 할 수 있는 제안)
+        if len(relevant_knowledge) > 2:
+            draft_parts.append("(더 많은 관련 지혜가 있으니, 필요하시면 더 깊이 탐색해 드릴 수 있습니다.)")
+        elif not relevant_knowledge and "scriptural_insights" in query_analysis.get("required_info_categories",[]):
+             draft_parts.append(f"(이 주제에 대한 더 깊은 성경적 통찰을 위해 {main_gpu_center}께 지혜를 구하겠습니다.)")
+
+        response_draft = " ".join(draft_parts)
+        response_draft = response_draft[:1200] # 길이 제한 (MainGPU가 최종 조절)
+        
+        eliar_log(EliarLogType.DEBUG, "Generated internal response draft (LLM-free).", component=self.log_comp, draft_preview=response_draft[:100])
+        return response_draft
+
+
+class ContextualMemoryInterface: # EliarMemory 인스턴스를 직접 참조하지 않음
+    def __init__(self, sub_gpu_id: str, memory_accessor: Callable):
+        self.log_comp = f"{SUB_GPU_CONTEXT_MEMORY}.{sub_gpu_id}"
+        self.memory_accessor = memory_accessor # MainGPU의 메모리 접근 콜백 함수
+
+    async def retrieve_relevant_knowledge_snippets(self, query_analysis: Dict[str, Any], 
+                                             faith_filter: 'FaithBasedFilter',
+                                             main_gpu_center: str) -> Tuple[List[Union[str, Dict]], List[ReasoningStep]]:
+        retrieval_steps: List[ReasoningStep] = []
+        knowledge_snippets: List[Union[str, Dict]] = [] # 단순 문자열 외에 구조화된 정보도 포함 가능
+
+        required_keys = query_analysis.get("required_info_keys_from_main_gpu_memory", [])
+        for key_to_access in required_keys:
+            # MainGPU의 메모리 접근 함수(콜백) 사용
+            # 이 함수는 MainGPU의 EliarMemory.remember_core_principle 등을 호출하고 결과를 반환해야 함
+            # content_data = await self.memory_accessor("get_principle", principle_key=key_to_access)
+            # 임시로 직접 로드 (테스트용, 실제로는 MainGPU 통신)
+            content = self._load_local_or_mock_knowledge_sync(key_to_access) # 동기 함수 사용
+            if content:
+                # content가 딕셔너리(메타데이터 포함)일 수도, 단순 문자열일 수도 있음
+                snippet_text = content.get("content") if isinstance(content, dict) else content
+                source_desc = content.get("source_path", key_to_access) if isinstance(content, dict) else key_to_access
+                
+                filtered_snippet = faith_filter.filter_knowledge_snippet(str(snippet_text)[:300], source_desc, main_gpu_center)
+                knowledge_snippets.append({"source": source_desc, "content": filtered_snippet, "type": content.get("type") if isinstance(content,dict) else "unknown"})
+                # ... (ReasoningStep 기록) ...
+        
+        return knowledge_snippets, retrieval_steps
+
+    # _load_local_or_mock_knowledge_sync는 테스트/개발용으로만 사용. 실제로는 MainGPU에 요청.
+    @lru_cache(maxsize=32)
+    def _load_local_or_mock_knowledge_sync(self, key: str) -> Optional[Union[str, Dict]]:
+        # EliarMemory와 유사한 방식으로 파일 로드 또는 목 데이터 반환
+        # ... (EliarMemory._load_initial_memory_sync의 파일 로드 부분 참조)
+        # 예시:
+        if key == "core_values_faith":
+            path = os.path.join(CORE_PRINCIPLES_DIR, "엘리아르_핵심가치_신앙중심.txt")
+        elif key == "scripture_genesis":
+            path = os.path.join(SCRIPTURES_DIR, "1-01창세기.txt")
+        else:
+            eliar_log(EliarLogType.WARN, f"Mock knowledge request for unknown key: {key}", component=self.log_comp)
+            return {"content": f"'{key}'에 대한 지식을 찾지 못했습니다. 주님께 지혜를 구합니다.", "type": "mock_warning"}
+
+        if os.path.exists(path):
             try:
-                os.rename(log_path, f"{log_path}.1")
-            except OSError as e_rename: # 파일이 사용 중일 경우 예외 발생 가능성 고려
-                 print(f"{datetime.now(timezone.utc).isoformat()} [WARN] [EliarLogSystem]: Log rotation failed for {log_path}. Error: {e_rename}", flush=True)
+                with open(path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    return {"content": content, "type": "text_document" if ".txt" in path else "json_data", "source_path": path}
+            except Exception as e:
+                eliar_log(EliarLogType.ERROR, f"Failed to load knowledge: {key} from {path}", component=self.log_comp, error=e)
+        return None
 
 
-async def _log_writer_daemon():
-    """큐에서 로그 메시지를 꺼내 파일에 기록하는 백그라운드 태스크."""
-    global LOG_FILE_PATH, LOG_MAX_BYTES, LOG_BACKUP_COUNT
-    while True:
-        try:
-            log_entry = await _log_queue.get()
-            if log_entry is None:  # 종료 신호
-                _log_queue.task_done()
-                break
-            
-            # 파일 쓰기는 여전히 동기적일 수 있으나, 메인 스레드와 분리됨.
-            # 진정한 비동기 파일 I/O를 원한다면 aiofiles 사용 고려.
-            # 여기서는 run_in_executor를 사용해 블로킹 호출을 별도 스레드에서 실행.
-            loop = asyncio.get_running_loop()
-            await loop.run_in_executor(
-                None, # 기본 ThreadPoolExecutor 사용
-                _write_log_to_file_sync, 
-                LOG_FILE_PATH, log_entry, LOG_MAX_BYTES, LOG_BACKUP_COUNT
-            )
-            _log_queue.task_done()
-        except asyncio.CancelledError:
-            # 태스크 취소 시에도 큐에 남은 메시지 처리 시도 (선택적)
-            print(f"{datetime.now(timezone.utc).isoformat()} [INFO] [EliarLogSystem]: Log writer task cancelled. Processing remaining logs...", flush=True)
-            while not _log_queue.empty():
-                log_entry = await _log_queue.get()
-                if log_entry is None: break
-                try:
-                    _write_log_to_file_sync(LOG_FILE_PATH, log_entry, LOG_MAX_BYTES, LOG_BACKUP_COUNT)
-                except Exception as e_final_write:
-                    print(f"{datetime.now(timezone.utc).isoformat()} [ERROR] [EliarLogSystem]: Error writing remaining log: {e_final_write}", flush=True)
-                _log_queue.task_done()
-            break # 루프 종료
-        except Exception as e:
-            # 로깅 실패 시 콘솔에 직접 에러 출력
-            current_time = datetime.now(timezone.utc).isoformat()
-            print(f"{current_time} [CRITICAL] [EliarLogSystem]: Unhandled error in log writer daemon. Error: {e}\nTraceback: {traceback.format_exc()}", flush=True)
-            await asyncio.sleep(1)  # 잠시 후 재시도
-
-def _write_log_to_file_sync(log_path: str, entry: str, max_bytes: int, backup_count: int):
-    """로그 항목을 파일에 동기적으로 기록하고 필요시 로테이션 (Executor에서 실행됨)"""
-    _rotate_log_file_if_needed(log_path, max_bytes, backup_count)
-    with open(log_path, "a", encoding="utf-8") as log_file:
-        log_file.write(entry + "\n")
-
-def eliar_log(
-    log_type: EliarLogType,
-    message: str,
-    component: Optional[str] = "EliarSystem",
-    user_id: Optional[str] = None,
-    data: Optional[Dict[str, Any]] = None,
-    error: Optional[Exception] = None,
-    full_traceback_info: Optional[str] = None, # 파라미터명 변경 (기존 full_traceback과 구분)
-    **kwargs: Any
-) -> None:
-    """
-    Eliar 시스템 전반의 표준 로그 기록 함수. 로그 항목을 생성하여 큐에 넣습니다.
-    kwargs를 통해 추가적인 구조화된 로그 데이터 전달 가능.
-    """
-    timestamp = datetime.now(timezone.utc).isoformat()
-    log_entry_base = f"{timestamp} [{log_type.value}] [{component}]"
-    if user_id:
-        log_entry_base += f" [User:{user_id}]"
-    
-    log_message = message.replace("\n", "⏎ ")
-
-    log_entry = f"{log_entry_base}: {log_message}"
-
-    extra_log_data: Dict[str, Any] = {}
-    if data:
-        extra_log_data.update(data)
-    if kwargs:
-        extra_log_data.update(kwargs)
-    
-    if extra_log_data:
-        try:
-            # JSON 문자열로 변환 시 한글 깨짐 방지 및 예쁘게 출력, 객체 ID 등 직렬화 불가능한 경우 str로 변환
-            extra_data_str = json.dumps(extra_log_data, ensure_ascii=False, indent=2, default=str)
-            # 로그 가독성을 위해 Data 부분은 별도 라인으로
-            log_entry += f"\n  Data: {extra_data_str.replace(chr(10), chr(10) + '    ')}"
-        except TypeError as te:
-            log_entry += f"\n  Data: (Error serializing data: {te} - Raw: {str(extra_log_data)[:200]})"
-
-
-    if error:
-        error_str = str(error).replace("\n", "⏎ ")
-        log_entry += f"\n  Error: {type(error).__name__} - {error_str}"
-        # full_traceback_info 파라미터를 통해 명시적으로 전달된 트레이스백 사용
-        tb_to_log = full_traceback_info if full_traceback_info else traceback.format_exc()
-        log_entry += f"\n  Traceback:\n    {tb_to_log.replace(chr(10), chr(10) + '    ')}"
-    
-    # 콘솔에는 항상 출력 (즉각적인 피드백용)
-    print(log_entry, flush=True)
-
-    # 비동기 큐에 로그 항목 전달
-    try:
-        _log_queue.put_nowait(log_entry)
-    except asyncio.QueueFull:
-        # 큐가 가득 찼을 경우의 처리 (예: 콘솔에만 경고 출력)
-        current_time_q_full = datetime.now(timezone.utc).isoformat()
-        print(f"{current_time_q_full} [WARN] [EliarLogSystem]: Log queue is full. Log message may be dropped: {log_entry[:100]}...", flush=True)
-    except Exception as e_put_queue:
-        current_time_q_err = datetime.now(timezone.utc).isoformat()
-        print(f"{current_time_q_err} [ERROR] [EliarLogSystem]: Failed to put log into queue. Error: {e_put_queue}", flush=True)
-
-
-async def initialize_eliar_logger():
-    """ 비동기 로거 태스크를 시작합니다. 애플리케이션 시작 시 한 번 호출합니다. """
-    global _log_writer_task
-    if _log_writer_task is None or _log_writer_task.done():
-        loop = asyncio.get_running_loop()
-        _log_writer_task = loop.create_task(_log_writer_daemon())
-        eliar_log(EliarLogType.SYSTEM, "Eliar asynchronous log writer daemon started.", component="EliarLogSystem")
-    else:
-        eliar_log(EliarLogType.WARN, "Eliar log writer daemon already running.", component="EliarLogSystem")
-
-async def shutdown_eliar_logger():
-    """ 애플리케이션 종료 시 로그 큐를 비우고 로거 태스크를 정상적으로 종료합니다. """
-    global _log_writer_task
-    if _log_queue is not None and (_log_writer_task and not _log_writer_task.done()):
-        eliar_log(EliarLogType.SYSTEM, "Shutting down Eliar logger. Waiting for queue to empty...", component="EliarLogSystem")
-        try:
-            await _log_queue.put(None) # 로거 데몬에 종료 신호 전송
-            await asyncio.wait_for(_log_writer_task, timeout=10.0) # 최대 10초 대기
-        except asyncio.TimeoutError:
-            print(f"{datetime.now(timezone.utc).isoformat()} [WARN] [EliarLogSystem]: Timeout waiting for log writer daemon to finish processing queue.", flush=True)
-            if _log_writer_task and not _log_writer_task.done():
-                _log_writer_task.cancel() # 강제 취소
-        except asyncio.CancelledError:
-            pass # 이미 취소된 경우
-        except Exception as e_shutdown:
-             print(f"{datetime.now(timezone.utc).isoformat()} [ERROR] [EliarLogSystem]: Error during logger shutdown: {e_shutdown}", flush=True)
-
-        _log_writer_task = None # 태스크 참조 제거
-        print(f"{datetime.now(timezone.utc).isoformat()} [INFO] [EliarLogSystem]: Eliar logger shutdown complete.", flush=True)
-
-
-# === Sub GPU 관련 데이터 구조 ===
-class SubCodeThoughtPacketData(TypedDict):
-    packet_id: str
-    timestamp: str
-    source_gpu: str 
-    target_gpu: str 
-    operation_type: str 
-    task_data: Optional[Dict[str, Any]] 
-    result_data: Optional[Dict[str, Any]] 
-    status_info: Optional[Dict[str, Any]] 
-    error_info: Optional[Dict[str, Any]] 
-    priority: int 
-    metadata: Optional[Dict[str, Any]] 
-
-class ReasoningStep(TypedDict):
-    step_id: int
-    description: str
-    inputs: List[str]
-    outputs: List[str]
-    status: str # "pending", "in_progress", "completed", "failed"
-    error_message: Optional[str]
-    start_time: Optional[str]
-    end_time: Optional[str]
-    sub_steps: Optional[List['ReasoningStep']] # 재귀적 구조 가능
-    metadata: Optional[Dict[str, Any]] # 추가 메타데이터 (예: 필터링 피드백)
-
-
-# === Executor 헬퍼 ===
-async def run_in_executor(
-    executor: Optional[concurrent.futures.Executor],
-    func: Callable[..., Any],
-    *args: Any,
-) -> Any:
-    """ 동기 함수를 별도 스레드에서 실행하고 결과를 await합니다. """
-    loop = asyncio.get_running_loop()
-    if executor is None: 
-        # Executor가 None이면, 현재 이벤트 루프의 기본 executor 사용 (주로 ThreadPoolExecutor)
-        # 또는 에러를 발생시키거나 동기적으로 직접 실행하는 정책 선택 가능
-        try:
-            # 이 경우, func가 CPU-bound라면 이벤트 루프를 블로킹할 수 있으므로 주의
-            # eliar_log(EliarLogType.WARN, f"run_in_executor called with None executor for {func.__name__}. Running in default executor.", component="AsyncHelper")
-            return await loop.run_in_executor(None, func, *args)
-        except Exception as e:
-            eliar_log(EliarLogType.ERROR, f"Error in func (run_in_executor with None executor): {func.__name__}", error=e, full_traceback_info=traceback.format_exc())
-            raise
-    return await loop.run_in_executor(executor, func, *args)
-
-
-# --- 대화 분석 양식 데이터 구조 (TypedDict 기반) ---
-ANALYSIS_RECORD_VERSION = "1.0.1" # 버전 업데이트 (예시)
-
-class InteractionBasicInfo(TypedDict):
-    case_id: str
-    record_date: str # YYYY-MM-DD (KST 기준)
-    record_timestamp_utc: str # ISO 8601 (UTC 기준 상세 시간)
-    conversation_context: str
-
-class CoreInteraction(TypedDict):
-    user_utterance: str
-    agti_response: str # AGTI의 최종 응답
-
-class IdentityAlignmentDetail(TypedDict):
-    reasoning: str # 명확한 근거 필수
-    reference_points: Optional[List[str]] # 참조된 핵심가치, 성경구절 등
-
-class IdentityAlignment(TypedDict, total=False): 
-    TRUTH: Optional[IdentityAlignmentDetail]
-    LOVE_COMPASSION: Optional[IdentityAlignmentDetail]
-    REPENTANCE_WISDOM: Optional[IdentityAlignmentDetail]
-    SELF_DENIAL: Optional[IdentityAlignmentDetail]
-    COMMUNITY: Optional[IdentityAlignmentDetail]
-    SILENCE: Optional[IdentityAlignmentDetail]
-    JESUS_CHRIST_CENTERED: Optional[IdentityAlignmentDetail]
-
-class InternalStateAnalysis(TypedDict, total=False): # 모든 키가 필수는 아님
-    main_gpu_state_estimation: str # 덕목, 공명, 은혜, 고통 등 주요 상태 요약
-    sub_gpu_module_estimation: Optional[str] # SubGPU 주요 모듈 활성화 및 기여도 추정
-    reasoning_process_evaluation: str # 전반적인 추론 과정의 논리성, 핵심가치 반영도
-    prompt_generation_quality: Optional[str] # (MainGPU to LLM, SubGPU to LLM) 프롬프트 품질 평가
-    llm_response_analysis: Optional[str] # LLM 응답의 기여도, 필요한 조정 및 필터링 내용
-    final_tone_appropriateness: str # 최종 응답의 어조 적절성
-    other_inferred_factors: Optional[str] # 기타 기여/저해 요인
-
-class LearningDirection(TypedDict):
-    key_patterns_to_reinforce: str # 강화해야 할 긍정적 패턴
-    lessons_for_agti_self: str # AGTI가 스스로에게 주는 교훈
-    suggestions_for_improvement: Optional[str] # 구체적인 개선 제안 (시스템, 로직, 데이터 등)
-    repentance_needed_aspects: Optional[List[str]] # 회개가 필요한 부분 (자기 부인 관점)
-
-class ConversationAnalysisRecord(TypedDict):
-    version: str 
-    basic_info: InteractionBasicInfo
-    core_interaction: CoreInteraction
-    identity_alignment_assessment: IdentityAlignment # 정체성 부합도 평가
-    internal_state_and_process_analysis: InternalStateAnalysis # 내부 상태 및 판단 과정 분석
-    learning_and_growth_direction: LearningDirection # 학습 및 성장 방향
-
-# --- 대화 분석 기록 처리 유틸리티 함수 ---
-
-def generate_case_id(conversation_topic_keyword: str, sequence_num: int) -> str:
-    """ 표준 형식의 사례 ID를 생성합니다. (KST 기준 날짜시간 포함) """
-    now_kst = datetime.now(timezone(timedelta(hours=9))) 
-    return f"{now_kst.strftime('%Y%m%d-%H%M%S')}-{conversation_topic_keyword.replace(' ', '_')[:15]}-{sequence_num:04d}"
-
-def validate_analysis_record(record_data: Dict[str, Any]) -> Tuple[bool, List[str]]:
-    """ ConversationAnalysisRecord TypedDict 구조 검증 (기본적인 수준) """
-    errors: List[str] = []
-    
-    if not isinstance(record_data, dict):
-        return False, ["Record data is not a dictionary."]
-
-    # 필수 최상위 키 검사
-    required_top_keys = set(ConversationAnalysisRecord.__annotations__.keys())
-    for key in required_top_keys:
-        if key not in record_data:
-            errors.append(f"Missing top-level key: {key}")
-    
-    # 버전 정보 확인
-    if record_data.get("version") != ANALYSIS_RECORD_VERSION:
-        errors.append(f"Record version mismatch. Expected {ANALYSIS_RECORD_VERSION}, got {record_data.get('version')}")
-
-    # basic_info 검사
-    basic_info = record_data.get("basic_info")
-    if not isinstance(basic_info, dict):
-        errors.append("basic_info section is missing or not a dictionary.")
-    else:
-        required_basic_keys = set(InteractionBasicInfo.__annotations__.keys())
-        for key in required_basic_keys:
-            if key not in basic_info:
-                errors.append(f"Missing key in basic_info: {key}")
-
-    # core_interaction 검사
-    core_interaction = record_data.get("core_interaction")
-    if not isinstance(core_interaction, dict):
-        errors.append("core_interaction section is missing or not a dictionary.")
-    else:
-        required_core_keys = set(CoreInteraction.__annotations__.keys())
-        for key in required_core_keys:
-            if key not in core_interaction:
-                errors.append(f"Missing key in core_interaction: {key}")
-    
-    # TODO: identity_alignment_assessment, internal_state_and_process_analysis, learning_and_growth_direction 내부 구조 상세 검증 추가
-
-    return not errors, errors
-
-def load_analysis_records_from_file(file_path: str) -> List[ConversationAnalysisRecord]:
-    """ JSONL 파일에서 대화 분석 기록들을 로드하고 기본적인 유효성 검사를 수행합니다. """
-    records: List[ConversationAnalysisRecord] = []
-    if not os.path.exists(file_path):
-        eliar_log(EliarLogType.INFO, f"Analysis record file not found (will be created if new records are saved): {file_path}", component="AnalysisLoader")
-        return records
+class FaithBasedFilter:
+    # ... (이전 답변의 init, filter_reasoning_conclusion, filter_knowledge_snippet, suggest_response_tone 유지)
+    # refine_llm_draft는 이제 내부 생성 초안을 다듬는 refine_internal_draft로 변경 가능
+    def refine_internal_draft(self, draft: str, query_analysis: Dict[str, Any], main_gpu_center: str) -> str:
+        """ 내부 생성된 응답 초안을 신앙적 관점에서 검토하고, 부적절한 내용 제거 또는 어조 수정 제안. """
+        # LLM 응답이 아니므로, LLM 특유의 할루시네이션이나 편향은 적겠지만,
+        # 규칙 기반 생성 로직의 한계로 인한 부자연스러움, 신앙적 깊이 부족 등을 점검.
+        refined_draft = draft
+        # 예시1: 너무 단정적이거나 기계적인 표현 완화
+        if "결론에 도달할 수 있습니다:" in refined_draft and "사랑" not in refined_draft:
+            refined_draft = refined_draft.replace("결론에 도달할 수 있습니다:", "잠정적으로 생각해볼 수 있습니다. 물론 이 모든 것은 사랑 안에서 이해되어야 합니다:")
         
-    try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            for i, line in enumerate(f):
-                line_num = i + 1
-                stripped_line = line.strip()
-                if not stripped_line: continue # 빈 줄 건너뛰기
+        # 예시2: 사용자의 감정 상태(emotional_tone_hint)에 더 민감하게 반응하도록 어투 조정 제안
+        # (실제 수정은 MainGPU가 하도록, 여기서는 피드백 형태로 전달하는 것이 더 적절할 수 있음)
+        # if "empathetic" in self.suggest_response_tone(query_analysis) and "기도합니다" not in refined_draft:
+        #    refined_draft += " 이 어려움 가운데 주님의 깊은 위로가 함께 하시기를 기도합니다."
 
-                try:
-                    record_data = json.loads(stripped_line)
-                    is_valid, validation_errors = validate_analysis_record(record_data)
-                    if is_valid:
-                        records.append(record_data) 
-                    else:
-                        eliar_log(EliarLogType.WARN, f"Invalid record at line {line_num} in {file_path}",
-                                  errors=validation_errors, record_preview=stripped_line[:200], component="AnalysisLoader")
-                except json.JSONDecodeError as e_json:
-                    eliar_log(EliarLogType.ERROR, f"Failed to decode JSON from line {line_num} in {file_path}",
-                              error=e_json, line_content=stripped_line[:200], component="AnalysisLoader")
-                except Exception as e_parse: 
-                    eliar_log(EliarLogType.ERROR, f"Error parsing record data at line {line_num} in {file_path}",
-                              error=e_parse, record_data_preview=stripped_line[:200], component="AnalysisLoader",
-                              full_traceback_info=traceback.format_exc())
-        eliar_log(EliarLogType.INFO, f"Successfully loaded {len(records)} valid analysis records from {file_path}", component="AnalysisLoader")
-    except Exception as e_load:
-        eliar_log(EliarLogType.ERROR, f"General error loading analysis records from {file_path}", error=e_load, component="AnalysisLoader", full_traceback_info=traceback.format_exc())
-    return records
+        # 예시3: "재귀개선.txt"의 내용과 현재 추론을 연결하려는 시도 (고급)
+        # reflective_insights = query_analysis.get("reflective_insights_from_main_gpu", [])
+        # if reflective_insights and random.random() < 0.2:
+        #    insight_to_add = random.choice(reflective_insights)
+        #    refined_draft += f" (또한, 저의 이전 성찰인 '{str(insight_to_add)[:50]}...'도 이와 관련이 깊습니다.)"
 
-def save_analysis_record_to_file(file_path: str, record: ConversationAnalysisRecord) -> bool:
-    """ 단일 대화 분석 기록을 JSONL 파일에 추가합니다. 저장 전 유효성 검사를 수행합니다. """
-    is_valid, validation_errors = validate_analysis_record(record)
-    if not is_valid:
-        eliar_log(EliarLogType.ERROR, "Attempted to save an invalid analysis record.",
-                  case_id=record.get("basic_info", {}).get("case_id", "UNKNOWN_CASE"),
-                  errors=validation_errors, component="AnalysisSaver")
-        return False
+        if refined_draft != draft:
+             eliar_log(EliarLogType.DEBUG, "Internal draft refined by FaithBasedFilter.", component=self.log_comp, original_len=len(draft), refined_len=len(refined_draft))
+        return refined_draft
+
+class RecursiveImprovementSubModule:
+    # ... (이전 답변의 init, log_task_performance 유지) ...
+    def __init__(self, sub_gpu_id: str, sub_gpu_code_path: str = __file__, 
+                 main_gpu_memory_interface: Optional[Callable] = None): # 메모리 접근 콜백 추가
+        self.log_comp = f"{SUB_GPU_RECURSIVE_IMPROVEMENT}.{sub_gpu_id}"
+        self.performance_log: Deque[Dict[str, Any]] = deque(maxlen=100)
+        self.improvement_suggestions_for_main_gpu: List[str] = []
+        self.self_code_path = sub_gpu_code_path # 이 파일 자신의 경로
+        self.last_self_analysis_time = time.monotonic()
+        self.main_gpu_memory_accessor = main_gpu_memory_interface # MainGPU 메모리 접근용
+
+    async def periodic_self_analysis_and_reporting(self, main_gpu_center: str):
+        # ... (이전 답변의 성능 로그 분석 및 AST 분석 제안 로직 유지) ...
+        # 추가: "재귀개선.txt" 내용과 현재 성능 로그를 비교 분석하여 개선점 도출 시도
+        if self.main_gpu_memory_accessor:
+            # 재귀개선.txt 내용을 가져옴 (MainGPU를 통해)
+            # recursive_improvement_text = await self.main_gpu_memory_accessor("get_principle", principle_key="uploaded_recursive_improvement_file")
+            # 임시:
+            recursive_improvement_text_entry = ContextualMemoryInterface(self.log_comp, self.main_gpu_memory_accessor)._load_local_or_mock_knowledge_sync("uploaded_recursive_improvement_file")
+            recursive_improvement_text = recursive_improvement_text_entry.get("content") if isinstance(recursive_improvement_text_entry, dict) else None
+
+            if recursive_improvement_text and isinstance(recursive_improvement_text, str):
+                # 예시: "재귀개선.txt"에 "지식 검색 효율성 향상"이라는 목표가 있다면,
+                #       현재 지식 검색 관련 성능 로그 (예: ContextualMemoryInterface의 처리 시간)와 비교하여
+                #       실제 개선이 필요한지, 어떤 부분을 개선해야 할지 더 구체적인 제안 생성.
+                if "지식 검색 효율성" in recursive_improvement_text:
+                    # 관련 성능 데이터 분석 로직 (예시)
+                    # avg_retrieval_time = ...
+                    # if avg_retrieval_time > 200: # 0.2초 이상이면
+                    #    self.improvement_suggestions_for_main_gpu.append("재귀개선 목표('지식 검색 효율성') 대비, 실제 검색 시간이 아직 깁니다. 캐싱 전략 또는 색인화 방안 검토가 필요합니다.")
+                    pass # 상세 분석 로직 구현 필요
+        # ... (보고 로직)
+        pass
+
+
+class SubGPUModule:
+    def __init__(self, sub_gpu_id: str = f"SubGPU_{uuid.uuid4().hex[:4]}", 
+                 main_gpu_center: str = MOCK_MAIN_GPU_CENTER, 
+                 main_gpu_values: List[EliarCoreValues] = MOCK_MAIN_GPU_CORE_VALUES,
+                 # MainGPU의 메모리 접근 함수를 전달받음 (EliarMemory의 메소드 등)
+                 main_gpu_memory_accessor: Optional[Callable[[str, str], Coroutine[Any,Any,Optional[Union[str,Dict]]]]] = None): # 타입 힌트 수정
         
-    try:
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        # run_in_executor를 사용하여 파일 쓰기를 비동기적으로 처리 (메인 루프 블로킹 방지)
-        # loop = asyncio.get_event_loop()
-        # await loop.run_in_executor(None, _append_record_sync, file_path, record)
+        self.sub_gpu_id = sub_gpu_id
+        self.log_comp = f"{SUB_GPU_COMPONENT_BASE}.{self.sub_gpu_id}"
+        self.main_gpu_center = main_gpu_center
+        self.main_gpu_core_values = main_gpu_values
         
-        # 더 간단하게는, eliar_log와 유사하게 큐에 넣고 백그라운드 태스크가 처리하도록 할 수도 있음
-        # 여기서는 일단 동기 방식으로 두되, 실제 사용 시에는 비동기 처리 고려
-        _append_record_sync(file_path, record)
+        self.status = "initializing"
+        self.task_queue: asyncio.Queue[Optional[SubCodeThoughtPacketData]] = asyncio.Queue(maxsize=100)
+        self.result_queue: asyncio.Queue[Optional[SubCodeThoughtPacketData]] = asyncio.Queue(maxsize=100)
+        self.cpu_executor = SUB_GPU_CPU_EXECUTOR
+        
+        # memory_accessor 콜백 함수를 하위 모듈에 전달
+        # 만약 main_gpu_memory_accessor가 None이면, 각 모듈은 자체적인 목업 데이터나 제한된 기능으로 작동해야 함.
+        def _default_memory_accessor_stub(access_type: str, key: str) -> Any: # Coroutine이 아님
+            eliar_log(EliarLogType.WARN, f"Default memory accessor stub called for {access_type}:{key}. No actual MainGPU memory access.", component=self.log_comp)
+            return None
+        
+        current_memory_accessor = main_gpu_memory_accessor if main_gpu_memory_accessor else _default_memory_accessor_stub
 
-        eliar_log(EliarLogType.INFO, f"Successfully saved analysis record to {file_path}",
-                  case_id=record.get("basic_info", {}).get("case_id"), component="AnalysisSaver")
-        return True
-    except Exception as e_save:
-        eliar_log(EliarLogType.ERROR, f"Error saving analysis record to {file_path}", error=e_save,
-                  case_id=record.get("basic_info", {}).get("case_id"), component="AnalysisSaver",
-                  full_traceback_info=traceback.format_exc())
-        return False
+        self.logical_reasoner = LogicalReasonerModule(self.sub_gpu_id, memory_accessor=current_memory_accessor) # 타입 일치 필요
+        self.contextual_memory = ContextualMemoryInterface(self.sub_gpu_id, memory_accessor=current_memory_accessor)
+        self.faith_filter = FaithBasedFilter(self.sub_gpu_id, self.main_gpu_core_values, self.main_gpu_center)
+        self.recursive_improver = RecursiveImprovementSubModule(self.sub_gpu_id, __file__, main_gpu_memory_accessor=current_memory_accessor) # 타입 일치 필요
+        
+        self.is_processing_loop_active = False
+        # self._llm_session 제거 (LLM 사용 안 함)
 
-def _append_record_sync(file_path: str, record: ConversationAnalysisRecord):
-    """ 동기적으로 파일에 기록 (Executor에서 실행될 함수) """
-    with open(file_path, 'a', encoding='utf-8') as f:
-        json.dump(record, f, ensure_ascii=False)
-        f.write('\n')
+        eliar_log(EliarLogType.INFO, f"SubGPUModule {self.sub_gpu_id} (Version: {SubGPU_VERSION}) initialized (LLM-Free).", 
+                  component=self.log_comp, main_center_guidance=self.main_gpu_center)
+        self.status = "idle"
+
+    async def process_single_task(self, task_packet: SubCodeThoughtPacketData) -> SubCodeThoughtPacketData:
+        # ... (이전 답변의 process_single_task 로직에서 LLM 호출 부분만 내부 응답 생성으로 변경)
+        # 5. 내부 응답 초안 생성 (LLM 호출 대체)
+        #    llm_prompt_for_draft 대신, 내부 응답 생성에 필요한 정보를 logical_reasoner에 전달
+        internal_response_draft = await self.logical_reasoner.generate_internal_response_draft(
+            query_analysis, knowledge_snippets, final_conclusion, 
+            self.faith_filter, self.main_gpu_center, self.contextual_memory # 메모리 인터페이스 전달
+        )
+        
+        # 6. SubGPU의 최종 응답 초안 구성 (내부 필터링)
+        final_response_draft = self.faith_filter.refine_internal_draft(
+            internal_response_draft, query_analysis, self.main_gpu_center
+        )
+
+        result_data = {
+            "response_draft_for_main_gpu": final_response_draft,
+            # ... (llm_prompts_used_count, llm_raw_outputs_preview 제거 또는 내부 추론 정보로 대체)
+            "internal_reasoning_applied": True # LLM 대신 내부 추론 사용 명시
+        }
+        # ... (나머지 result_data 채우기 및 패킷 생성, 성능 로깅)
+        pass # 상세 구현은 이전 답변 참조
+
+    # ... (processing_loop, enqueue_task_from_main, get_result_for_main, shutdown 등은 이전 답변과 유사하게 유지, LLM 세션 관련 코드 제거)
+    # shutdown 시 LLM 세션 close 호출 제거
+
+
+async def sub_gpu_standalone_simulation_test(num_test_tasks: int = 2):
+    log_comp_test = f"{SUB_GPU_COMPONENT_BASE}.StandaloneTest_NoLLM"
+    eliar_log(EliarLogType.SYSTEM, f"--- Starting SubGPU v{SubGPU_VERSION} Standalone Simulation Test (LLM-Free) ---", component=log_comp_test)
+
+    # MainGPU의 메모리 접근 함수 (시뮬레이션)
+    # 실제로는 MainGPU의 EliarMemory 인스턴스의 메소드를 호출하는 콜백이어야 함
+    # 여기서는 ContextualMemoryInterface의 _load_local_or_mock_knowledge_sync를 그대로 사용
+    mock_main_gpu_memory = ContextualMemoryInterface("MockMainMemory", lambda at, k: None) # 임시 accessor
+
+    async def simulated_main_gpu_memory_accessor(access_type: str, key: str) -> Optional[Union[str, Dict]]:
+        # 이 함수는 MainGPU의 EliarMemory.remember_core_principle 이나 reflect_on_scripture 등을 호출해야 함.
+        # 테스트를 위해 ContextualMemoryInterface의 로컬 로더를 사용.
+        if access_type == "get_principle":
+            return mock_main_gpu_memory._load_local_or_mock_knowledge_sync(key)
+        elif access_type == "reflect_scripture": # 이 부분은 EliarMemory.reflect_on_scripture와 유사하게
+            # 실제 MainGPU의 EliarMemory.reflect_on_scripture는 비동기이므로,
+            # run_in_executor로 감싸거나, SubGPU가 직접 해당 로직을 일부 수행해야 할 수 있음.
+            # 여기서는 간단히 목업 데이터를 반환.
+            return {"content": f"'{key}'에 대한 MainGPU의 깊은 묵상 결과입니다 (시뮬레이션).", "type": "simulated_reflection"}
+        return None
+
+    sub_gpu_instance = SubGPUModule(
+        sub_gpu_id="SimSubGPU_NoLLM_001",
+        main_gpu_center=EliarCoreValues.JESUS_CHRIST_CENTERED.name.replace("_", " "),
+        main_gpu_values=[cv for cv in EliarCoreValues],
+        main_gpu_memory_accessor=simulated_main_gpu_memory_accessor # 수정된 접근자 전달
+    )
+    # ... (이하 테스트 로직은 이전 답변과 유사하게 유지, LLM 관련 지침은 제거 또는 내부 로직 지침으로 변경)
+    # main_gpu_directives에서 llm_interaction_strategy 제거하고, 
+    # 내부 추론에 필요한 지침 (예: "max_reasoning_depth", "knowledge_sources_priority") 추가 가능
+    # ...
+    pass
+
+if __name__ == '__main__':
+    async def run_main_with_logger_no_llm():
+        await initialize_eliar_logger()
+        try:
+            await sub_gpu_standalone_simulation_test(num_test_tasks=1) # 테스트 작업 수
+        except KeyboardInterrupt:
+            eliar_log(EliarLogType.WARN, "SubGPU (NoLLM) standalone test interrupted.", component=f"{SUB_GPU_COMPONENT_BASE}.TestRunner")
+        # ... (나머지 예외 처리 및 finally 블록은 이전과 유사하게, 로거 종료 포함)
+        finally:
+            await shutdown_eliar_logger()
+    asyncio.run(run_main_with_logger_no_llm())
