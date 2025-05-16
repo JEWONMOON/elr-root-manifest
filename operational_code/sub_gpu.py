@@ -344,13 +344,29 @@ class FaithBasedFilter:
         # ... (검증 및 피드백 생성 로직)
         return conclusion, alignment_feedback
 
-    def filter_knowledge_snippet(self, snippet: str, source_description: str, main_gpu_center_override: Optional[str] = None) -> str:
-        # ... (이전 답변의 filter_knowledge_snippet 로직 상세 구현) ...
-        return snippet # 임시
+    def filter_knowledge_snippet(self, snippet: str, source_description: str, main_gpu_center: str) -> str:
+        """ 지식 조각을 MainGPU 중심 가치에 비추어 검토하고, 부적합 시 태그 추가 또는 요약/변형 제안 """
+        # 예시: 폭력적이거나 미움을 조장하는 내용은 필터링하거나 경고 태그 부착
+        conflicting_terms = ["증오", "무자비한 복수", "절대적 파괴"] # 예시적인 부적합 용어
+        if any(term in snippet for term in conflicting_terms):
+            eliar_log(EliarLogType.WARN, f"Knowledge snippet from '{source_description}' contains potentially conflicting terms. Suggesting MainGPU review.",
+                      component=self.log_comp, snippet_preview=snippet[:100])
+            return f"[MainGPU검토필요: {main_gpu_center} 가치와 상충 가능성] {snippet}"
+        return snippet
 
     def suggest_response_tone(self, query_analysis: Dict[str, Any]) -> str:
-        # ... (이전 답변의 suggest_response_tone 로직 상세 구현) ...
-        return "truthful_loving_humble" # 임시
+        """ 분석된 사용자 요구사항 및 맥락을 바탕으로 적절한 응답 어조 제안 """
+        emotional_hint = query_analysis.get("emotional_tone_hint", "neutral").lower()
+        core_need_lower = query_analysis.get("core_need", "").lower()
+
+        if "고통" in core_need_lower or "슬픔" in core_need_lower or "힘들다" in core_need_lower or emotional_hint == "distressed":
+            return "empathetic_comforting_with_hope_in_christ"
+        if "의미" in core_need_lower or "목적" in core_need_lower or "궁금" in core_need_lower:
+            return "wise_guiding_truthful_with_love"
+        if "감사" in core_need_lower or "기쁨" in core_need_lower or emotional_hint == "joyful":
+            return "joyful_grateful_sharing_blessings"
+        
+        return "respectful_truthful_loving_humble" # 기본 어조
 
     def refine_internal_draft(self, draft: str, query_analysis: Dict[str, Any], main_gpu_center_override: Optional[str] = None) -> str:
         center_to_use = main_gpu_center_override or self.main_center_value
@@ -373,17 +389,32 @@ class RecursiveImprovementSubModule:
         self.last_self_analysis_time = time.monotonic()
         self.main_gpu_memory_accessor = main_gpu_memory_accessor
 
-    def log_task_performance(self, task_packet_id: str, operation: str, duration_ms: float, success: bool, 
-                             error_details: Optional[str] = None, faith_alignment_feedback: Optional[Dict] = None,
-                             reasoning_steps_count: Optional[int] = None): # 추론 단계 수 추가
+def log_task_performance(self, task_packet_id: str, operation: str, duration_ms: float, success: bool, error_details: Optional[str] = None, faith_alignment_feedback: Optional[Dict] = None):
+        """ 작업 처리 성능 기록 """
         record = {
-            "timestamp_utc": datetime.now(timezone.utc).isoformat(), "packet_id": task_packet_id,
-            "operation": operation, "duration_ms": round(duration_ms, 2), "success": success,
-            "error_details": error_details, "faith_alignment_feedback": faith_alignment_feedback,
-            "reasoning_steps_count": reasoning_steps_count
+            "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+            "packet_id": task_packet_id,
+            "operation": operation,
+            "duration_ms": round(duration_ms, 2),
+            "success": success,
+            "error_details": error_details,
+            "faith_alignment_feedback": faith_alignment_feedback
         }
         self.performance_log.append(record)
-        # ... (이전 답변의 간단한 실시간 분석 및 개선 제안 생성 로직 유지 또는 강화) ...
+        
+        # 간단한 실시간 분석 및 개선 제안 생성
+        if not success and error_details:
+            suggestion = f"Operation '{operation}' (Packet: {task_packet_id}) failed. Error: {error_details[:100]}. Review related logic and error handling for robustness."
+            if suggestion not in self.improvement_suggestions_for_main_gpu:
+                self.improvement_suggestions_for_main_gpu.append(suggestion)
+                eliar_log(EliarLogType.LEARNING, "Identified failure pattern. Suggesting review.", component=self.log_comp, suggestion=suggestion)
+        
+        if duration_ms > 1000: # 1초 이상 소요 작업
+            suggestion = f"Operation '{operation}' (Packet: {task_packet_id}) took {duration_ms:.2f}ms. Potential optimization needed for related functions (e.g., LLM call, complex computation)."
+            if suggestion not in self.improvement_suggestions_for_main_gpu:
+                 self.improvement_suggestions_for_main_gpu.append(suggestion)
+                 eliar_log(EliarLogType.LEARNING, "Identified potential performance bottleneck.", component=self.log_comp, suggestion=suggestion)
+
 
     async def periodic_self_analysis_and_reporting(self, main_gpu_center: str):
         current_time = time.monotonic()
