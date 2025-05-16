@@ -346,7 +346,10 @@ class VirtueEthicsModule:
 class SpiritualGrowthModule:
     def __init__(self, center: str, memory: EliarMemory, virtue_module: VirtueEthicsModule):
         self.log_comp = COMPONENT_NAME_SPIRITUAL_GROWTH
-        self.center = center
+        if center != "JESUS CHRIST":
+            eliar_log(EliarLogType.ERROR, f"Invalid center value detected: {center}. Must be 'JESUS CHRIST'.", component=self.log_comp)
+            raise ValueError("Center must be 'JESUS CHRIST'")
+        self.center = "JESUS CHRIST"
         self.memory = memory
         self.virtue_module = virtue_module
         self.scripture_insights: Dict[str, List[str]] = {}
