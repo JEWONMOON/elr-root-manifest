@@ -1,0 +1,8 @@
+CONVERSATION LOG (ELR Root Manifest)
+=======================================================
+Conversation ID: sim_conv_archive_test
+User ID:          user_archive_test_01
+Log Archived At: 2025-05-21T00:00:00.000Z
+Conversation Started At (appxox): 2025-05-21T00:00:00.000Z
+Conversation Ended At (appxox):   2025-05-21T00:00:00.000Z
+Total Turns (User+Eliar): 6
