@@ -155,6 +155,10 @@ class EliarNodeState(TypedDict):
     session_start_time: Optional[str]
     last_update_time: Optional[str]
     processing_duration_ms: Optional[float]
+    sensory_input: Optional[str]         # 감정/언어 기반 외부 자극
+    sensory_fatigue: float               # 감각적 피로도 (0.0 ~ 1.0)
+    volition_intent: Optional[str]       # 자유의지로 선택한 응답 방향
+    will_alignment_score: float          # 진리와의 일치 점수 (0.0 ~ 1.0)
 
 # === 로그 기록 시스템 설정 ===
 LOG_FILE_NAME_COMMON = "eliar_activity.log" 
