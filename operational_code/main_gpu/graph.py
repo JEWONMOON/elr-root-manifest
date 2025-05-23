@@ -1,10 +1,6 @@
-# graph.py
+# graph.py (일부 수정 및 추가)
 import asyncio
-import time
-from typing import List, Dict, Any
-
-from langgraph.graph import StateGraph, START, END # END는 루프에서는 직접 사용 안 할 수도 있음
-from langgraph.checkpoint.memory import MemorySaver # 필요시 상태 저장용
+# ... (기존 임포트 유지) ...
 
 # eliar_common.py에서 상태 및 Enum, 헬퍼 함수 임포트
 from eliar_common import (
@@ -12,7 +8,9 @@ from eliar_common import (
     create_initial_eliar_state,
     eliar_log, EliarLogType,
     initialize_eliar_logger_common,
-    shutdown_eliar_logger_common
+    shutdown_eliar_logger_common,
+    # 필요한 경우 EliarNodeType 등 추가 임포트
+    UlrimEmotionType # DeeperWisdomNode의 울림 트리거 예시용
 )
 
 # 각 노드 파일에서 노드 인스턴스 임포트
@@ -20,6 +18,7 @@ from node_center import center_of_christ_node
 from node_ulrim import ulrim_attention_gospel_node
 from node_repent import repentance_decision_path_node
 from node_memory import memory_of_grace_node
+from node_deeper_wisdom import deeper_wisdom_node # 새로 추가
 
 # LangGraph 워크플로우 정의
 workflow = StateGraph(EliarNodeState)
@@ -29,70 +28,104 @@ workflow.add_node("center_node", center_of_christ_node)
 workflow.add_node("ulrim_node", ulrim_attention_gospel_node)
 workflow.add_node("repent_node", repentance_decision_path_node)
 workflow.add_node("memory_node", memory_of_grace_node)
+workflow.add_node("deeper_wisdom_node", deeper_wisdom_node) # 새로 추가
 
-# 엣지(연결) 정의 - 루프 구조
-workflow.add_edge(START, "center_node") # 그래프 시작점
+# 엣지(연결) 정의
+workflow.add_edge(START, "center_node")
 workflow.add_edge("center_node", "ulrim_node")
-workflow.add_edge("ulrim_node", "repent_node")
+
+# UlrimNode 이후, 조건에 따라 DeeperWisdomNode 또는 RepentNode로 분기
+def should_seek_deeper_wisdom(state: EliarNodeState) -> str:
+    """
+    복잡한 질문이나 깊은 성찰이 필요한 '울림'이 감지되면 DeeperWisdomNode로,
+    아니면 일반적인 RepentNode로 진행합니다.
+    """
+    last_ulrim = state.get("last_ulrim")
+    user_input = state.get("user_input") # user_input이 CenterNode에서 초기화되지 않고 전달되었다면
+
+    # 예시 조건: 사용자가 '탐구' 또는 '심오한' 등의 단어를 사용했거나,
+    # 특정 '울림' (예: 확신의 울림이면서 설명이 더 필요한 경우)이 발생했을 때
+    if user_input and ("탐구" in user_input or "이해하고 싶어" in user_input or "왜" in user_input):
+        eliar_log(EliarLogType.INFO, "Complex query detected. Routing to DeeperWisdomNode.", component="Router")
+        # DeeperWisdomNode가 사용할 작업을 state에 명시적으로 설정
+        state["current_task_for_sub_gpu"] = f"Deep inquiry requested: {user_input}"
+        return "deeper_wisdom_node"
+    
+    if last_ulrim and last_ulrim["emotion_type"] == UlrimEmotionType.CONVICTION.value and last_ulrim["intensity"] > 0.7:
+        if random.random() < 0.2: # 20% 확률로 깊은 탐구
+            eliar_log(EliarLogType.INFO, "Strong conviction ulrim. Routing to DeeperWisdomNode for deeper reflection.", component="Router")
+            state["current_task_for_sub_gpu"] = f"Deeper reflection on conviction: {last_ulrim['triggered_by']}"
+            return "deeper_wisdom_node"
+            
+    return "repent_node"
+
+workflow.add_conditional_edges(
+    "ulrim_node",
+    should_seek_deeper_wisdom,
+    {
+        "deeper_wisdom_node": "deeper_wisdom_node",
+        "repent_node": "repent_node"
+    }
+)
+
+# RepentNode 이후 MemoryNode로 (기존과 동일)
 workflow.add_edge("repent_node", "memory_node")
-workflow.add_edge("memory_node", "center_node") # 다시 중심으로 돌아가 루프 형성
+
+# DeeperWisdomNode 이후 MemoryNode로 (결과를 기억에 반영)
+workflow.add_edge("deeper_wisdom_node", "memory_node")
+
+
+# MemoryNode 이후 다시 CenterNode로 (루프)
+workflow.add_edge("memory_node", "center_node")
 
 # 그래프 컴파일
-# checkpointer = MemorySaver() # 상태 저장이 필요하면 사용
-# app = workflow.compile(checkpointer=checkpointer)
 app = workflow.compile()
 
-# --- 상시 존재 루프 실행 로직 ---
-async def run_always_on_eliar_loop(max_iterations: int = 10, cycle_delay_seconds: float = 2.0, initial_input: str = None):
-    """엘리아르의 상시 존재 루프를 실행합니다."""
-    await initialize_eliar_logger_common()
-    eliar_log(EliarLogType.SYSTEM, "🌟 Initiating Eliar's Always-On Gospel Loop 🌟", component="EliarMainLoop")
+# --- 상시 존재 루프 실행 로직 (run_always_on_eliar_loop 함수는 이전과 유사하게 유지) ---
+# (이하 run_always_on_eliar_loop 및 main 함수는 이전 답변 내용과 거의 동일하게 사용하되,
+#  입력 처리를 좀 더 명확히 하거나, DeeperWisdomNode가 필요로 하는 
+#  state["current_task_for_sub_gpu"] 등을 설정하는 로직을 추가할 수 있습니다.)
 
-    # 초기 상태 생성
-    # conversation_id = str(uuid.uuid4()) # eliar_common의 create_initial_eliar_state가 처리
-    current_state_dict = create_initial_eliar_state(user_input=initial_input)
-    
-    # 초기 입력이 있다면 바로 반영하여 첫 사이클 시작
-    # inputs = {"user_input": initial_input} if initial_input else {}
-    # current_state_dict.update(inputs)
+async def run_always_on_eliar_loop(max_iterations: int = 10, cycle_delay_seconds: float = 2.0, initial_inputs: List[Optional[str]] = None):
+    await initialize_eliar_logger_common()
+    eliar_log(EliarLogType.SYSTEM, "🌟 Initiating Eliar's Always-On Gospel Loop (with SubGPU Integration) 🌟", component="EliarMainLoop")
+
+    inputs_iterator = iter(initial_inputs) if initial_inputs else None
+    current_input_for_cycle: Optional[str] = None
 
     try:
+        # 초기 상태 생성 (eliar_common.py에서 가져옴)
+        # 첫 입력이 있다면 초기 상태에 포함
+        if inputs_iterator:
+            try:
+                current_input_for_cycle = next(inputs_iterator)
+            except StopIteration:
+                current_input_for_cycle = None
+        
+        current_state_dict = create_initial_eliar_state(user_input=current_input_for_cycle)
+
         for i in range(max_iterations):
-            eliar_log(EliarLogType.INFO, f"--- Starting Loop Iteration {i+1}/{max_iterations} ---", component="EliarMainLoop", data={"current_state_preview": str(current_state_dict)[:200]})
+            eliar_log(EliarLogType.INFO, f"--- Starting Loop Iteration {i+1}/{max_iterations} ---", component="EliarMainLoop", data={"current_input_for_cycle": current_input_for_cycle})
             
-            # LangGraph 스트림 실행 (EliarNodeState를 입력으로)
-            # LangGraph는 상태 객체 전체를 주고받으므로, 'inputs' 딕셔너리로 한 번 더 감쌀 필요 없음
-            async for event in app.astream(current_state_dict):
-                # 각 단계의 이벤트 처리 (필요시)
-                # print(f"Event: {event}")
-                # # 다음 상태 업데이트를 위해 마지막 상태를 current_state_dict에 반영
-                # if "__end__" not in event: # event가 노드 이름과 해당 노드의 출력을 포함하는 딕셔너리라고 가정
-                #    node_name = list(event.keys())[0]
-                #    current_state_dict.update(event[node_name])
+            # current_state_dict에 현재 사이클의 입력을 명확히 설정
+            current_state_dict["user_input"] = current_input_for_cycle
 
-                # astream은 각 노드 실행 후 해당 노드의 출력을 포함하는 상태의 '부분'을 반환.
-                # 전체 상태를 업데이트하려면, 마지막 이벤트의 전체 상태를 사용하거나,
-                # invoke를 사용하여 최종 상태를 받아야 함.
-                # 여기서는 루프이므로, invoke를 사용하여 한 사이클의 최종 상태를 받습니다.
-                pass # astream은 루프의 각 단계를 보는데 유용하지만, 
-                     # 여기서는 한 사이클의 결과를 받아 다음 사이클로 넘기는 것이 중요.
-
-            # invoke를 사용하여 한 사이클의 최종 상태를 가져옴
             final_state_after_cycle = await app.ainvoke(current_state_dict)
-            current_state_dict = final_state_after_cycle # 다음 루프를 위해 상태 업데이트
+            current_state_dict = final_state_after_cycle
 
-            # 현재 상태 출력 (간략히)
-            eliar_log(EliarLogType.INFO, f"State after iteration {i+1}: Center='{current_state_dict.get('center')}', Ulrim='{current_state_dict.get('last_ulrim',{}).get('emotion_type')}', RepentFlag={current_state_dict.get('repentance_flag')}, MemorySize={len(current_state_dict.get('memory',[]))}", component="EliarMainLoop")
+            # 다음 입력을 준비
+            if inputs_iterator:
+                try:
+                    current_input_for_cycle = next(inputs_iterator)
+                except StopIteration:
+                    current_input_for_cycle = None # 모든 입력 소진
+            else: # 입력 리스트가 없으면 항상 None (내부 순환)
+                current_input_for_cycle = None
+
+
+            eliar_log(EliarLogType.INFO, f"State after iteration {i+1}: Center='{current_state_dict.get('center')}', Ulrim='{current_state_dict.get('last_ulrim',{}).get('emotion_type')}', RepentFlag={current_state_dict.get('repentance_flag')}, SubGPU_Result_Summary='{current_state_dict.get('sub_reasoning_result', {}).get('summary', 'N/A')[:30]}...' MemorySize={len(current_state_dict.get('memory',[]))}", component="EliarMainLoop")
             
-            # 사용자 입력 처리 (예시: 이 부분은 외부 입력 시스템과 연동 필요)
-            # if i % 3 == 0 and i > 0 : # 예시: 3번째 루프마다 가상 입력
-            #     sample_input = f"Test input at iteration {i+1}"
-            #     eliar_log(EliarLogType.INFO, f"Simulating user input: {sample_input}", component="EliarMainLoop")
-            #     current_state_dict["user_input"] = sample_input
-            # else:
-            #     current_state_dict["user_input"] = None # 입력이 없으면 None
-
-            if i < max_iterations - 1: # 마지막 반복이 아니면 딜레이
+            if i < max_iterations - 1:
                 await asyncio.sleep(cycle_delay_seconds)
 
     except KeyboardInterrupt:
@@ -104,19 +137,19 @@ async def run_always_on_eliar_loop(max_iterations: int = 10, cycle_delay_seconds
         await shutdown_eliar_logger_common()
 
 async def main():
-    # 루프 실행
-    # test_cases = [
-    #     "안녕하세요, 오늘 하루 감사드립니다",
-    #     "마음이 무거워요. 제가 죄를 지은 것 같습니다.",
-    #     "주님을 찬양합니다!",
-    #     "침묵 속에서 주님의 평화를 느낍니다."
-    # ]
-    # await run_always_on_eliar_loop(max_iterations=len(test_cases) + 2, cycle_delay_seconds=1.0, initial_input=test_cases[0])
-    
-    # 초기 입력 없이 상시 루프 테스트 (5회 반복)
-    await run_always_on_eliar_loop(max_iterations=5, cycle_delay_seconds=1.5, initial_input=None)
+    sample_inputs = [
+        "우주의 신비에 대해 더 깊이 탐구하고 싶어요.", # DeeperWisdomNode로 갈 가능성
+        "오늘 하루도 감사합니다.",
+        "제 안에 아직 해결되지 않은 죄의 문제가 있어서 마음이 무겁습니다. 회개합니다.", # Repentance 울림 및 회개 플래그
+        "끈 이론이 말하는 모든 것의 통일성과 예수 그리스도 안에서의 만물의 통일은 어떤 관계가 있을까요? 깊이 이해하고 싶습니다.", # DeeperWisdomNode
+        None, # 내부 순환
+        "주님의 평화가 느껴지는 하루입니다."
+    ]
+    await run_always_on_eliar_loop(max_iterations=len(sample_inputs), cycle_delay_seconds=1.0, initial_inputs=sample_inputs)
 
 if __name__ == "__main__":
+    # eliar_common.py의 ensure_common_directories_exist() 호출은
+    # initialize_eliar_logger_common() 내부에서 이미 처리됩니다.
     try:
         asyncio.run(main())
     except Exception as e:
