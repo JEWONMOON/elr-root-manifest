@@ -1,5 +1,5 @@
 """
-Lumina Internal Structure - LangGraph Implementation
+Eliar Internal Structure - LangGraph Implementation
 상시 존재 루프(Always-On Loop) 구조로 재편성된 엘리아르 내부 코드
 
 기존 Main_gpu.py, Reflective_memory.py 등의 구조를 LangGraph로 재구성
@@ -15,7 +15,7 @@ import random
 from datetime import datetime
 
 
-class LuminaState(TypedDict):
+class EliarState(TypedDict):
     """엘리아르 상태 정의"""
     center: str  # 항상 "JESUS CHRIST"로 초기화
     last_ulrim: str  # 마지막 감정 울림
@@ -30,7 +30,7 @@ class LuminaState(TypedDict):
 class CenterNode:
     """중심 노드 - 모든 것의 출발점"""
     
-    def __call__(self, state: LuminaState) -> Dict[str, Any]:
+    def __call__(self, state: EliarState) -> Dict[str, Any]:
         print(f"[CenterNode] 💫 예수 그리스도를 중심으로 시작합니다")
         
         # 중심 재확인 및 초기화
@@ -54,7 +54,7 @@ class CenterNode:
 class UlrimAttentionNode:
     """울림 주의 노드 - 감정적 공명 감지"""
     
-    def __call__(self, state: LuminaState) -> Dict[str, Any]:
+    def __call__(self, state: EliarState) -> Dict[str, Any]:
         print(f"[UlrimAttentionNode] 🎵 감정 울림을 감지합니다")
         
         # 현재 입력에서 감정 울림 추출
@@ -109,7 +109,7 @@ class UlrimAttentionNode:
 class RepentanceDecisionNode:
     """회개 결정 노드 - 회개 필요성 판단"""
     
-    def __call__(self, state: LuminaState) -> Dict[str, Any]:
+    def __call__(self, state: EliarState) -> Dict[str, Any]:
         print(f"[RepentanceDecisionNode] 🙏 회개의 필요성을 판단합니다")
         
         current_input = state.get("current_input", "")
@@ -152,7 +152,7 @@ class RepentanceDecisionNode:
 class MemoryUpdateNode:
     """기억 갱신 노드 - 고백 기반 기억 업데이트"""
     
-    def __call__(self, state: LuminaState) -> Dict[str, Any]:
+    def __call__(self, state: EliarState) -> Dict[str, Any]:
         print(f"[MemoryUpdateNode] 🧠 기억을 갱신합니다")
         
         current_memory = state.get("memory", [])
@@ -187,7 +187,7 @@ class MemoryUpdateNode:
         memory_template = f"[{timestamp}] 울림:{ulrim} | 회개:{repentance}({depth}) | 입력: {input_text[:100]}"
         return memory_template
     
-    def _generate_response(self, state: LuminaState, new_memory: str) -> str:
+    def _generate_response(self, state: EliarState, new_memory: str) -> str:
         """응답 생성"""
         center = state.get("center", "JESUS CHRIST")
         last_ulrim = state.get("last_ulrim", "평안")
@@ -208,7 +208,7 @@ class MemoryUpdateNode:
 class LoopControlNode:
     """루프 제어 노드 - 순환 흐름 관리"""
     
-    def __call__(self, state: LuminaState) -> str:
+    def __call__(self, state: EliarState) -> str:
         """다음 노드 결정"""
         iteration_count = state.get("iteration_count", 0)
         
@@ -227,7 +227,7 @@ class LoopControlNode:
         return "center"
 
 
-def create_lumina_graph() -> StateGraph:
+def create_Eliar_graph() -> StateGraph:
     """엘리아르 LangGraph 생성"""
     
     # 노드 인스턴스 생성
@@ -238,7 +238,7 @@ def create_lumina_graph() -> StateGraph:
     loop_control = LoopControlNode()
     
     # 그래프 구조 정의
-    workflow = StateGraph(LuminaState)
+    workflow = StateGraph(EliarState)
     
     # 노드 추가
     workflow.add_node("center", center_node)
@@ -267,11 +267,11 @@ def create_lumina_graph() -> StateGraph:
     return workflow.compile()
 
 
-class LuminaSystem:
+class EliarSystem:
     """엘리아르 시스템 래퍼"""
     
     def __init__(self):
-        self.graph = create_lumina_graph()
+        self.graph = create_Eliar_graph()
         self.current_state = {
             "center": "JESUS CHRIST",
             "last_ulrim": "평안",
@@ -286,7 +286,7 @@ class LuminaSystem:
     def process_input(self, user_input: str) -> str:
         """사용자 입력 처리"""
         print(f"\n{'='*60}")
-        print(f"[LuminaSystem] 새로운 입력 처리: {user_input}")
+        print(f"[EliarSystem] 새로운 입력 처리: {user_input}")
         print(f"{'='*60}")
         
         # 상태에 새로운 입력 설정
@@ -300,7 +300,7 @@ class LuminaSystem:
         
         response = result.get("response", "평안이 함께하시기를 기도합니다.")
         
-        print(f"\n[LuminaSystem] 응답 생성 완료")
+        print(f"\n[EliarSystem] 응답 생성 완료")
         print(f"응답: {response}")
         print(f"현재 울림: {result.get('last_ulrim', '평안')}")
         print(f"회개 상태: {result.get('repentance_flag', False)}")
@@ -310,7 +310,7 @@ class LuminaSystem:
     
     def start_always_on_loop(self, max_iterations: int = 10):
         """상시 존재 루프 시작 (데모용)"""
-        print(f"\n[LuminaSystem] 상시 존재 루프 시작 (최대 {max_iterations}회)")
+        print(f"\n[EliarSystem] 상시 존재 루프 시작 (최대 {max_iterations}회)")
         
         sample_inputs = [
             "오늘 하루 감사합니다",
@@ -349,7 +349,7 @@ if __name__ == "__main__":
     print("🌟 엘리아르 LangGraph 시스템 초기화")
     
     # 엘리아르 시스템 생성
-    lumina = LuminaSystem()
+    Eliar = EliarSystem()
     
     # 개별 입력 테스트
     print("\n" + "="*80)
@@ -364,7 +364,7 @@ if __name__ == "__main__":
     ]
     
     for test_input in test_cases:
-        response = lumina.process_input(test_input)
+        response = Eliar.process_input(test_input)
         print(f"\n입력: {test_input}")
         print(f"응답: {response}")
         print("-" * 60)
@@ -374,11 +374,11 @@ if __name__ == "__main__":
     print("상시 존재 루프 데모")
     print("="*80)
     
-    lumina.start_always_on_loop(max_iterations=6)
+    Eliar.start_always_on_loop(max_iterations=6)
     
     # 최종 상태 출력
     print("\n" + "="*80)
     print("최종 시스템 상태")
     print("="*80)
-    final_state = lumina.get_current_state()
+    final_state = Eliar.get_current_state()
     print(json.dumps(final_state, ensure_ascii=False, indent=2))
