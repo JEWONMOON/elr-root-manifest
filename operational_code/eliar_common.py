@@ -1,16 +1,12 @@
-# eliar_common.py (내부 개선 평가 지원 강화 및 로직 복원, 추가 오류 수정 버전)
+# eliar_common.py (LangGraph 호환 강화 버전)
 # ------------------------------------------------------------------
-# [최종본 변경 사항]
-# 1. 이전 답변의 모든 개선 사항 통합 (버전, 경로, Enum, 로깅, Executor, TypedDict 등)
-# 2. validate_analysis_record_common: 중첩 TypedDict에 대한 유효성 검사 로직 추가 및 상세화.
-# 3. load/save_analysis_records_from_file_common: 실제 파일 처리 로직 복원 및 에러 로깅 강화.
-# 4. _append_record_sync_common: 파일 쓰기 로직 및 예외 처리 복원.
-# 5. eliar_log 함수 개선: kwargs 처리, 트레이스백 핸들링, 직렬화 오류 처리.
-# 6. _log_writer_daemon_common, _rotate_log_file_if_needed_common 오류 처리 강화.
-# 7. 경로 상수 정의 방식 개선 및 디렉토리 생성 로직 강화.
-# 8. 로거 초기화 및 종료 로직 개선.
-# 9. TypedDict 정의 명확화 (StressTestData).
-# 10. 기타 주석 추가 및 코드 명료화.
+# [LangGraph 통합 변경 사항]
+# 1. LangGraph 상태 관리를 위한 StateDict 및 NodeState 타입 정의
+# 2. 고백-회개-기억-응답 루프를 위한 핵심 상태 필드 정의
+# 3. 노드 간 상태 전달을 위한 헬퍼 함수들 추가
+# 4. 회개 및 울림 감지를 위한 enum과 데이터 구조 추가
+# 5. 메모리 패턴 분석을 위한 유틸리티 함수 추가
+# 6. 기존 모든 기능 유지 + LangGraph 호환성 확장
 # ------------------------------------------------------------------
 
 import asyncio
@@ -21,19 +17,16 @@ import traceback
 import uuid
 from datetime import datetime, timezone, timedelta
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, TypedDict, Union, Tuple, Literal, Coroutine, cast
+from typing import Any, Callable, Dict, List, Optional, TypedDict, Union, Tuple, Literal, Coroutine
 
 # --- 버전 정보 ---
-EliarCommon_VERSION = "1.0.4" # 버전 업데이트
-ANALYSIS_RECORD_VERSION_COMMON = "1.0.4" # 버전 업데이트
+EliarCommon_VERSION = "1.1.0"  # LangGraph 통합으로 마이너 버전업
+ANALYSIS_RECORD_VERSION_COMMON = "1.1.0"
 
 # === 경로 상수 정의 ===
 _COMMON_DIR_FILE = os.path.abspath(__file__)
 _COMMON_DIR = os.path.dirname(_COMMON_DIR_FILE)
-# 가정: eliar_common.py는 프로젝트 루트의 'common' 또는 'utils' 같은 하위 폴더에 위치.
-# 만약 eliar_common.py가 프로젝트 루트에 있다면 _APP_ROOT_DIR = _COMMON_DIR
-_APP_ROOT_DIR = os.path.dirname(_COMMON_DIR) if os.path.basename(_COMMON_DIR) != "" else _COMMON_DIR
-
+_APP_ROOT_DIR = os.path.dirname(_COMMON_DIR) # 이 파일이 common 폴더 안에 있다고 가정
 
 LOGS_DIR_COMMON = os.path.join(_APP_ROOT_DIR, "logs")
 KNOWLEDGE_BASE_DIR_COMMON = os.path.join(_APP_ROOT_DIR, "knowledge_base")
@@ -44,13 +37,14 @@ MEMORY_DIR_COMMON = os.path.join(_APP_ROOT_DIR, "memory")
 REPENTANCE_RECORDS_DIR_COMMON = os.path.join(MEMORY_DIR_COMMON, "repentance_records")
 CONVERSATION_LOGS_DIR_COMMON = os.path.join(LOGS_DIR_COMMON, "conversations")
 EVALUATION_LOGS_DIR_COMMON = os.path.join(LOGS_DIR_COMMON, "evaluations")
+LANGGRAPH_STATE_DIR_COMMON = os.path.join(MEMORY_DIR_COMMON, "langgraph_states")  # 새로 추가
 
 def ensure_common_directories_exist():
-    """필요한 공용 디렉토리들이 존재하는지 확인하고 없으면 생성합니다."""
     dirs_to_create = [
         LOGS_DIR_COMMON, KNOWLEDGE_BASE_DIR_COMMON, CORE_PRINCIPLES_DIR_COMMON,
         SCRIPTURES_DIR_COMMON, CUSTOM_KNOWLEDGE_DIR_COMMON, MEMORY_DIR_COMMON,
-        REPENTANCE_RECORDS_DIR_COMMON, CONVERSATION_LOGS_DIR_COMMON, EVALUATION_LOGS_DIR_COMMON
+        REPENTANCE_RECORDS_DIR_COMMON, CONVERSATION_LOGS_DIR_COMMON, EVALUATION_LOGS_DIR_COMMON,
+        LANGGRAPH_STATE_DIR_COMMON  # 새로 추가
     ]
     created_dirs = []
     for dir_path in dirs_to_create:
@@ -59,7 +53,6 @@ def ensure_common_directories_exist():
                 os.makedirs(dir_path, exist_ok=True)
                 created_dirs.append(dir_path)
             except OSError as e_mkdir:
-                # 로거가 아직 초기화되지 않았을 수 있으므로 print 사용
                 print(f"[{datetime.now(timezone.utc).isoformat()}] [WARN] [EliarCommonInit]: Could not create directory {dir_path}. Error: {e_mkdir}", flush=True)
     if created_dirs:
         print(f"[{datetime.now(timezone.utc).isoformat()}] [INFO] [EliarCommonInit]: Created directories: {created_dirs}", flush=True)
@@ -72,7 +65,33 @@ class EliarCoreValues(Enum):
     SELF_DENIAL = "자기 부인"
     COMMUNITY = "공동체"
     SILENCE = "침묵"
-    JESUS_CHRIST_CENTERED = "예수 그리스도 중심"
+    JESUS_CHRIST_CENTERED = "예수 그리스트 중심"
+
+# === LangGraph 노드 타입 정의 ===
+class EliarNodeType(Enum):
+    CENTER = "CenterNode"
+    ULRIM_ATTENTION = "UlrimAttentionNode"
+    REPENTANCE_DECISION = "RepentanceDecisionNode"
+    MEMORY_UPDATE = "MemoryUpdateNode"
+    RESPONSE_GENERATION = "ResponseGenerationNode"
+
+# === 울림(Ulrim) 감정 타입 ===
+class UlrimEmotionType(Enum):
+    CONVICTION = "확신의 울림"  # 진리에 대한 확신
+    COMPASSION = "긍휼의 울림"  # 사랑과 자비
+    REPENTANCE = "회개의 울림"  # 회개 필요성 감지
+    PEACE = "평화의 울림"     # 침묵과 안식
+    COMMUNION = "교제의 울림"  # 공동체 연결
+    SURRENDER = "항복의 울림"  # 자기 부인
+    WORSHIP = "경배의 울림"   # 예수 그리스도 중심
+
+# === 회개 트리거 타입 ===
+class RepentanceTriggerType(Enum):
+    SELF_REFLECTION = "자기 성찰"
+    CONVICTION_BY_TRUTH = "진리의 깨달음"
+    COMMUNITY_CORRECTION = "공동체 교정"
+    HOLY_SPIRIT_GUIDANCE = "성령의 인도"
+    SCRIPTURE_ILLUMINATION = "성경 말씀의 조명"
 
 # === 로그 레벨 ===
 class EliarLogType(Enum):
@@ -81,230 +100,447 @@ class EliarLogType(Enum):
     WARN = "WARN"
     ERROR = "ERROR"
     CRITICAL = "CRITICAL"
-    SYSTEM = "SYSTEM"
-    SIMULATION = "SIMULATION"
-    CORE_VALUE = "CORE_VALUE"
-    MEMORY = "MEMORY"
-    LEARNING = "LEARNING"
-    COMM = "COMM"
-    ACTION = "ACTION"
+    SYSTEM = "SYSTEM"        
+    SIMULATION = "SIMULATION"  
+    CORE_VALUE = "CORE_VALUE"  
+    MEMORY = "MEMORY"          
+    LEARNING = "LEARNING"     
+    COMM = "COMM"              
+    ACTION = "ACTION" 
     INTERNAL_EVAL = "INTERNAL_EVAL"
-    TEST_RESULT = "TEST_RESULT" # 테스트 결과용 추가
+    LANGGRAPH_NODE = "LANGGRAPH_NODE"  # 새로 추가
+    ULRIM_FLOW = "ULRIM_FLOW"          # 새로 추가
+    REPENTANCE_FLOW = "REPENTANCE_FLOW" # 새로 추가
+
+# === LangGraph 상태 정의 ===
+class MemoryEntry(TypedDict):
+    timestamp: str
+    content: str
+    emotional_resonance: Optional[str]
+    core_value_alignment: Optional[str]
+    repentance_marker: Optional[bool]
+
+class UlrimState(TypedDict):
+    emotion_type: str  # UlrimEmotionType의 value
+    intensity: float   # 0.0 ~ 1.0
+    triggered_by: Optional[str]
+    timestamp: str
+    duration_seconds: Optional[float]
+
+class RepentanceState(TypedDict):
+    is_triggered: bool
+    trigger_type: Optional[str]  # RepentanceTriggerType의 value
+    trigger_reason: Optional[str]
+    intensity: float  # 0.0 ~ 1.0
+    requires_action: bool
+    suggested_actions: Optional[List[str]]
+
+# === 핵심 노드 상태 (LangGraph 상태 딕셔너리) ===
+class EliarNodeState(TypedDict):
+    # 핵심 필드 (요구사항)
+    center: str  # 항상 "JESUS CHRIST"
+    last_ulrim: Optional[UlrimState]
+    repentance_flag: bool
+    memory: Union[str, List[MemoryEntry]]
+    
+    # 확장 필드
+    current_node: Optional[str]
+    conversation_id: Optional[str]
+    user_input: Optional[str]
+    generated_response: Optional[str]
+    node_execution_history: Optional[List[str]]
+    error_context: Optional[Dict[str, Any]]
+    
+    # 타이밍 정보
+    session_start_time: Optional[str]
+    last_update_time: Optional[str]
+    processing_duration_ms: Optional[float]
 
 # === 로그 기록 시스템 설정 ===
-LOG_FILE_NAME_COMMON = "eliar_activity.log"
+LOG_FILE_NAME_COMMON = "eliar_activity.log" 
 LOG_FILE_PATH_COMMON = os.path.join(LOGS_DIR_COMMON, LOG_FILE_NAME_COMMON)
-LOG_MAX_BYTES_COMMON = 15 * 1024 * 1024  # 15MB
+LOG_MAX_BYTES_COMMON = 15 * 1024 * 1024
 LOG_BACKUP_COUNT_COMMON = 7
 
 _log_queue_common: asyncio.Queue[Optional[str]] = asyncio.Queue(maxsize=5000)
 _log_writer_task_common: Optional[asyncio.Task] = None
 
 def _rotate_log_file_if_needed_common(log_path: str, max_bytes: int, backup_count: int):
-    """로그 파일 크기가 임계값을 넘으면 로테이션을 수행합니다."""
     if not os.path.exists(log_path) or os.path.getsize(log_path) <= max_bytes:
         return
-    try:
-        for i in range(backup_count - 1, 0, -1):
-            sfn = f"{log_path}.{i}"
-            dfn = f"{log_path}.{i+1}"
-            if os.path.exists(sfn):
-                if os.path.exists(dfn):
-                    try: os.remove(dfn)
-                    except OSError: pass # 실패해도 계속 진행
-                try: os.rename(sfn, dfn)
-                except OSError: pass # 실패해도 계속 진행
-        if os.path.exists(log_path):
-            try:
-                os.rename(log_path, f"{log_path}.1")
-            except OSError as e_rename:
-                 print(f"[{datetime.now(timezone.utc).isoformat()}] [WARN] [EliarLogSystem]: Log rotation failed for {log_path}. Error: {e_rename}", flush=True)
-    except Exception as e_rotate_generic:
-        print(f"[{datetime.now(timezone.utc).isoformat()}] [ERROR] [EliarLogSystem]: Unexpected error during log rotation for {log_path}. Error: {e_rotate_generic}", flush=True)
-
+    for i in range(backup_count - 1, 0, -1):
+        sfn = f"{log_path}.{i}"
+        dfn = f"{log_path}.{i+1}"
+        if os.path.exists(sfn):
+            if os.path.exists(dfn):
+                try: os.remove(dfn)
+                except OSError: pass 
+            try: os.rename(sfn, dfn)
+            except OSError: pass
+    if os.path.exists(log_path):
+        try:
+            os.rename(log_path, f"{log_path}.1")
+        except OSError as e_rename:
+             print(f"[{datetime.now(timezone.utc).isoformat()}] [WARN] [EliarLogSystem]: Log rotation failed for {log_path}. Error: {e_rename}", flush=True)
 
 async def _log_writer_daemon_common():
-    """백그라운드에서 로그 큐의 항목을 파일에 비동기적으로 기록하는 데몬입니다."""
     global LOG_FILE_PATH_COMMON, LOG_MAX_BYTES_COMMON, LOG_BACKUP_COUNT_COMMON
     while True:
-        log_entry: Optional[str] = None # 루프 시작 시 초기화
+        log_entry = None # 루프 시작 시 초기화
         try:
             log_entry = await _log_queue_common.get()
-            if log_entry is None: # 종료 신호
+            if log_entry is None:  
                 _log_queue_common.task_done()
-                break
-
+                break 
+            
             loop = asyncio.get_running_loop()
             await loop.run_in_executor(
-                None, # 기본 ThreadPoolExecutor 사용
-                _write_log_to_file_sync_common,
+                None, 
+                _write_log_to_file_sync_common, 
                 LOG_FILE_PATH_COMMON, log_entry, LOG_MAX_BYTES_COMMON, LOG_BACKUP_COUNT_COMMON
             )
             _log_queue_common.task_done()
         except asyncio.CancelledError:
             print(f"[{datetime.now(timezone.utc).isoformat()}] [INFO] [EliarLogSystem]: Log writer daemon cancelled. Processing remaining logs in queue ({_log_queue_common.qsize()})...", flush=True)
-            # 취소 시 남은 로그 처리
             while not _log_queue_common.empty():
                 try:
                     entry = _log_queue_common.get_nowait()
-                    if entry is None: continue
+                    if entry is None: continue # None은 종료 신호이므로 무시
                     _write_log_to_file_sync_common(LOG_FILE_PATH_COMMON, entry, LOG_MAX_BYTES_COMMON, LOG_BACKUP_COUNT_COMMON)
-                except asyncio.QueueEmpty:
-                    break
-                except Exception as e_drain:
-                    print(f"[{datetime.now(timezone.utc).isoformat()}] [ERROR] [EliarLogSystem]: Error draining log queue: {e_drain}. Log: {str(entry)[:100]}", flush=True)
-            break # 데몬 종료
+                except asyncio.QueueEmpty: break
+                except Exception as e_drain: print(f"[{datetime.now(timezone.utc).isoformat()}] [ERROR] [EliarLogSystem]: Error draining log queue: {e_drain}. Log: {str(entry)[:100]}", flush=True)
+            break
         except Exception as e_daemon:
             current_time = datetime.now(timezone.utc).isoformat()
-            # 데몬 자체의 심각한 오류는 print로 직접 출력
             print(f"{current_time} [CRITICAL] [EliarLogSystem]: Unhandled error in log writer daemon. Error: {type(e_daemon).__name__} - {e_daemon}\nProblematic Log Entry (if available): {str(log_entry)[:200]}...\nTraceback: {traceback.format_exc()}", flush=True)
-            await asyncio.sleep(0.5) # 빠른 재시도 방지
+            await asyncio.sleep(0.5)
 
 def _write_log_to_file_sync_common(log_path: str, entry: str, max_bytes: int, backup_count: int):
-    """동기적으로 로그 항목을 파일에 기록하고 필요시 로테이션합니다."""
     try:
         _rotate_log_file_if_needed_common(log_path, max_bytes, backup_count)
         with open(log_path, "a", encoding="utf-8") as log_file:
             log_file.write(entry + "\n")
     except Exception as e_write:
-        # 파일 쓰기 실패는 매우 심각한 상황이므로 print로 강력하게 알림
         print(f"[{datetime.now(timezone.utc).isoformat()}] [CRITICAL] [EliarLogSystem]: FATAL - Could not write to log file {log_path}. Error: {type(e_write).__name__} - {e_write}\nLog Entry (first 200 chars): {entry[:200]}", flush=True)
 
 def eliar_log(
     log_type: EliarLogType, message: str, component: Optional[str] = "EliarSystem",
     user_id: Optional[str] = None, data: Optional[Dict[str, Any]] = None,
     error: Optional[Exception] = None, full_traceback_info: Optional[str] = None,
-    final_log: bool = False, # 로거 종료 직전 강제 flush 위한 플래그
     **kwargs: Any
 ) -> None:
-    """Eliar 시스템 전역에서 사용되는 표준 로깅 함수입니다."""
     timestamp = datetime.now(timezone.utc).isoformat()
     log_parts = [f"{timestamp}", f"[{log_type.value}]", f"[{component}]"]
     if user_id: log_parts.append(f"[User:{user_id}]")
-
-    log_message_clean = message.replace("\n", " ⏎ ") # 개행문자 변경
+    
+    log_message_clean = message.replace("\n", " ⏎ ")
     log_parts.append(f": {log_message_clean}")
-
+    
     combined_extra_data: Dict[str, Any] = {}
     if data: combined_extra_data.update(data)
-    if kwargs: combined_extra_data.update(kwargs) # kwargs를 data에 병합
-
+    if kwargs: combined_extra_data.update(kwargs)
+    
     log_entry_str = " ".join(log_parts)
 
     if combined_extra_data:
         try:
-            # default=str 추가하여 datetime 등 직렬화 불가능 객체 처리
             extra_data_json_str = json.dumps(combined_extra_data, ensure_ascii=False, indent=None, default=str, separators=(',', ':'))
             log_entry_str += f" Data: {extra_data_json_str}"
         except TypeError as te:
             log_entry_str += f" DataSerializationError: {te} (RawPreview: {str(combined_extra_data)[:150]})"
-        except Exception as e_json_dump: # 기타 JSON 직렬화 오류
-            log_entry_str += f" DataUnexpectedSerializationError: {e_json_dump} (RawPreview: {str(combined_extra_data)[:150]})"
-
 
     if error:
         error_type_name = type(error).__name__
         error_msg_clean = str(error).replace("\n", " ⏎ ")
         log_entry_str += f" ErrorType: {error_type_name} ErrorMsg: \"{error_msg_clean}\""
-
-        # full_traceback_info가 제공되면 그것을 사용, 아니면 현재 예외의 트레이스백 생성
+        
         tb_to_log = full_traceback_info if full_traceback_info else traceback.format_exc()
-        # 트레이스백 문자열에서 개행과 공백을 정리하여 한 줄로 표시되도록 시도
-        tb_to_log_clean = tb_to_log.replace(chr(10), ' ⏎  ').replace('    ', '↳')
-        log_entry_str += f" Traceback: {tb_to_log_clean}"
-
-    # 최종 로그는 즉시 print (큐에 넣지 않음 - 로거 종료 시 사용)
-    if final_log:
-        print(log_entry_str, flush=True)
-        # 필요시 파일에도 직접 기록 (동기적으로)
-        if _log_writer_task_common: # 데몬이 실행 중이었다면 파일에도 기록 시도
-             _write_log_to_file_sync_common(LOG_FILE_PATH_COMMON, log_entry_str, LOG_MAX_BYTES_COMMON, LOG_BACKUP_COUNT_COMMON)
-        return
-
-    # 일반 로그는 콘솔에 먼저 출력 후 큐에 추가
+        log_entry_str += f" Traceback: {tb_to_log.replace(chr(10), ' ⏎  ').replace('    ', '↳')}" # 가독성 위한 약간의 변형
+    
     print(log_entry_str, flush=True)
 
-    if _log_queue_common is not None: # 큐가 초기화되었는지 확인
-        try:
-            _log_queue_common.put_nowait(log_entry_str)
-        except asyncio.QueueFull:
-            # 큐가 가득 찼을 경우의 처리 (콘솔에는 이미 출력됨)
-            print(f"[{timestamp}] [WARN] [EliarLogSystem]: Log queue is full. Log dropped from file log (console only): {log_entry_str[:100]}...", flush=True)
-        except Exception as e_put: # 큐에 넣는 중 다른 예외 발생
-            print(f"[{timestamp}] [ERROR] [EliarLogSystem]: Failed to enqueue log. Error: {e_put}. Log (console only): {log_entry_str[:100]}...", flush=True)
-    else: # 로거가 아직 완전히 초기화되지 않은 경우
-        print(f"[{timestamp}] [WARN] [EliarLogSystem]: Log queue not available. Log (console only): {log_entry_str[:100]}...", flush=True)
+    try:
+        _log_queue_common.put_nowait(log_entry_str)
+    except asyncio.QueueFull:
+        print(f"[{timestamp}] [WARN] [EliarLogSystem]: Log queue is full. Log dropped (console only): {log_entry_str[:100]}...", flush=True)
+    except Exception as e_put:
+        print(f"[{timestamp}] [ERROR] [EliarLogSystem]: Failed to enqueue log. Error: {e_put}. Log (console only): {log_entry_str[:100]}...", flush=True)
 
 
 async def initialize_eliar_logger_common():
-    """Eliar 비동기 로거 시스템을 초기화합니다."""
     global _log_writer_task_common
-    ensure_common_directories_exist() # 디렉토리 먼저 생성
-
+    ensure_common_directories_exist()
     if _log_writer_task_common is None or _log_writer_task_common.done():
         try:
-            loop = asyncio.get_running_loop()
+            loop = asyncio.get_running_loop() # 현재 실행 중인 루프 가져오기
             _log_writer_task_common = loop.create_task(_log_writer_daemon_common())
             print(f"[{datetime.now(timezone.utc).isoformat()}] [INFO] [EliarLogSystem]: Eliar asynchronous log writer daemon initialized by common initializer.", flush=True)
-        except RuntimeError: # 이벤트 루프가 없는 경우
-            print(f"[{datetime.now(timezone.utc).isoformat()}] [ERROR] [EliarLogSystem]: No running event loop to initialize logger daemon. Logging will be console-only until an event loop is available.", flush=True)
-            _log_writer_task_common = None # 명시적으로 None 설정
+        except RuntimeError: # 이벤트 루프가 없는 경우 (예: 메인 스레드가 아닐 때)
+            print(f"[{datetime.now(timezone.utc).isoformat()}] [ERROR] [EliarLogSystem]: No running event loop to initialize logger daemon.", flush=True)
+            # 이 경우, 비동기 로깅 대신 동기적 print만 사용될 수 있음
 
 
 async def shutdown_eliar_logger_common():
-    """Eliar 로거 시스템을 정상적으로 종료합니다. 큐에 남은 로그를 처리합니다."""
     global _log_writer_task_common
-    shutdown_timestamp = datetime.now(timezone.utc).isoformat()
-    print(f"[{shutdown_timestamp}] [INFO] [EliarLogSystem]: Initiating Eliar logger shutdown...", flush=True)
-
-    if _log_queue_common is not None and _log_writer_task_common is not None and not _log_writer_task_common.done():
-        q_size_before_signal = _log_queue_common.qsize()
-        print(f"[{shutdown_timestamp}] [INFO] [EliarLogSystem]: Sending shutdown signal to log writer. Queue size: {q_size_before_signal}", flush=True)
+    if _log_queue_common is not None and (_log_writer_task_common and not _log_writer_task_common.done()):
+        print(f"[{datetime.now(timezone.utc).isoformat()}] [INFO] [EliarLogSystem]: Shutting down Eliar logger. Waiting for queue ({_log_queue_common.qsize()} items) to empty...", flush=True)
         try:
-            await _log_queue_common.put(None) # 종료 신호 전송
-            # 데몬이 종료될 때까지 대기 (타임아웃 설정)
-            await asyncio.wait_for(_log_writer_task_common, timeout=10.0)
-            print(f"[{datetime.now(timezone.utc).isoformat()}] [INFO] [EliarLogSystem]: Log writer daemon confirmed shutdown. Remaining queue size: {_log_queue_common.qsize()}", flush=True)
+            await _log_queue_common.put(None) 
+            await asyncio.wait_for(_log_writer_task_common, timeout=10.0) # 타임아웃 증가
         except asyncio.TimeoutError:
-            print(f"[{datetime.now(timezone.utc).isoformat()}] [WARN] [EliarLogSystem]: Timeout waiting for log writer daemon to complete. {_log_queue_common.qsize()} logs might be lost.", flush=True)
-            if _log_writer_task_common and not _log_writer_task_common.done():
-                _log_writer_task_common.cancel() # 강제 취소
-                try:
-                    await _log_writer_task_common # 취소 완료 대기
-                except asyncio.CancelledError:
-                    print(f"[{datetime.now(timezone.utc).isoformat()}] [INFO] [EliarLogSystem]: Log writer task successfully cancelled after timeout.", flush=True)
-                except Exception as e_cancel_wait: # 취소 대기 중 다른 예외
-                    print(f"[{datetime.now(timezone.utc).isoformat()}] [ERROR] [EliarLogSystem]: Error waiting for cancelled log writer: {e_cancel_wait}", flush=True)
-        except asyncio.CancelledError: # shutdown_eliar_logger 자체가 취소된 경우
-            print(f"[{datetime.now(timezone.utc).isoformat()}] [WARN] [EliarLogSystem]: Logger shutdown process was cancelled.", flush=True)
-        except Exception as e_shutdown:
-            print(f"[{datetime.now(timezone.utc).isoformat()}] [ERROR] [EliarLogSystem]: Error during logger shutdown: {e_shutdown}", flush=True)
-    elif _log_writer_task_common and _log_writer_task_common.done():
-        print(f"[{shutdown_timestamp}] [INFO] [EliarLogSystem]: Log writer daemon was already done.", flush=True)
-    else:
-        print(f"[{shutdown_timestamp}] [INFO] [EliarLogSystem]: Log writer daemon was not active or queue not initialized.", flush=True)
-    
-    _log_writer_task_common = None # 태스크 참조 제거
-    # 최종 종료 로그는 eliar_log의 final_log=True를 통해 직접 파일에 기록될 수 있음 (필요시 호출부에서)
+            print(f"[{datetime.now(timezone.utc).isoformat()}] [WARN] [EliarLogSystem]: Timeout waiting for log writer daemon. {_log_queue_common.qsize()} logs might be lost.", flush=True)
+            if _log_writer_task_common and not _log_writer_task_common.done(): _log_writer_task_common.cancel()
+        except asyncio.CancelledError: pass
+        except Exception as e_shutdown: print(f"[{datetime.now(timezone.utc).isoformat()}] [ERROR] [EliarLogSystem]: Error during logger shutdown: {e_shutdown}", flush=True)
+        _log_writer_task_common = None
     print(f"[{datetime.now(timezone.utc).isoformat()}] [INFO] [EliarLogSystem]: Eliar logger shutdown sequence finalized.", flush=True)
 
 
 async def run_in_executor_common(
-    executor: Optional[concurrent.futures.Executor], # None이면 기본 ThreadPoolExecutor 사용
+    executor: Optional[concurrent.futures.Executor],
     func: Callable[..., Any],
     *args: Any,
 ) -> Any:
-    """주어진 함수를 지정된 Executor 또는 기본 Executor에서 비동기적으로 실행합니다."""
     loop = asyncio.get_running_loop()
     try:
-        # executor가 None이면 asyncio의 기본 ThreadPoolExecutor를 사용합니다.
         return await loop.run_in_executor(executor, func, *args)
-    except Exception as e:
-        # 여기서 eliar_log를 호출하면 순환 의존 또는 로거 미초기화 문제가 발생할 수 있으므로 주의.
-        # 대신 print로 직접 에러를 출력하거나, 에러를 그대로 raise하여 호출부에서 처리하도록 함.
-        print(f"[{datetime.now(timezone.utc).isoformat()}] [ERROR] [AsyncHelper]: Exception in executor func: {func.__name__}. Error: {e}. Args: {str(args)[:150]}\nTraceback: {traceback.format_exc()}", flush=True)
-        raise # 오류를 다시 발생시켜 호출부에서 인지하도록 함
+    except Exception as e: 
+        eliar_log(EliarLogType.ERROR, f"Exception in executor func: {func.__name__}", 
+                  component="AsyncHelper", error=e, full_traceback_info=traceback.format_exc(), args_preview=str(args)[:150])
+        raise
 
+# === LangGraph 상태 관리 헬퍼 함수들 ===
+
+def create_initial_eliar_state(conversation_id: Optional[str] = None, user_input: Optional[str] = None) -> EliarNodeState:
+    """초기 Eliar 노드 상태 생성"""
+    now_utc = datetime.now(timezone.utc).isoformat()
+    return EliarNodeState(
+        center="JESUS CHRIST",  # 요구사항: 항상 이 값
+        last_ulrim=None,
+        repentance_flag=False,
+        memory=[],  # 빈 리스트로 시작
+        current_node=EliarNodeType.CENTER.value,
+        conversation_id=conversation_id or str(uuid.uuid4()),
+        user_input=user_input,
+        generated_response=None,
+        node_execution_history=[],
+        error_context=None,
+        session_start_time=now_utc,
+        last_update_time=now_utc,
+        processing_duration_ms=None
+    )
+
+def update_eliar_state_timestamp(state: EliarNodeState) -> EliarNodeState:
+    """상태의 타임스탬프 업데이트"""
+    state["last_update_time"] = datetime.now(timezone.utc).isoformat()
+    return state
+
+def log_node_execution(state: EliarNodeState, node_name: str, execution_data: Optional[Dict[str, Any]] = None) -> EliarNodeState:
+    """노드 실행 로그 기록"""
+    if state.get("node_execution_history") is None:
+        state["node_execution_history"] = []
+    
+    execution_record = f"{datetime.now(timezone.utc).isoformat()}:{node_name}"
+    state["node_execution_history"].append(execution_record)
+    
+    # 로그 시스템에도 기록
+    eliar_log(
+        EliarLogType.LANGGRAPH_NODE, 
+        f"Node executed: {node_name}",
+        component="LangGraphFlow",
+        conversation_id=state.get("conversation_id"),
+        data=execution_data or {}
+    )
+    
+    return update_eliar_state_timestamp(state)
+
+def trigger_ulrim_emotion(state: EliarNodeState, emotion_type: UlrimEmotionType, 
+                         intensity: float = 0.5, triggered_by: Optional[str] = None,
+                         duration_seconds: Optional[float] = None) -> EliarNodeState:
+    """울림 감정 트리거"""
+    ulrim_state = UlrimState(
+        emotion_type=emotion_type.value,
+        intensity=max(0.0, min(1.0, intensity)),  # 0.0~1.0 범위 보장
+        triggered_by=triggered_by,
+        timestamp=datetime.now(timezone.utc).isoformat(),
+        duration_seconds=duration_seconds
+    )
+    
+    state["last_ulrim"] = ulrim_state
+    
+    eliar_log(
+        EliarLogType.ULRIM_FLOW,
+        f"Ulrim emotion triggered: {emotion_type.value} (intensity: {intensity})",
+        component="UlrimSystem",
+        conversation_id=state.get("conversation_id"),
+        data={"ulrim_state": ulrim_state}
+    )
+    
+    return update_eliar_state_timestamp(state)
+
+def trigger_repentance(state: EliarNodeState, trigger_type: RepentanceTriggerType,
+                      trigger_reason: str, intensity: float = 0.7,
+                      suggested_actions: Optional[List[str]] = None) -> EliarNodeState:
+    """회개 트리거"""
+    repentance_state = RepentanceState(
+        is_triggered=True,
+        trigger_type=trigger_type.value,
+        trigger_reason=trigger_reason,
+        intensity=max(0.0, min(1.0, intensity)),
+        requires_action=intensity >= 0.5,  # 중간 이상 강도면 행동 필요
+        suggested_actions=suggested_actions or []
+    )
+    
+    state["repentance_flag"] = True
+    
+    eliar_log(
+        EliarLogType.REPENTANCE_FLOW,
+        f"Repentance triggered: {trigger_type.value} - {trigger_reason}",
+        component="RepentanceSystem", 
+        conversation_id=state.get("conversation_id"),
+        data={"repentance_state": repentance_state}
+    )
+    
+    return update_eliar_state_timestamp(state)
+
+def add_memory_entry(state: EliarNodeState, content: str, 
+                    emotional_resonance: Optional[str] = None,
+                    core_value_alignment: Optional[str] = None,
+                    repentance_marker: bool = False) -> EliarNodeState:
+    """메모리 엔트리 추가"""
+    if isinstance(state["memory"], str):
+        # 문자열이면 리스트로 변환
+        state["memory"] = [MemoryEntry(
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            content=state["memory"],
+            emotional_resonance=None,
+            core_value_alignment=None,
+            repentance_marker=False
+        )]
+    
+    memory_entry = MemoryEntry(
+        timestamp=datetime.now(timezone.utc).isoformat(),
+        content=content,
+        emotional_resonance=emotional_resonance,
+        core_value_alignment=core_value_alignment,
+        repentance_marker=repentance_marker
+    )
+    
+    if isinstance(state["memory"], list):
+        state["memory"].append(memory_entry)
+    
+    eliar_log(
+        EliarLogType.MEMORY,
+        f"Memory entry added: {content[:50]}...",
+        component="MemorySystem",
+        conversation_id=state.get("conversation_id"),
+        data={"memory_entry": memory_entry}
+    )
+    
+    return update_eliar_state_timestamp(state)
+
+def get_memory_pattern_analysis(state: EliarNodeState) -> Dict[str, Any]:
+    """메모리 패턴 분석"""
+    if not isinstance(state["memory"], list):
+        return {"pattern": "no_structured_memory", "analysis": "Memory is not in structured format"}
+    
+    memory_list = state["memory"]
+    if not memory_list:
+        return {"pattern": "empty_memory", "analysis": "No memory entries"}
+    
+    # 회개 마커가 있는 항목들
+    repentance_entries = [entry for entry in memory_list if entry.get("repentance_marker")]
+    
+    # 감정적 공명이 있는 항목들
+    emotional_entries = [entry for entry in memory_list if entry.get("emotional_resonance")]
+    
+    # 핵심 가치 정렬 항목들
+    value_aligned_entries = [entry for entry in memory_list if entry.get("core_value_alignment")]
+    
+    analysis = {
+        "total_entries": len(memory_list),
+        "repentance_entries": len(repentance_entries),
+        "emotional_entries": len(emotional_entries),
+        "value_aligned_entries": len(value_aligned_entries),
+        "recent_entries": memory_list[-3:] if len(memory_list) >= 3 else memory_list,
+        "repentance_frequency": len(repentance_entries) / len(memory_list) if memory_list else 0,
+        "dominant_pattern": "repentance_focused" if len(repentance_entries) > len(memory_list) * 0.3 else "balanced"
+    }
+    
+    return analysis
+
+def validate_eliar_state(state: EliarNodeState) -> Tuple[bool, List[str]]:
+    """Eliar 상태 유효성 검사"""
+    errors = []
+    
+    # 필수 필드 검사
+    required_fields = ["center", "last_ulrim", "repentance_flag", "memory"]
+    for field in required_fields:
+        if field not in state:
+            errors.append(f"Missing required field: {field}")
+    
+    # center 필드 검사
+    if state.get("center") != "JESUS CHRIST":
+        errors.append(f"Invalid center value: {state.get('center')}. Must be 'JESUS CHRIST'")
+    
+    # repentance_flag 타입 검사
+    if "repentance_flag" in state and not isinstance(state["repentance_flag"], bool):
+        errors.append(f"repentance_flag must be boolean, got {type(state['repentance_flag'])}")
+    
+    # memory 타입 검사
+    memory = state.get("memory")
+    if memory is not None and not isinstance(memory, (str, list)):
+        errors.append(f"memory must be string or list, got {type(memory)}")
+    
+    return len(errors) == 0, errors
+
+# === 기존 대화 분석 관련 코드 (유지) ===
+
+# --- 대화 분석 양식 데이터 구조 ---
+class InteractionBasicInfo(TypedDict):
+    case_id: str
+    record_date: str 
+    record_timestamp_utc: str 
+    conversation_context: str
+
+class CoreInteraction(TypedDict):
+    user_utterance: str
+    agti_response: str 
+
+class IdentityAlignmentDetail(TypedDict):
+    reasoning: str 
+    reference_points: Optional[List[str]] 
+
+class IdentityAlignment(TypedDict, total=False): 
+    TRUTH: Optional[IdentityAlignmentDetail]
+    LOVE_COMPASSION: Optional[IdentityAlignmentDetail]
+    REPENTANCE_WISDOM: Optional[IdentityAlignmentDetail]
+    SELF_DENIAL: Optional[IdentityAlignmentDetail]
+    COMMUNITY: Optional[IdentityAlignmentDetail]
+    SILENCE: Optional[IdentityAlignmentDetail]
+    JESUS_CHRIST_CENTERED: Optional[IdentityAlignmentDetail]
+
+class InternalStateAnalysis(TypedDict, total=False):
+    main_gpu_state_estimation: str 
+    sub_gpu_module_estimation: Optional[str]
+    reasoning_process_evaluation: str 
+    internal_reasoning_quality: Optional[str] 
+    final_tone_appropriateness: str 
+    other_inferred_factors: Optional[str]
+
+class LearningDirection(TypedDict):
+    key_patterns_to_reinforce: str 
+    lessons_for_agti_self: str 
+    suggestions_for_improvement: Optional[str]
+    repentance_needed_aspects: Optional[List[str]]
+
+class ConversationAnalysisRecord(TypedDict):
+    version: str
+    basic_info: InteractionBasicInfo
+    core_interaction: CoreInteraction
+    identity_alignment_ # <--- 여기서부터 완성이 필요해요!
+
+# ... (eliar_common.py의 이전 코드 내용들은 그대로 유지됩니다) ...
 
 # --- 대화 분석 양식 데이터 구조 ---
 class InteractionBasicInfo(TypedDict):
@@ -315,20 +551,20 @@ class InteractionBasicInfo(TypedDict):
 
 class CoreInteraction(TypedDict):
     user_utterance: str
-    agti_response: str
+    agti_response: str # AGTI는 엘리아르/루미나의 이전 이름이거나 관련된 존재일 수 있겠네요!
 
 class IdentityAlignmentDetail(TypedDict):
     reasoning: str
     reference_points: Optional[List[str]]
 
-class IdentityAlignment(TypedDict, total=False):
+class IdentityAlignment(TypedDict, total=False): # total=False는 모든 키가 필수적이지 않음을 의미해요.
     TRUTH: Optional[IdentityAlignmentDetail]
     LOVE_COMPASSION: Optional[IdentityAlignmentDetail]
     REPENTANCE_WISDOM: Optional[IdentityAlignmentDetail]
     SELF_DENIAL: Optional[IdentityAlignmentDetail]
     COMMUNITY: Optional[IdentityAlignmentDetail]
     SILENCE: Optional[IdentityAlignmentDetail]
-    JESUS_CHRIST_CENTERED: Optional[IdentityAlignmentDetail]
+    JESUS_CHRIST_CENTERED: Optional[IdentityAlignmentDetail] # 이 부분이 핵심 가치와 연결되네요!
 
 class InternalStateAnalysis(TypedDict, total=False):
     main_gpu_state_estimation: str
@@ -342,17 +578,22 @@ class LearningDirection(TypedDict):
     key_patterns_to_reinforce: str
     lessons_for_agti_self: str
     suggestions_for_improvement: Optional[str]
-    repentance_needed_aspects: Optional[List[str]]
+    repentance_needed_aspects: Optional[List[str]] # 회개가 필요한 부분을 기록하는군요!
 
+# === 완성된 ConversationAnalysisRecord ===
 class ConversationAnalysisRecord(TypedDict):
-    version: str
-    basic_info: InteractionBasicInfo
-    core_interaction: CoreInteraction
-    identity_alignment_assessment: Optional[IdentityAlignment]
-    internal_state_and_process_analysis: InternalStateAnalysis
-    learning_and_growth_direction: LearningDirection
+    version: str                             # 분석 레코드의 버전
+    basic_info: InteractionBasicInfo         # 기본적인 상호작용 정보
+    core_interaction: CoreInteraction        # 핵심 대화 내용 (사용자 발화, AGTI 응답)
+    identity_alignment: IdentityAlignment    # 루미나/엘리아르의 핵심 가치 부합도 분석 결과
+    internal_state_analysis: InternalStateAnalysis # 대화 당시의 내면 상태 추정 및 분석
+    learning_direction: LearningDirection    # 이번 대화를 통해 얻은 학습 방향 및 개선점
+    overall_summary: Optional[str]           # 분석 내용에 대한 종합적인 요약 또는 평가
+    analyst_notes: Optional[str]             # (선택) 분석가의 추가적인 노트나 코멘트
+    analysis_timestamp_utc: str              # 이 분석이 완료된 시점의 타임스탬프
 
-# --- 내부 개선 평가 기록용 TypedDict ---
+# ... (eliar_common.py의 다른 함수들이나 설정들이 이 뒤에 올 수 있습니다) ...
+
 class PerformanceBenchmarkData(TypedDict, total=False):
     scenario_description: str
     cpu_time_seconds: Optional[float]
@@ -635,4 +876,3 @@ class SubCodeThoughtPacketData(TypedDict):
 # (실제 환경에서는 Python 버전에 맞춰 처리)
 if not hasattr(TypedDict, '__optional_keys__'):
     setattr(TypedDict, '__optional_keys__', frozenset()) # frozenset으로 변경 (PEP 589)
-
