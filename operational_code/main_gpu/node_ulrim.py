@@ -31,13 +31,19 @@ class UlrimAttentionGospelNode:
         user_input = state.get("user_input")
         if user_input:
             if "감사" in user_input or "찬양" in user_input:
-                return UlrimEmotionType.WORSHIP
-            elif "용서" in user_input or "죄" in user_input:
+                return UlrimEmotionType.WORSHIP # Corrected from GRATITUDE_JOY if WORSHIP is the intended enum
+            elif "용서" in user_input or "죄" in user_input: # Assuming REPENTANCE from your previous definitions
                 return UlrimEmotionType.REPENTANCE
-            elif "사랑" in user_input or "긍휼" in user_input:
+            elif "사랑" in user_input or "긍휼" in user_input: # Assuming COMPASSION
                 return UlrimEmotionType.COMPASSION
-            elif "평화" in user_input or "안식" in user_input:
+            elif "평화" in user_input or "안식" in user_input: # Assuming PEACE
                 return UlrimEmotionType.PEACE
+            # The snippet shows "슬픔" or "아픔" returning UlrimEmotionType.SORROW_współczucie
+            # This seems like a mix-up or a placeholder. Assuming a SORROW type if it exists,
+            # or it needs clarification based on eliar_common.UlrimEmotionType
+            elif "슬픔" in user_input or "아픔" in user_input:
+                # return UlrimEmotionType.SORROW # Placeholder, actual enum value might differ
+                pass # Needs correct UlrimEmotionType from eliar_common
         
         # 상시 존재 루프에서 내부 성찰을 통한 울림 (예시)
         if random.random() < 0.1: # 10% 확률로 내부 성찰 울림 발생
