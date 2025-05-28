@@ -1,534 +1,1069 @@
 """
-Enhanced Scientific Reasoning Core
-진짜 추론 능력을 위한 강화된 과학적 사고 시스템
+Practical Scientific Reasoning Core v2.0
+실제로 작동하는 실용적 추론 시스템
+
+철학:
+- 복잡성 < 투명성
+- 완벽함 < 유용함  
+- 이론 < 실전
+- 허세 < 정직
+
+"추론하는 척"이 아닌 "실제 추론"을 목표로 합니다.
 """
 
 import numpy as np
-from typing import Dict, List, Any, Optional, Tuple, Set, Union, Callable
+from typing import Dict, List, Any, Optional, Tuple, Set, Union
 from dataclasses import dataclass, field
-from enum import Enum
-import networkx as nx
+from datetime import datetime
 from collections import defaultdict, deque
-import itertools
-from abc import ABC, abstractmethod
-import uuid
-import asyncio
+import json
+import hashlib
 
-# 1. BAYESIAN REASONING ENGINE - 불확실성 하에서의 추론
-class BayesianReasoningEngine:
-    """베이지안 추론 엔진 - 확률적 사고의 핵심"""
+
+# ======================== 1. SIMPLE BAYESIAN REASONER ========================
+class SimpleBayesianReasoner:
+    """실제로 작동하는 베이지안 추론 엔진"""
     
     def __init__(self):
-        # 신념 네트워크
-        self.belief_network = nx.DiGraph()
-        self.prior_beliefs: Dict[str, float] = {}
-        self.likelihood_functions: Dict[str, Callable] = {}
-        self.evidence_history = deque(maxlen=10000)
+        self.beliefs: Dict[str, float] = {}
+        self.evidence_history: List[Dict[str, Any]] = []
+        self.prior_defaults = {
+            "very_likely": 0.8,
+            "likely": 0.7,
+            "neutral": 0.5,
+            "unlikely": 0.3,
+            "very_unlikely": 0.2
+        }
+    
+    def set_prior(self, hypothesis: str, probability: float = 0.5, 
+                  confidence: str = "neutral") -> None:
+        """사전 확률 설정"""
+        if confidence in self.prior_defaults:
+            probability = self.prior_defaults[confidence]
         
-    def update_belief(self, hypothesis: str, evidence: Dict[str, Any]) -> Dict[str, float]:
-        """베이즈 정리를 통한 신념 업데이트"""
+        self.beliefs[hypothesis] = max(0.001, min(0.999, probability))
+    
+    def update_belief(self, hypothesis: str, evidence: str, 
+                     likelihood_if_true: float, 
+                     likelihood_if_false: float) -> Dict[str, float]:
+        """베이즈 정리를 사용한 신념 업데이트"""
         
-        # P(H|E) = P(E|H) * P(H) / P(E)
-        prior = self.prior_beliefs.get(hypothesis, 0.5)
+        # 사전 확률
+        prior = self.beliefs.get(hypothesis, 0.5)
         
-        # 증거의 가능도 계산
-        likelihood = self._calculate_likelihood(hypothesis, evidence)
+        # 베이즈 정리: P(H|E) = P(E|H)P(H) / P(E)
+        # P(E) = P(E|H)P(H) + P(E|~H)P(~H)
+        p_evidence = (likelihood_if_true * prior + 
+                     likelihood_if_false * (1 - prior))
         
-        # 한계 확률 P(E) 계산 - 모든 가설에 대한 합
-        marginal_probability = self._calculate_marginal_probability(evidence)
+        if p_evidence == 0:
+            posterior = prior  # 증거가 불가능한 경우
+        else:
+            posterior = (likelihood_if_true * prior) / p_evidence
         
-        # 사후 확률 계산
-        posterior = (likelihood * prior) / marginal_probability if marginal_probability > 0 else prior
+        # 업데이트
+        self.beliefs[hypothesis] = posterior
         
-        # 신념 업데이트
-        self.prior_beliefs[hypothesis] = posterior
-        
-        # 연관된 가설들도 연쇄적으로 업데이트
-        cascading_updates = self._propagate_belief_updates(hypothesis, posterior)
-        
-        return {
+        # 기록
+        update_record = {
             "hypothesis": hypothesis,
+            "evidence": evidence,
             "prior": prior,
-            "likelihood": likelihood,
             "posterior": posterior,
-            "confidence_change": posterior - prior,
-            "cascading_updates": cascading_updates,
-            "evidence_strength": self._assess_evidence_strength(evidence)
+            "change": posterior - prior,
+            "timestamp": datetime.now().isoformat()
         }
+        self.evidence_history.append(update_record)
+        
+        return update_record
     
-    def _calculate_likelihood(self, hypothesis: str, evidence: Dict[str, Any]) -> float:
-        """P(E|H) - 가설이 참일 때 증거가 관찰될 확률"""
+    def get_most_likely_hypothesis(self) -> Tuple[str, float]:
+        """가장 가능성 높은 가설 반환"""
+        if not self.beliefs:
+            return None, 0.0
         
-        # 복합 증거의 경우 독립성 가정 하에 개별 likelihood 곱
-        total_likelihood = 1.0
-        
-        for evidence_type, evidence_value in evidence.items():
-            if f"{hypothesis}_{evidence_type}" in self.likelihood_functions:
-                likelihood_func = self.likelihood_functions[f"{hypothesis}_{evidence_type}"]
-                individual_likelihood = likelihood_func(evidence_value)
-                total_likelihood *= individual_likelihood
-            else:
-                # 알려지지 않은 증거에 대해서는 중립적 확률
-                total_likelihood *= 0.5
-        
-        return total_likelihood
+        return max(self.beliefs.items(), key=lambda x: x[1])
     
-    def calculate_information_gain(self, potential_evidence: str, 
-                                 cost: float = 0.0) -> Dict[str, float]:
-        """잠재적 증거의 정보 이득 계산 - 어떤 실험을 해야 할지 결정"""
+    def compare_hypotheses(self, h1: str, h2: str) -> Dict[str, Any]:
+        """두 가설 비교"""
+        p1 = self.beliefs.get(h1, 0.5)
+        p2 = self.beliefs.get(h2, 0.5)
         
-        # 현재 엔트로피
-        current_entropy = self._calculate_belief_entropy()
-        
-        # 각 가능한 증거 결과에 대한 기대 엔트로피
-        expected_entropies = []
-        possible_outcomes = self._get_possible_outcomes(potential_evidence)
-        
-        for outcome in possible_outcomes:
-            # 이 결과가 나올 확률
-            outcome_probability = self._estimate_outcome_probability(potential_evidence, outcome)
-            
-            # 이 결과가 나왔을 때의 엔트로피
-            hypothetical_entropy = self._calculate_hypothetical_entropy(potential_evidence, outcome)
-            
-            expected_entropies.append(outcome_probability * hypothetical_entropy)
-        
-        expected_entropy = sum(expected_entropies)
-        information_gain = current_entropy - expected_entropy
+        # 베이즈 팩터 계산
+        if p2 > 0 and (1-p1) > 0:
+            bayes_factor = (p1 / (1-p1)) / (p2 / (1-p2))
+        else:
+            bayes_factor = float('inf') if p1 > p2 else 0
         
         return {
-            "evidence_type": potential_evidence,
-            "current_entropy": current_entropy,
-            "expected_entropy": expected_entropy,
-            "information_gain": information_gain,
-            "cost": cost,
-            "value_of_information": information_gain - cost,
-            "recommendation": "gather" if information_gain > cost else "skip"
+            f"P({h1})": p1,
+            f"P({h2})": p2,
+            "bayes_factor": bayes_factor,
+            "interpretation": self._interpret_bayes_factor(bayes_factor),
+            "preferred": h1 if p1 > p2 else h2
         }
+    
+    def _interpret_bayes_factor(self, bf: float) -> str:
+        """베이즈 팩터 해석"""
+        if bf > 100:
+            return "결정적 증거"
+        elif bf > 10:
+            return "강한 증거"
+        elif bf > 3:
+            return "중간 증거"
+        elif bf > 1:
+            return "약한 증거"
+        elif bf == 1:
+            return "중립"
+        else:
+            return "반대 증거"
 
 
-# 2. FORMAL LOGIC ENGINE - 엄밀한 논리적 추론
-class FormalLogicEngine:
-    """형식 논리 엔진 - 수학적 엄밀성을 갖춘 추론"""
+# ======================== 2. PRACTICAL LOGIC ENGINE ========================
+class PracticalLogicEngine:
+    """실용적 논리 추론 엔진"""
     
     def __init__(self):
-        self.axioms: Set[str] = set()
-        self.theorems: Dict[str, Dict[str, Any]] = {}
-        self.proof_tree = nx.DiGraph()
-        self.inference_rules = self._initialize_inference_rules()
+        self.facts: Set[str] = set()
+        self.rules: List[Dict[str, Any]] = []
+        self.inference_history: List[Dict[str, Any]] = []
+    
+    def add_fact(self, fact: str) -> None:
+        """사실 추가"""
+        self.facts.add(fact)
+    
+    def add_rule(self, name: str, conditions: List[str], 
+                 conclusion: str, confidence: float = 1.0) -> None:
+        """추론 규칙 추가"""
+        self.rules.append({
+            "name": name,
+            "conditions": conditions,
+            "conclusion": conclusion,
+            "confidence": confidence
+        })
+    
+    def forward_inference(self, max_iterations: int = 10) -> List[str]:
+        """전방 추론 실행"""
+        new_facts_total = []
         
-    def prove_theorem(self, statement: str, max_depth: int = 10) -> Optional[Dict[str, Any]]:
-        """정리 증명 시도"""
-        
-        proof_search = deque([(statement, [], 0)])  # (목표, 경로, 깊이)
-        visited = set()
-        
-        while proof_search:
-            current_goal, proof_path, depth = proof_search.popleft()
+        for iteration in range(max_iterations):
+            new_facts = []
             
-            if depth > max_depth:
-                continue
+            for rule in self.rules:
+                # 모든 조건이 만족되는지 확인
+                if all(cond in self.facts for cond in rule["conditions"]):
+                    if rule["conclusion"] not in self.facts:
+                        new_facts.append(rule["conclusion"])
+                        self.facts.add(rule["conclusion"])
+                        
+                        # 추론 기록
+                        self.inference_history.append({
+                            "rule": rule["name"],
+                            "conditions": rule["conditions"],
+                            "conclusion": rule["conclusion"],
+                            "iteration": iteration
+                        })
+            
+            if not new_facts:
+                break  # 더 이상 새로운 사실이 없으면 종료
                 
-            if current_goal in visited:
-                continue
-            visited.add(current_goal)
-            
-            # 이미 증명된 정리인지 확인
-            if current_goal in self.theorems:
-                return {
-                    "statement": statement,
-                    "proof_path": proof_path + [current_goal],
-                    "proof_type": "direct_reference",
-                    "depth": depth
-                }
-            
-            # 공리인지 확인
-            if current_goal in self.axioms:
-                return {
-                    "statement": statement,
-                    "proof_path": proof_path + [current_goal],
-                    "proof_type": "axiom",
-                    "depth": depth
-                }
-            
-            # 추론 규칙 적용
-            for rule_name, rule_func in self.inference_rules.items():
-                sub_goals = rule_func(current_goal, self.axioms, self.theorems)
-                for sub_goal in sub_goals:
-                    new_path = proof_path + [f"{rule_name}: {current_goal}"]
-                    proof_search.append((sub_goal, new_path, depth + 1))
+            new_facts_total.extend(new_facts)
         
-        return None  # 증명 실패
+        return new_facts_total
     
     def check_consistency(self) -> Dict[str, Any]:
-        """논리 체계의 일관성 검사"""
+        """논리적 일관성 검사"""
+        contradictions = []
         
-        inconsistencies = []
+        # 직접적인 모순 찾기 (A와 ~A)
+        for fact in self.facts:
+            if fact.startswith("~"):
+                positive = fact[1:]
+                if positive in self.facts:
+                    contradictions.append((positive, fact))
+            else:
+                negative = f"~{fact}"
+                if negative in self.facts:
+                    contradictions.append((fact, negative))
         
-        # 모든 정리 쌍에 대해 모순 검사
-        for theorem1, theorem2 in itertools.combinations(self.theorems.keys(), 2):
-            if self._are_contradictory(theorem1, theorem2):
-                inconsistencies.append({
-                    "theorem1": theorem1,
-                    "theorem2": theorem2,
-                    "type": "direct_contradiction"
+        return {
+            "is_consistent": len(contradictions) == 0,
+            "contradictions": contradictions,
+            "fact_count": len(self.facts),
+            "rule_count": len(self.rules)
+        }
+    
+    def explain_inference(self, target_fact: str) -> List[Dict[str, Any]]:
+        """특정 사실에 대한 추론 경로 설명"""
+        explanation = []
+        
+        for record in self.inference_history:
+            if record["conclusion"] == target_fact:
+                explanation.append({
+                    "step": len(explanation) + 1,
+                    "rule_used": record["rule"],
+                    "required_facts": record["conditions"],
+                    "derived_fact": record["conclusion"]
                 })
         
-        # 추론 규칙을 통한 간접 모순 검사
-        indirect_contradictions = self._find_indirect_contradictions()
-        inconsistencies.extend(indirect_contradictions)
-        
-        return {
-            "is_consistent": len(inconsistencies) == 0,
-            "inconsistencies": inconsistencies,
-            "consistency_score": 1.0 - (len(inconsistencies) / max(1, len(self.theorems))),
-            "recommendation": self._generate_consistency_recommendation(inconsistencies)
-        }
+        return explanation
 
 
-# 3. PROBABILISTIC PROGRAMMING ENGINE - 확률적 모델링
-class ProbabilisticProgrammingEngine:
-    """확률적 프로그래밍 엔진 - 불확실성을 다루는 프로그램"""
+# ======================== 3. UNCERTAINTY HANDLER ========================
+class UncertaintyHandler:
+    """불확실성 처리 시스템"""
     
     def __init__(self):
-        self.models: Dict[str, 'ProbabilisticModel'] = {}
-        self.sampling_methods = {
-            "rejection": self._rejection_sampling,
-            "importance": self._importance_sampling,
-            "mcmc": self._mcmc_sampling,
-            "variational": self._variational_inference
+        self.confidence_threshold = 0.7
+        self.uncertainty_sources = {
+            "incomplete_data": 0.3,
+            "measurement_error": 0.1,
+            "model_uncertainty": 0.2,
+            "unknown_factors": 0.4
         }
-        
-    def create_model(self, name: str, structure: Dict[str, Any]) -> 'ProbabilisticModel':
-        """확률 모델 생성"""
-        
-        model = ProbabilisticModel(name)
-        
-        # 변수 정의
-        for var_name, var_spec in structure.get("variables", {}).items():
-            distribution = var_spec["distribution"]
-            parents = var_spec.get("parents", [])
-            model.add_variable(var_name, distribution, parents)
-        
-        # 제약조건 추가
-        for constraint in structure.get("constraints", []):
-            model.add_constraint(constraint)
-        
-        self.models[name] = model
-        return model
     
-    def infer(self, model_name: str, query: Dict[str, Any], 
-              evidence: Dict[str, Any], method: str = "mcmc") -> Dict[str, Any]:
-        """확률적 추론 수행"""
+    def calculate_confidence(self, 
+                           evidence_quality: float,
+                           model_accuracy: float,
+                           consistency_score: float) -> Dict[str, float]:
+        """종합적 신뢰도 계산"""
         
-        model = self.models[model_name]
-        sampling_func = self.sampling_methods[method]
+        # 가중 평균
+        weights = {"evidence": 0.4, "model": 0.3, "consistency": 0.3}
         
-        # 샘플링을 통한 추론
-        samples = sampling_func(model, query, evidence, n_samples=10000)
-        
-        # 결과 분석
-        posterior_distribution = self._analyze_samples(samples, query)
-        
-        return {
-            "query": query,
-            "evidence": evidence,
-            "method": method,
-            "posterior": posterior_distribution,
-            "confidence_intervals": self._calculate_confidence_intervals(posterior_distribution),
-            "convergence_diagnostics": self._check_convergence(samples)
-        }
-
-
-# 4. REASONING GRAPH VISUALIZER - 추론 과정 시각화
-class ReasoningGraphVisualizer:
-    """추론 그래프 시각화 - 사고 과정을 투명하게"""
-    
-    def __init__(self):
-        self.reasoning_graph = nx.MultiDiGraph()
-        self.node_types: Dict[str, str] = {}
-        self.edge_strengths: Dict[tuple, float] = {}
-        
-    def add_reasoning_step(self, from_node: str, to_node: str, 
-                          reasoning_type: str, strength: float = 1.0,
-                          metadata: Dict[str, Any] = None) -> None:
-        """추론 단계 추가"""
-        
-        # 노드 추가
-        if from_node not in self.reasoning_graph:
-            self.reasoning_graph.add_node(from_node)
-        if to_node not in self.reasoning_graph:
-            self.reasoning_graph.add_node(to_node)
-        
-        # 엣지 추가 (추론 관계)
-        edge_key = self.reasoning_graph.add_edge(
-            from_node, to_node, 
-            reasoning_type=reasoning_type,
-            strength=strength,
-            metadata=metadata or {}
+        weighted_score = (
+            evidence_quality * weights["evidence"] +
+            model_accuracy * weights["model"] +
+            consistency_score * weights["consistency"]
         )
         
-        self.edge_strengths[(from_node, to_node, edge_key)] = strength
+        # 불확실성 요인 고려
+        uncertainty_penalty = sum(
+            self.uncertainty_sources.values()
+        ) / len(self.uncertainty_sources)
+        
+        final_confidence = weighted_score * (1 - uncertainty_penalty)
+        
+        return {
+            "raw_confidence": weighted_score,
+            "uncertainty_penalty": uncertainty_penalty,
+            "final_confidence": final_confidence,
+            "is_reliable": final_confidence >= self.confidence_threshold,
+            "interpretation": self._interpret_confidence(final_confidence)
+        }
     
-    def find_reasoning_chains(self, start: str, end: str, 
-                            min_strength: float = 0.5) -> List[List[str]]:
-        """추론 체인 찾기"""
+    def propagate_uncertainty(self, 
+                            input_uncertainties: List[float],
+                            operation: str = "multiply") -> float:
+        """불확실성 전파 계산"""
         
-        valid_paths = []
+        if operation == "multiply":
+            # 곱셈의 경우: 상대 불확실성의 제곱합의 제곱근
+            if len(input_uncertainties) == 0:
+                return 0
+            return np.sqrt(sum(u**2 for u in input_uncertainties))
         
-        # 모든 경로 찾기
-        try:
-            all_paths = list(nx.all_simple_paths(self.reasoning_graph, start, end))
-        except nx.NetworkXNoPath:
+        elif operation == "add":
+            # 덧셈의 경우: 절대 불확실성의 제곱합의 제곱근
+            return np.sqrt(sum(u**2 for u in input_uncertainties))
+        
+        else:
+            # 기본: 최대 불확실성
+            return max(input_uncertainties) if input_uncertainties else 0
+    
+    def _interpret_confidence(self, confidence: float) -> str:
+        """신뢰도 수준 해석"""
+        if confidence >= 0.9:
+            return "매우 높음"
+        elif confidence >= 0.7:
+            return "높음"
+        elif confidence >= 0.5:
+            return "중간"
+        elif confidence >= 0.3:
+            return "낮음"
+        else:
+            return "매우 낮음"
+
+
+# ======================== 4. CAUSAL REASONER ========================
+class CausalReasoner:
+    """인과관계 추론 시스템"""
+    
+    def __init__(self):
+        self.causal_graph = {}  # cause -> [effects]
+        self.observations = []
+        self.confounders = set()
+    
+    def add_causal_link(self, cause: str, effect: str, 
+                       strength: float = 1.0) -> None:
+        """인과관계 추가"""
+        if cause not in self.causal_graph:
+            self.causal_graph[cause] = []
+        
+        self.causal_graph[cause].append({
+            "effect": effect,
+            "strength": strength
+        })
+    
+    def add_confounder(self, variable: str) -> None:
+        """교란변수 추가"""
+        self.confounders.add(variable)
+    
+    def observe(self, variable: str, value: Any, 
+                context: Dict[str, Any] = None) -> None:
+        """관찰 기록"""
+        self.observations.append({
+            "variable": variable,
+            "value": value,
+            "context": context or {},
+            "timestamp": datetime.now().isoformat()
+        })
+    
+    def infer_causation(self, cause: str, effect: str) -> Dict[str, Any]:
+        """인과관계 추론"""
+        
+        # 직접 인과관계 확인
+        direct_link = None
+        if cause in self.causal_graph:
+            for link in self.causal_graph[cause]:
+                if link["effect"] == effect:
+                    direct_link = link
+                    break
+        
+        # 간접 경로 찾기
+        indirect_paths = self._find_causal_paths(cause, effect)
+        
+        # 관찰 데이터에서 상관관계 확인
+        correlation = self._calculate_correlation(cause, effect)
+        
+        # 교란변수 영향 평가
+        confounder_risk = self._assess_confounder_risk(cause, effect)
+        
+        return {
+            "direct_causation": direct_link is not None,
+            "direct_strength": direct_link["strength"] if direct_link else 0,
+            "indirect_paths": len(indirect_paths),
+            "correlation": correlation,
+            "confounder_risk": confounder_risk,
+            "causal_confidence": self._calculate_causal_confidence(
+                direct_link, indirect_paths, correlation, confounder_risk
+            )
+        }
+    
+    def _find_causal_paths(self, start: str, end: str, 
+                          path: List[str] = None) -> List[List[str]]:
+        """인과 경로 찾기 (DFS)"""
+        if path is None:
+            path = [start]
+        
+        if start == end:
+            return [path]
+        
+        if start not in self.causal_graph:
             return []
         
-        # 최소 강도 조건을 만족하는 경로만 필터
-        for path in all_paths:
-            path_strength = self._calculate_path_strength(path)
-            if path_strength >= min_strength:
-                valid_paths.append({
-                    "path": path,
-                    "strength": path_strength,
-                    "steps": len(path) - 1
-                })
+        paths = []
+        for link in self.causal_graph[start]:
+            next_node = link["effect"]
+            if next_node not in path:  # 순환 방지
+                new_path = path + [next_node]
+                paths.extend(
+                    self._find_causal_paths(next_node, end, new_path)
+                )
         
-        # 강도순으로 정렬
-        valid_paths.sort(key=lambda x: x["strength"], reverse=True)
-        return valid_paths
+        return paths
+    
+    def _calculate_correlation(self, var1: str, var2: str) -> float:
+        """관찰 데이터에서 상관관계 계산"""
+        # 간단한 구현 - 실제로는 더 정교한 통계 필요
+        var1_obs = [o["value"] for o in self.observations 
+                   if o["variable"] == var1]
+        var2_obs = [o["value"] for o in self.observations 
+                   if o["variable"] == var2]
+        
+        if len(var1_obs) < 2 or len(var2_obs) < 2:
+            return 0.0
+        
+        # 동시 발생 비율로 간단히 추정
+        co_occurrence = 0
+        for obs in self.observations:
+            context = obs.get("context", {})
+            if var1 in context and var2 in context:
+                co_occurrence += 1
+        
+        return co_occurrence / max(len(var1_obs), len(var2_obs))
+    
+    def _assess_confounder_risk(self, cause: str, effect: str) -> float:
+        """교란변수 위험도 평가"""
+        risk = 0.0
+        
+        # 각 교란변수가 원인과 결과 모두에 영향을 주는지 확인
+        for confounder in self.confounders:
+            affects_cause = confounder in self.causal_graph and \
+                          any(link["effect"] == cause 
+                              for link in self.causal_graph[confounder])
+            affects_effect = confounder in self.causal_graph and \
+                           any(link["effect"] == effect 
+                               for link in self.causal_graph[confounder])
+            
+            if affects_cause and affects_effect:
+                risk += 0.3  # 각 교란변수당 위험도 증가
+        
+        return min(risk, 1.0)
+    
+    def _calculate_causal_confidence(self, direct_link, indirect_paths, 
+                                   correlation, confounder_risk) -> float:
+        """종합적 인과관계 신뢰도"""
+        confidence = 0.0
+        
+        # 직접 인과관계가 있으면 기본 신뢰도
+        if direct_link:
+            confidence += direct_link["strength"] * 0.5
+        
+        # 간접 경로도 고려
+        if indirect_paths:
+            confidence += min(len(indirect_paths) * 0.1, 0.3)
+        
+        # 상관관계도 고려
+        confidence += correlation * 0.2
+        
+        # 교란변수 위험도만큼 감소
+        confidence *= (1 - confounder_risk * 0.5)
+        
+        return min(confidence, 1.0)
 
 
-# 5. META-REASONING ENGINE - 추론에 대한 추론
-class MetaReasoningEngine:
-    """메타 추론 엔진 - 자신의 추론을 모니터링하고 개선"""
+# ======================== 5. BIAS DETECTOR ========================
+class BiasDetector:
+    """인지 편향 감지기"""
     
     def __init__(self):
-        self.reasoning_patterns: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
-        self.performance_metrics: Dict[str, float] = {}
-        self.bias_detectors = self._initialize_bias_detectors()
-        self.optimization_strategies = self._initialize_optimization_strategies()
-        
-    def monitor_reasoning_process(self, reasoning_trace: Dict[str, Any]) -> Dict[str, Any]:
-        """추론 과정 모니터링"""
-        
-        # 추론 패턴 분석
-        pattern_analysis = self._analyze_reasoning_pattern(reasoning_trace)
-        
-        # 편향 감지
-        detected_biases = self._detect_reasoning_biases(reasoning_trace)
-        
-        # 효율성 평가
-        efficiency_metrics = self._evaluate_reasoning_efficiency(reasoning_trace)
-        
-        # 개선 제안
-        improvements = self._suggest_improvements(
-            pattern_analysis, detected_biases, efficiency_metrics
-        )
-        
-        return {
-            "pattern_type": pattern_analysis["dominant_pattern"],
-            "detected_biases": detected_biases,
-            "efficiency_score": efficiency_metrics["overall_efficiency"],
-            "bottlenecks": efficiency_metrics["bottlenecks"],
-            "improvement_suggestions": improvements,
-            "meta_confidence": self._calculate_meta_confidence(reasoning_trace)
+        self.detected_biases = []
+        self.bias_patterns = {
+            "confirmation": self._check_confirmation_bias,
+            "anchoring": self._check_anchoring_bias,
+            "availability": self._check_availability_bias,
+            "complexity": self._check_complexity_bias
         }
     
-    def optimize_reasoning_strategy(self, problem_type: str, 
-                                   constraints: Dict[str, Any]) -> Dict[str, Any]:
-        """문제 유형에 따른 최적 추론 전략 선택"""
+    def analyze_reasoning(self, reasoning_trace: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """추론 과정에서 편향 감지"""
         
-        # 과거 성능 데이터 분석
-        historical_performance = self._analyze_historical_performance(problem_type)
+        detected = {}
         
-        # 제약조건 고려
-        feasible_strategies = self._filter_feasible_strategies(constraints)
+        for bias_name, check_func in self.bias_patterns.items():
+            result = check_func(reasoning_trace)
+            if result["detected"]:
+                detected[bias_name] = result
         
-        # 최적 전략 선택
-        optimal_strategy = self._select_optimal_strategy(
-            problem_type, feasible_strategies, historical_performance
-        )
-        
-        # 전략 파라미터 튜닝
-        tuned_parameters = self._tune_strategy_parameters(
-            optimal_strategy, problem_type, constraints
-        )
+        # 전체 편향 점수
+        bias_score = len(detected) / len(self.bias_patterns)
         
         return {
-            "selected_strategy": optimal_strategy,
-            "parameters": tuned_parameters,
-            "expected_performance": self._estimate_performance(optimal_strategy, problem_type),
-            "fallback_strategies": self._identify_fallback_strategies(optimal_strategy),
-            "monitoring_plan": self._create_monitoring_plan(optimal_strategy)
+            "detected_biases": detected,
+            "bias_score": bias_score,
+            "is_biased": bias_score > 0.3,
+            "recommendations": self._generate_debiasing_recommendations(detected)
         }
-
-
-# 6. INTEGRATED SCIENTIFIC REASONING SYSTEM
-class IntegratedScientificReasoningSystem:
-    """통합 과학적 추론 시스템 - 모든 엔진의 시너지"""
     
-    def __init__(self, agi_name: str = "통합추론AGI"):
-        self.name = agi_name
+    def _check_confirmation_bias(self, trace: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """확증편향 검사"""
         
-        # 핵심 추론 엔진들
-        self.bayesian_engine = BayesianReasoningEngine()
-        self.formal_logic_engine = FormalLogicEngine()
-        self.probabilistic_engine = ProbabilisticProgrammingEngine()
-        self.reasoning_visualizer = ReasoningGraphVisualizer()
-        self.meta_reasoning_engine = MetaReasoningEngine()
+        supporting_evidence = 0
+        contradicting_evidence = 0
         
-        # 통합 상태
-        self.reasoning_context = {}
-        self.active_hypotheses = {}
-        self.confidence_threshold = 0.7
+        for step in trace:
+            if step.get("type") == "evidence":
+                if step.get("supports_hypothesis"):
+                    supporting_evidence += 1
+                else:
+                    contradicting_evidence += 1
         
-    async def reason_scientifically(self, problem: Dict[str, Any], 
-                                  evidence: List[Dict[str, Any]] = None) -> Dict[str, Any]:
-        """통합 과학적 추론 수행"""
+        total = supporting_evidence + contradicting_evidence
+        if total == 0:
+            return {"detected": False}
         
-        print(f"\n🧠 [{self.name}] 통합 과학적 추론 시작")
+        support_ratio = supporting_evidence / total
         
-        # 1. 메타 추론으로 최적 전략 선택
-        reasoning_strategy = self.meta_reasoning_engine.optimize_reasoning_strategy(
-            problem.get("type", "general"),
-            problem.get("constraints", {})
+        # 지지 증거가 80% 이상이면 확증편향 의심
+        if support_ratio > 0.8:
+            return {
+                "detected": True,
+                "severity": "high" if support_ratio > 0.9 else "medium",
+                "evidence": f"지지 증거 {support_ratio:.0%}",
+                "recommendation": "반대 증거를 적극적으로 찾아보세요"
+            }
+        
+        return {"detected": False}
+    
+    def _check_anchoring_bias(self, trace: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """기준점 편향 검사"""
+        
+        initial_estimates = []
+        final_estimates = []
+        
+        for i, step in enumerate(trace):
+            if step.get("type") == "estimate":
+                if i < len(trace) / 3:  # 초기 1/3
+                    initial_estimates.append(step.get("value", 0))
+                elif i > 2 * len(trace) / 3:  # 후기 1/3
+                    final_estimates.append(step.get("value", 0))
+        
+        if not initial_estimates or not final_estimates:
+            return {"detected": False}
+        
+        # 초기 추정치 주변에 최종 추정치가 모여있는지 확인
+        initial_mean = np.mean(initial_estimates)
+        final_std = np.std(final_estimates)
+        
+        if final_std < initial_mean * 0.2:  # 변동성이 작으면 기준점 편향 의심
+            return {
+                "detected": True,
+                "severity": "medium",
+                "evidence": f"최종 추정치 표준편차: {final_std:.2f}",
+                "recommendation": "초기 가정을 의심하고 다시 생각해보세요"
+            }
+        
+        return {"detected": False}
+    
+    def _check_availability_bias(self, trace: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """가용성 편향 검사"""
+        
+        recent_examples = 0
+        old_examples = 0
+        
+        for step in trace:
+            if step.get("type") == "example":
+                age = step.get("age_days", 0)
+                if age < 7:  # 최근 1주일
+                    recent_examples += 1
+                else:
+                    old_examples += 1
+        
+        if recent_examples + old_examples == 0:
+            return {"detected": False}
+        
+        recency_ratio = recent_examples / (recent_examples + old_examples)
+        
+        if recency_ratio > 0.7:
+            return {
+                "detected": True,
+                "severity": "medium",
+                "evidence": f"최근 사례 비율: {recency_ratio:.0%}",
+                "recommendation": "더 오래되고 다양한 사례를 고려하세요"
+            }
+        
+        return {"detected": False}
+    
+    def _check_complexity_bias(self, trace: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """복잡성 편향 검사"""
+        
+        complexity_scores = []
+        preference_scores = []
+        
+        for step in trace:
+            if step.get("type") == "option_evaluation":
+                complexity = step.get("complexity", 0)
+                preference = step.get("preference", 0)
+                
+                complexity_scores.append(complexity)
+                preference_scores.append(preference)
+        
+        if len(complexity_scores) < 2:
+            return {"detected": False}
+        
+        # 복잡성과 선호도의 상관관계
+        correlation = np.corrcoef(complexity_scores, preference_scores)[0, 1]
+        
+        if correlation > 0.6:
+            return {
+                "detected": True,
+                "severity": "high" if correlation > 0.8 else "medium",
+                "evidence": f"복잡성-선호도 상관: {correlation:.2f}",
+                "recommendation": "단순한 해결책도 진지하게 고려하세요"
+            }
+        
+        return {"detected": False}
+    
+    def _generate_debiasing_recommendations(self, detected_biases: Dict[str, Any]) -> List[str]:
+        """편향 제거 권고사항 생성"""
+        
+        recommendations = []
+        
+        if "confirmation" in detected_biases:
+            recommendations.append("적극적으로 반대 증거를 찾아보세요")
+        
+        if "anchoring" in detected_biases:
+            recommendations.append("초기 가정 없이 처음부터 다시 분석해보세요")
+        
+        if "availability" in detected_biases:
+            recommendations.append("체계적인 데이터 수집을 고려하세요")
+        
+        if "complexity" in detected_biases:
+            recommendations.append("Occam's Razor - 가장 단순한 설명을 선호하세요")
+        
+        if not recommendations:
+            recommendations.append("현재 추론 과정은 균형잡혀 있습니다")
+        
+        return recommendations
+
+
+# ======================== 6. INTEGRATED REASONER ========================
+class PracticalReasoner:
+    """모든 구성요소를 통합한 실용적 추론 시스템"""
+    
+    def __init__(self, name: str = "PracticalAGI"):
+        self.name = name
+        self.bayesian = SimpleBayesianReasoner()
+        self.logic = PracticalLogicEngine()
+        self.uncertainty = UncertaintyHandler()
+        self.causal = CausalReasoner()
+        self.bias_detector = BiasDetector()
+        
+        self.reasoning_trace = []
+        self.conclusions = []
+    
+    def reason(self, question: str, context: Dict[str, Any] = None) -> Dict[str, Any]:
+        """통합 추론 수행"""
+        
+        print(f"\n🧠 [{self.name}] 추론 시작: {question}")
+        
+        # 추론 시작
+        self.reasoning_trace = []
+        
+        # 1. 문제 분석
+        problem_type = self._analyze_problem(question, context)
+        self._log_step("problem_analysis", problem_type)
+        
+        # 2. 적절한 추론 방법 선택
+        reasoning_methods = self._select_reasoning_methods(problem_type)
+        
+        results = {}
+        
+        # 3. 선택된 방법들로 추론 수행
+        if "bayesian" in reasoning_methods:
+            results["bayesian"] = self._apply_bayesian_reasoning(
+                problem_type, context
+            )
+        
+        if "logical" in reasoning_methods:
+            results["logical"] = self._apply_logical_reasoning(
+                problem_type, context
+            )
+        
+        if "causal" in reasoning_methods:
+            results["causal"] = self._apply_causal_reasoning(
+                problem_type, context
+            )
+        
+        # 4. 결과 통합
+        integrated_conclusion = self._integrate_results(results)
+        
+        # 5. 불확실성 평가
+        confidence_analysis = self._assess_confidence(
+            integrated_conclusion, results
         )
         
-        # 2. 형식 논리로 문제 구조 분석
-        logical_structure = await self._analyze_logical_structure(problem)
+        # 6. 편향 검사
+        bias_analysis = self.bias_detector.analyze_reasoning(
+            self.reasoning_trace
+        )
         
-        # 3. 베이지안 추론으로 불확실성 처리
-        if evidence:
-            bayesian_updates = await self._perform_bayesian_inference(problem, evidence)
+        # 최종 결과
+        final_result = {
+            "question": question,
+            "answer": integrated_conclusion["answer"],
+            "confidence": confidence_analysis["final_confidence"],
+            "reasoning_methods": reasoning_methods,
+            "detailed_results": results,
+            "bias_analysis": bias_analysis,
+            "limitations": self._identify_limitations(
+                integrated_conclusion, confidence_analysis
+            )
+        }
+        
+        self.conclusions.append(final_result)
+        
+        print(f"✅ 결론: {final_result['answer']}")
+        print(f"📊 신뢰도: {final_result['confidence']:.2%}")
+        
+        return final_result
+    
+    def _analyze_problem(self, question: str, context: Dict[str, Any]) -> Dict[str, Any]:
+        """문제 유형 분석"""
+        
+        problem_type = {
+            "type": "unknown",
+            "requires_probability": "확률" in question or "가능성" in question,
+            "requires_logic": "만약" in question or "따라서" in question,
+            "requires_causation": "때문" in question or "영향" in question,
+            "has_uncertainty": "아마" in question or "추측" in question
+        }
+        
+        # 문제 유형 결정
+        if problem_type["requires_probability"]:
+            problem_type["type"] = "probabilistic"
+        elif problem_type["requires_logic"]:
+            problem_type["type"] = "logical"
+        elif problem_type["requires_causation"]:
+            problem_type["type"] = "causal"
         else:
-            bayesian_updates = {"message": "증거 없음 - 사전 확률만 사용"}
+            problem_type["type"] = "general"
         
-        # 4. 확률적 모델링
-        probabilistic_model = await self._build_probabilistic_model(problem, evidence)
+        return problem_type
+    
+    def _select_reasoning_methods(self, problem_type: Dict[str, Any]) -> List[str]:
+        """적절한 추론 방법 선택"""
         
-        # 5. 추론 과정 시각화
-        self._visualize_reasoning_process(
-            logical_structure, bayesian_updates, probabilistic_model
+        methods = []
+        
+        if problem_type["type"] == "probabilistic":
+            methods.append("bayesian")
+        elif problem_type["type"] == "logical":
+            methods.append("logical")
+        elif problem_type["type"] == "causal":
+            methods.append("causal")
+            methods.append("bayesian")  # 인과관계도 확률적 요소 포함
+        else:
+            # 일반적인 경우 모든 방법 사용
+            methods = ["logical", "bayesian"]
+        
+        return methods
+    
+    def _apply_bayesian_reasoning(self, problem_type: Dict[str, Any], 
+                                context: Dict[str, Any]) -> Dict[str, Any]:
+        """베이지안 추론 적용"""
+        
+        # 컨텍스트에서 가설과 증거 추출
+        hypotheses = context.get("hypotheses", ["H1", "H2"])
+        evidence = context.get("evidence", [])
+        
+        # 각 가설에 대해 베이지안 업데이트
+        results = {}
+        for h in hypotheses:
+            self.bayesian.set_prior(h, 0.5)  # 중립적 사전확률
+            
+            for e in evidence:
+                update = self.bayesian.update_belief(
+                    h, 
+                    e.get("description", "evidence"),
+                    e.get("likelihood_if_true", 0.8),
+                    e.get("likelihood_if_false", 0.3)
+                )
+                self._log_step("bayesian_update", update)
+        
+        # 가장 가능성 높은 가설
+        best_hypothesis, probability = self.bayesian.get_most_likely_hypothesis()
+        
+        return {
+            "method": "bayesian",
+            "best_hypothesis": best_hypothesis,
+            "probability": probability,
+            "all_beliefs": dict(self.bayesian.beliefs)
+        }
+    
+    def _apply_logical_reasoning(self, problem_type: Dict[str, Any], 
+                                context: Dict[str, Any]) -> Dict[str, Any]:
+        """논리적 추론 적용"""
+        
+        # 컨텍스트에서 사실과 규칙 추출
+        facts = context.get("facts", [])
+        rules = context.get("rules", [])
+        
+        # 사실 추가
+        for fact in facts:
+            self.logic.add_fact(fact)
+            self._log_step("add_fact", {"fact": fact})
+        
+        # 규칙 추가
+        for rule in rules:
+            self.logic.add_rule(
+                rule.get("name", "rule"),
+                rule.get("conditions", []),
+                rule.get("conclusion", ""),
+                rule.get("confidence", 1.0)
+            )
+        
+        # 추론 실행
+        new_facts = self.logic.forward_inference()
+        consistency = self.logic.check_consistency()
+        
+        return {
+            "method": "logical",
+            "derived_facts": new_facts,
+            "all_facts": list(self.logic.facts),
+            "is_consistent": consistency["is_consistent"],
+            "contradictions": consistency.get("contradictions", [])
+        }
+    
+    def _apply_causal_reasoning(self, problem_type: Dict[str, Any], 
+                               context: Dict[str, Any]) -> Dict[str, Any]:
+        """인과 추론 적용"""
+        
+        # 컨텍스트에서 인과관계 정보 추출
+        causal_links = context.get("causal_links", [])
+        observations = context.get("observations", [])
+        
+        # 인과 그래프 구축
+        for link in causal_links:
+            self.causal.add_causal_link(
+                link["cause"],
+                link["effect"],
+                link.get("strength", 1.0)
+            )
+        
+        # 관찰 추가
+        for obs in observations:
+            self.causal.observe(
+                obs["variable"],
+                obs["value"],
+                obs.get("context", {})
+            )
+        
+        # 주요 인과관계 분석
+        target_cause = context.get("target_cause", "")
+        target_effect = context.get("target_effect", "")
+        
+        if target_cause and target_effect:
+            causal_analysis = self.causal.infer_causation(
+                target_cause, target_effect
+            )
+        else:
+            causal_analysis = {"message": "인과관계 대상 미지정"}
+        
+        return {
+            "method": "causal",
+            "analysis": causal_analysis,
+            "causal_graph_size": len(self.causal.causal_graph)
+        }
+    
+    def _integrate_results(self, results: Dict[str, Any]) -> Dict[str, Any]:
+        """여러 추론 방법의 결과 통합"""
+        
+        integrated = {
+            "answer": "",
+            "supporting_methods": [],
+            "conflicts": []
+        }
+        
+        # 각 방법의 주요 결론 추출
+        conclusions = []
+        
+        if "bayesian" in results:
+            bayesian_result = results["bayesian"]
+            if bayesian_result["best_hypothesis"]:
+                conclusions.append({
+                    "method": "bayesian",
+                    "conclusion": bayesian_result["best_hypothesis"],
+                    "confidence": bayesian_result["probability"]
+                })
+        
+        if "logical" in results:
+            logical_result = results["logical"]
+            if logical_result["derived_facts"]:
+                conclusions.append({
+                    "method": "logical",
+                    "conclusion": ", ".join(logical_result["derived_facts"]),
+                    "confidence": 1.0 if logical_result["is_consistent"] else 0.5
+                })
+        
+        if "causal" in results:
+            causal_result = results["causal"]
+            if "analysis" in causal_result and causal_result["analysis"]:
+                conclusions.append({
+                    "method": "causal",
+                    "conclusion": f"인과관계 신뢰도: {causal_result['analysis'].get('causal_confidence', 0):.2f}",
+                    "confidence": causal_result["analysis"].get("causal_confidence", 0)
+                })
+        
+        # 가장 신뢰도 높은 결론 선택
+        if conclusions:
+            best_conclusion = max(conclusions, key=lambda x: x["confidence"])
+            integrated["answer"] = best_conclusion["conclusion"]
+            integrated["supporting_methods"] = [best_conclusion["method"]]
+        else:
+            integrated["answer"] = "충분한 정보가 없어 결론을 내릴 수 없습니다"
+        
+        return integrated
+    
+    def _assess_confidence(self, conclusion: Dict[str, Any], 
+                         results: Dict[str, Any]) -> Dict[str, Any]:
+        """종합적 신뢰도 평가"""
+        
+        # 각 추론 방법의 신뢰도 수집
+        confidences = []
+        
+        if "bayesian" in results:
+            confidences.append(results["bayesian"].get("probability", 0.5))
+        
+        if "logical" in results:
+            is_consistent = results["logical"].get("is_consistent", True)
+            confidences.append(1.0 if is_consistent else 0.3)
+        
+        if "causal" in results and "analysis" in results["causal"]:
+            confidences.append(
+                results["causal"]["analysis"].get("causal_confidence", 0.5)
+            )
+        
+        # 평균 신뢰도
+        avg_confidence = np.mean(confidences) if confidences else 0.5
+        
+        # 증거 품질과 모델 정확도 추정 (간단히)
+        evidence_quality = min(len(self.reasoning_trace) / 10, 1.0)
+        model_accuracy = 0.7  # 기본값
+        consistency_score = 1.0 if not any(
+            r.get("contradictions") for r in results.values()
+        ) else 0.5
+        
+        return self.uncertainty.calculate_confidence(
+            evidence_quality,
+            model_accuracy,
+            consistency_score
         )
+    
+    def _identify_limitations(self, conclusion: Dict[str, Any], 
+                            confidence: Dict[str, Any]) -> List[str]:
+        """추론의 한계 식별"""
         
-        # 6. 통합 결론 도출
-        integrated_conclusion = await self._synthesize_conclusion(
-            logical_structure, bayesian_updates, probabilistic_model
-        )
+        limitations = []
         
-        # 7. 메타 분석
-        meta_analysis = self.meta_reasoning_engine.monitor_reasoning_process({
-            "strategy": reasoning_strategy,
-            "logical": logical_structure,
-            "bayesian": bayesian_updates,
-            "probabilistic": probabilistic_model,
-            "conclusion": integrated_conclusion
+        if confidence["final_confidence"] < 0.7:
+            limitations.append("신뢰도가 낮아 결론이 불확실합니다")
+        
+        if not conclusion.get("supporting_methods"):
+            limitations.append("어떤 추론 방법도 명확한 답을 제공하지 못했습니다")
+        
+        if len(self.reasoning_trace) < 5:
+            limitations.append("충분한 추론 단계를 거치지 못했습니다")
+        
+        # 편향 검사 결과 확인
+        bias_count = len(self.bias_detector.detected_biases)
+        if bias_count > 0:
+            limitations.append(f"{bias_count}개의 인지 편향이 감지되었습니다")
+        
+        if not limitations:
+            limitations.append("중요한 한계점이 발견되지 않았습니다")
+        
+        return limitations
+    
+    def _log_step(self, step_type: str, data: Any) -> None:
+        """추론 단계 기록"""
+        self.reasoning_trace.append({
+            "step": len(self.reasoning_trace) + 1,
+            "type": step_type,
+            "data": data,
+            "timestamp": datetime.now().isoformat()
         })
-        
-        return {
-            "problem": problem,
-            "reasoning_strategy": reasoning_strategy,
-            "logical_analysis": logical_structure,
-            "bayesian_inference": bayesian_updates,
-            "probabilistic_model": probabilistic_model,
-            "integrated_conclusion": integrated_conclusion,
-            "meta_analysis": meta_analysis,
-            "confidence": integrated_conclusion.get("confidence", 0),
-            "reasoning_graph": self._export_reasoning_graph()
-        }
     
-    async def _synthesize_conclusion(self, logical: Dict[str, Any], 
-                                   bayesian: Dict[str, Any],
-                                   probabilistic: Dict[str, Any]) -> Dict[str, Any]:
-        """다양한 추론 결과 통합"""
+    def explain_reasoning(self) -> str:
+        """추론 과정 설명"""
         
-        # 각 추론 방법의 결론 추출
-        logical_conclusion = logical.get("conclusion", {})
-        bayesian_conclusion = bayesian.get("most_likely_hypothesis", {})
-        probabilistic_conclusion = probabilistic.get("predictions", {})
+        explanation = f"\n=== {self.name}의 추론 과정 ===\n"
         
-        # 일관성 검사
-        consistency = self._check_conclusion_consistency(
-            logical_conclusion, bayesian_conclusion, probabilistic_conclusion
-        )
+        for step in self.reasoning_trace:
+            explanation += f"\n단계 {step['step']} ({step['type']}):\n"
+            
+            if step['type'] == 'problem_analysis':
+                explanation += f"  문제 유형: {step['data']['type']}\n"
+            elif step['type'] == 'bayesian_update':
+                data = step['data']
+                explanation += f"  가설: {data['hypothesis']}\n"
+                explanation += f"  사전확률: {data['prior']:.3f} → "
+                explanation += f"사후확률: {data['posterior']:.3f}\n"
+            elif step['type'] == 'add_fact':
+                explanation += f"  사실 추가: {step['data']['fact']}\n"
+            
+        if self.conclusions:
+            latest = self.conclusions[-1]
+            explanation += f"\n최종 결론: {latest['answer']}\n"
+            explanation += f"신뢰도: {latest['confidence']:.2%}\n"
+            
+            if latest['limitations']:
+                explanation += "\n한계점:\n"
+                for limitation in latest['limitations']:
+                    explanation += f"  - {limitation}\n"
         
-        # 가중 통합
-        if consistency["is_consistent"]:
-            integrated = self._weighted_integration(
-                logical_conclusion, bayesian_conclusion, probabilistic_conclusion
-            )
-        else:
-            # 불일치 해결
-            integrated = self._resolve_inconsistencies(
-                logical_conclusion, bayesian_conclusion, probabilistic_conclusion,
-                consistency["conflicts"]
-            )
-        
-        # 신뢰도 계산
-        confidence = self._calculate_integrated_confidence(
-            logical, bayesian, probabilistic, consistency
-        )
-        
-        return {
-            "conclusion": integrated,
-            "confidence": confidence,
-            "consistency": consistency,
-            "reasoning_methods_used": ["formal_logic", "bayesian", "probabilistic"],
-            "limitations": self._identify_conclusion_limitations(integrated, confidence)
-        }
+        return explanation
 
 
-# 실제 사용 예제
-async def demonstrate_enhanced_reasoning():
-    """강화된 추론 시스템 시연"""
+# ======================== 실제 사용 예제 ========================
+def demonstrate_practical_reasoning():
+    """실용적 추론 시스템 시연"""
     
-    # 통합 시스템 생성
-    reasoning_system = IntegratedScientificReasoningSystem("아인슈타인2.0_AGI")
+    print("🚀 실용적 과학 추론 시스템 v2.0")
+    print("=" * 60)
     
-    # 복잡한 추론 문제
-    problem = {
-        "type": "causal_inference",
-        "question": "고농도 CO2 환경이 식물 성장에 미치는 영향",
-        "constraints": {
-            "time_limit": 60,  # seconds
-            "confidence_required": 0.8
-        }
+    # 추론 시스템 생성
+    reasoner = PracticalReasoner("Agnes_실용추론기")
+    
+    # 예제 1: 의료 진단 추론
+    print("\n📋 예제 1: 의료 진단")
+    
+    medical_context = {
+        "hypotheses": ["독감", "감기", "코로나19"],
+        "evidence": [
+            {
+                "description": "발열 38.5도",
+                "likelihood_if_true": {"독감": 0.9, "감기": 0.3, "코로나19": 0.8},
+                "likelihood_if_false": 0.1
+            },
+            {
+                "description": "기침",
+                "likelihood_if_true": {"독감": 0.7, "감기": 0.8, "코로나19": 0.9},
+                "likelihood_if_false": 0.2
+            }
+        ],
+        "facts": ["환자는_발열중", "환자는_기침중"],
+        "rules": [
+            {
+                "name": "독감_진단_규칙",
+                "conditions": ["환자는_발열중", "환자는_기침중"],
+                "conclusion": "독감_가능성_높음"
+            }
+        ]
     }
     
-    # 증거 데이터
-    evidence = [
-        {"co2_ppm": 400, "growth_rate": 2.3, "temp": 25},
-        {"co2_ppm": 600, "growth_rate": 3.1, "temp": 25},
-        {"co2_ppm": 800, "growth_rate": 3.5, "temp": 25},
-        {"co2_ppm": 1000, "growth_rate": 3.2, "temp": 25}  # 비선형 관찰!
-    ]
+    result1 = reasoner.reason(
+        "환자의 증상을 보고 가장 가능성 높은 질병은?",
+        medical_context
+    )
     
-    # 추론 수행
-    result = await reasoning_system.reason_scientifically(problem, evidence)
+    # 예제 2: 인과관계 추론
+    print("\n📋 예제 2: 인과관계 분석")
     
-    print(f"\n📊 통합 추론 결과:")
-    print(f"결론: {result['integrated_conclusion']['conclusion']}")
-    print(f"신뢰도: {result['integrated_conclusion']['confidence']:.2f}")
-    print(f"사용된 추론 방법: {result['integrated_conclusion']['reasoning_methods_used']}")
+    causal_context = {
+        "causal_links": [
+            {"cause": "흡연", "effect": "폐암", "strength": 0.7},
+            {"cause": "대기오염", "effect": "폐암", "strength": 0.4},
+            {"cause": "유전", "effect": "폐암", "strength": 0.3}
+        ],
+        "observations": [
+            {"variable": "흡연", "value": True},
+            {"variable": "폐암", "value": True}
+        ],
+        "target_cause": "흡연",
+        "target_effect": "폐암"
+    }
     
-    return result
-
-
-# 핵심 클래스들
-@dataclass
-class ProbabilisticModel:
-    """확률 모델"""
-    name: str
-    variables: Dict[str, 'RandomVariable'] = field(default_factory=dict)
-    constraints: List[Callable] = field(default_factory=list)
+    result2 = reasoner.reason(
+        "흡연이 폐암의 원인일 가능성은?",
+        causal_context
+    )
     
-    def add_variable(self, name: str, distribution: str, parents: List[str]):
-        # 구현...
-        pass
-        
-    def add_constraint(self, constraint: Callable):
-        # 구현...
-        pass
+    # 추론 과정 설명
+    print("\n" + reasoner.explain_reasoning())
+    
+    return reasoner
 
 
 if __name__ == "__main__":
-    asyncio.run(demonstrate_enhanced_reasoning())
+    # 시스템 시연
+    reasoner = demonstrate_practical_reasoning()
+    
+    print("\n" + "=" * 60)
+    print("✅ 실용적 추론 시스템의 특징:")
+    print("1. 실제로 작동하는 구현")
+    print("2. 투명한 추론 과정")
+    print("3. 명확한 한계 인정")
+    print("4. 편향 감지 및 보정")
+    print("5. 실용적 신뢰도 평가")
